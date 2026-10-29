@@ -21,6 +21,7 @@
     "AGENTS.md",
     ".agents/",
     ".opencode/agents/",
+    ".opencode/plugins/",
     ".github/copilot-instructions.md",
     ".cursor/rules/",
     ".devin/rules/",
