@@ -34,5 +34,5 @@ test("skill requires realistic state and responsive/accessibility review", () =>
 
 test("skill keeps design choices intentional rather than equating minimalism with quality", () => {
   assert.match(skill, /Choose type scale, density, spacing, contrast, borders, and corner radius intentionally/);
-  assert.match(skill, /equate “less AI-looking” with “unstyled”/);
+  assert.match(skill, /equate “less AI-looking” with “unstyled\.?”/);
 });
