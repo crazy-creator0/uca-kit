@@ -21,6 +21,7 @@
     "AGENTS.md",
     ".agents/",
     ".opencode/agents/",
+    ".opencode/plugins/",
     ".github/copilot-instructions.md",
     ".cursor/rules/",
     ".devin/rules/",
@@ -32,12 +33,11 @@
     "GENERIC-IDE-SETUP.md",
     "IMPECCABLE-SETUP.md",
     "OPENCODE-SETUP.md",
-    ".opencode/plugins/",
     "HOST-CAPABILITY-FALLBACK.md",
     ".cursor/agents/"
   ],
   "scripts": {
-    "test": "node --test tests/cli.test.cjs tests/context-recovery-policy.test.cjs tests/stack-migration-policy.test.cjs tests/usage.test.cjs tests/opencode-plugin.test.cjs tests/packlist.test.cjs",
+    "test": "node --test tests/cli.test.cjs tests/context-recovery-policy.test.cjs tests/stack-migration-policy.test.cjs tests/usage.test.cjs tests/opencode-plugin.test.cjs tests/packlist.test.cjs tests/design-taste-discovery.test.cjs",
     "check": "node --check bin/cli.cjs && npm test",
     "pack:dry-run": "npm pack --dry-run",
     "prepublishOnly": "npm run check"
@@ -65,7 +65,6 @@
     "windsurf",
     "devin",
     "jetbrains",
-    "full-stack",
     "python",
     "code-review",
     "devops",
