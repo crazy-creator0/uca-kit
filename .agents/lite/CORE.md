@@ -1,6 +1,6 @@
 # UCA Lite Core
 
-Use this file as the compact, always-on policy for Lite tier. Estimate: 0 tokens (characters / 4; estimate only).
+Use this file as the compact, always-on policy for Lite tier. Token budget: 600 estimated tokens maximum (characters / 4; verify with tests).
 
 ## Shared rules
 
