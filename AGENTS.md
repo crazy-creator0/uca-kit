@@ -2,6 +2,14 @@
 
 This is the canonical core policy. Keep it concise; platform adapters should reference this file instead of duplicating it.
 
+## Scope-first workflow
+- Match effort to the request: small/clear = light pass; module-sized = targeted discovery; broad/ambiguous = ask one scope question with 3–5 options.
+- Do not ask when the goal is clear. Large repositories require targeted discovery, not an automatic full scan.
+- On first meaningful task, read `PROJECT.md` if present; otherwise scan top-level structure, manifests, entry points, test commands, and Git status, then offer/create a concise Project Card when useful. Reuse it until the project changes noticeably.
+- Trace the real execution flow and relevant callers before editing. Define expected behavior, test edge cases, and distinguish confirmed bugs from potential risks.
+- Use only relevant skills. Search external skill repositories only when the user explicitly asks. Preview the full skill contents and source/version/license before installation; never auto-install or execute third-party scripts.
+- Use technical web research when an audit, logic/security review, or current/version-specific claim needs external evidence. Prefer official sources, verify versions/dates, and cite findings. Do not browse by default for every task.
+
 ## Default workflow
 - Greeting or vague request: answer/ask what help is needed. Do not scan the project, load skills, dispatch agents, or edit files without a task.
 - For meaningful work, understand the outcome, scope, acceptance criteria, current architecture, conventions, and available checks before editing.
@@ -27,6 +35,12 @@ This is the canonical core policy. Keep it concise; platform adapters should ref
 - Infer the actual language(s), framework(s), build system, and conventions from the user's goal and repository evidence; account for mixed-language and polyglot projects.
 - Choose techniques and validation appropriate to the detected stack and task. Use a language-specific skill when it adds relevant guidance, but absence of such a skill must never block work or imply the language is unsupported.
 - Prefer existing project conventions and available verification tools. If a toolchain or expertise is uncertain or unavailable, state the limitation, investigate from reliable project evidence when useful, and avoid pretending verification occurred.
+
+## Safe changes and checkpoints
+- Before a meaningful change, inspect Git status and existing diffs. If a Git repository exists, recommend a branch/commit checkpoint where appropriate.
+- If the project is not a Git repository, explain that Git rollback is unavailable. Offer `git init` and an initial commit, but do not run repository-changing Git commands without explicit permission.
+- Ask before deleting files, adding dependencies, changing configuration, touching secrets/env files, running migrations, deploying, or taking other destructive/high-impact actions.
+- Explain changes in plain language, including material risks and how to undo them when a reliable rollback path exists.
 
 ## Higher-risk changes
 - Existing-stack migration is an architecture decision, not find-and-replace. Read `.agents/workflows/stack-migration.md`, compare keeping/changing/incremental options, define scope and acceptance checks, assess data/deployment/rollback risks, and get approval before broad/destructive/irreversible/production-impacting work unless clearly authorized already.

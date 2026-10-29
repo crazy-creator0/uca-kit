@@ -14,7 +14,7 @@
 
 It is designed to help developers plan before coding, understand unfamiliar code, make focused changes, test carefully, protect existing behavior, and learn the reasoning behind engineering decisions.
 
-[Quick start](#quick-start) · [Features](#what-is-included) · [Agent/skill routing](AGENT-SKILL-MAP.md) · [Host capability fallback](HOST-CAPABILITY-FALLBACK.md) · [Local usage meter](#local-usage-meter-and-budget-guard) · [Supported tools](#supported-coding-tools) · [License](#license) · [Generic IDE setup](GENERIC-IDE-SETUP.md) · [Platform guide](PLATFORM-SETUP.md)
+[Quick start](#quick-start) · [Workflow](#scope-first-workflow) · [Features](#what-is-included) · [Roadmap](docs/ROADMAP.md) · [Demo plan](docs/DEMO.md) · [Tool compatibility](docs/TOOL-COMPATIBILITY.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Platform guide](PLATFORM-SETUP.md)
 
 ## Quick start
 
@@ -53,6 +53,24 @@ The installer preserves existing files by default. When run in an interactive te
 
 > **npm registry note:** The source and MIT license are in this repository, but a public npm release is not yet confirmed. Verify the package name is available and the packed files are correct before publishing. Until then, use the GitHub-based commands above. After the public release is verified, the intended short command will be `npx create-universal-coding-agent-kit@latest init .`.
 
+## Scope-first workflow
+
+1. **Reconnaissance:** inspect only top-level structure, manifests, entry points, test commands, and Git status.
+2. **Clarify only if needed:** continue when the goal is clear; ask one scope question when it is broad or ambiguous.
+3. **Discover the flow:** search relevant files and symbols, trace callers/data flow, and read incrementally. Reuse `PROJECT.md` rather than rescanning every task.
+4. **Test like a strict QA engineer:** define expected behavior, probe relevant edge cases, reproduce suspected bugs, and separate evidence-backed bugs from risks.
+5. **Fix and verify:** make the smallest coherent change, add/update regression tests, run focused checks, and report what was and was not verified.
+
+Effort scales with task size. A small fix gets a light pass; a module change gets targeted discovery; a broad audit starts with scope options. Never claim a full-repository audit after inspecting only part of the repository.
+
+### Search and safety policy
+
+- Built-in skills are the default; load only relevant skills.
+- Search for external skills **only when the user explicitly asks**. Preview the skill contents, source, pinned version, license, and risks before installation. Never auto-install.
+- Use technical web research when current documentation or external evidence is needed for an audit, logic/security review, or version-specific question. Prefer authoritative sources and record dates/versions. Do not search for every task.
+- Git checkpoints can provide rollback when available. If the project is not a Git repository, explain that rollback is unavailable and ask before running `git init` or making an initial commit.
+- Ask before destructive/high-impact changes such as deleting files, adding dependencies, changing configuration, touching secrets, migrations, or deployment.
+
 ## What is included
 
 - **Shared agent instructions** — consistent engineering principles, mentoring, safe editing, and verification guidance.
@@ -68,7 +86,7 @@ The installer preserves existing files by default. When run in an interactive te
 
 ## Supported coding tools
 
-The kit aims for broad compatibility, not identical behavior in every tool. Follow the [platform setup guide](PLATFORM-SETUP.md), and use the [generic IDE guide](GENERIC-IDE-SETUP.md) when your assistant is not listed.
+The kit aims for broad compatibility, not identical behavior in every tool. The file paths below are setup guidance, **not proof that a specific tool/version loads them**. See the [tool compatibility matrix](docs/TOOL-COMPATIBILITY.md); combinations without recorded tests are marked untested. Follow the [platform setup guide](PLATFORM-SETUP.md), and use the [generic IDE guide](GENERIC-IDE-SETUP.md) when your assistant is not listed.
 
 | Tool | Getting started |
 |---|---|
@@ -115,7 +133,7 @@ The ledger is local by default at `~/.uca-kit/usage.json`; set `UCA_USAGE_FILE` 
 
 ## Roadmap
 
-The following are **planned capabilities, not claims about features already implemented**:
+See the [measurable phased roadmap](docs/ROADMAP.md), [demo plan](docs/DEMO.md), and [tool compatibility matrix](docs/TOOL-COMPATIBILITY.md). The following are **planned capabilities, not claims about features already implemented**:
 
 - A colleague-like project planner that maintains NOW / NEXT / LATER priorities and explains trade-offs.
 - A visual planning workspace using source-backed SVG diagrams, user journeys, architecture maps, and UI previews.
@@ -138,7 +156,7 @@ This project is licensed under the [MIT License](LICENSE). The license applies t
 
 ## Contributing and support
 
-Bug reports and focused improvements are welcome through [GitHub Issues](https://github.com/crazy-creator0/uca-kit/issues). Please include reproducible steps, relevant environment details, and the checks you ran; do not post secrets or private project data.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution checklist and [SECURITY.md](SECURITY.md) for private vulnerability reporting guidance. Bug reports and focused improvements are welcome through [GitHub Issues](https://github.com/crazy-creator0/uca-kit/issues). Please include reproducible steps, relevant environment details, and the checks you ran; do not post secrets or private project data.
 
 Before contributing, run:
 
