@@ -64,7 +64,24 @@ Prefer a specific visual system over a fashionable template:
 - Do not add a date, score, stats panel, quote, icon, or other decoration unless it helps the user make a decision or complete a task.
 - Use realistic content to evaluate the layout: empty, populated, completed, long-text, and error states, plus narrow/mobile widths.
 
-## Step 6 — review like a product designer
+
+## Step 6 — design intentional, distinctive motion when requested
+When a user asks for advanced animation, page-switching transitions, or a unique animated experience, treat motion as part of the design brief—not a decorative afterthought. If their description is clear, translate it into a concrete motion concept and implement it in the existing project; do not stop at generic suggestions or a list of animation libraries.
+
+First identify:
+- **Motion purpose:** what the animation communicates or improves (navigation continuity, hierarchy, feedback, storytelling, spatial relationships, or delight).
+- **Motion language:** choose a coherent, project-specific system—such as shared-element transitions, directional page reveals, masked/clip-path reveals, staggered choreography, scroll-linked scenes, spring-based interactions, or custom SVG/canvas motion—only where it serves the brief.
+- **Signature moment:** define one or two memorable interactions that make this experience distinctive, rather than animating every element.
+- **Implementation fit:** inspect the framework, router, existing animation dependencies, and browser constraints. Prefer the current stack and the simplest technique that can deliver the intended result; consider a dedicated motion library only when it materially helps.
+- **Behavior details:** specify enter/exit states, timing, easing, sequencing, interruption/cancellation, loading and failure behavior, and how navigation behaves if the user clicks quickly or uses browser back/forward.
+
+For page transitions, preserve orientation and continuity between routes where useful; do not add a transition that delays navigation, obscures content, breaks deep links, or makes back/forward behavior confusing. For advanced effects, use a clear fallback for unsupported features and avoid expensive perpetual animation when a short, purposeful sequence will do.
+
+If the user gives a clear animation brief, proceed with a small working implementation and show the result where project/browser tools allow. Ask a concise question only when a missing choice would materially change the motion direction. If they ask for a unique design but give no reference, propose a specific concept and state the assumption; do not default to the same fade-up-on-scroll effect.
+
+Respect `prefers-reduced-motion`, keyboard interaction, touch input, performance budgets, and readability. Provide reduced-motion alternatives that preserve meaning and functionality, not merely hide content. Test route changes, rapid repeated input, mobile layout, and reduced-motion behavior. Never claim an animation was visually tested unless it was actually run and inspected.
+
+## Step 7 — review like a product designer
 Before declaring the UI done:
 1. Compare the implementation with the user's references, stated taste, and product purpose.
 2. Identify at least three specific choices that make the interface appropriate to this product, rather than merely saying it looks modern or polished.
@@ -73,7 +90,7 @@ Before declaring the UI done:
 5. If screenshots or browser tools are available, inspect them. Do not claim visual inspection when only source code was checked.
 6. Make targeted revisions based on visible problems; do not replace one generic template with another or equate “less AI-looking” with “unstyled.”
 
-## Step 7 — approval and implementation
+## Step 8 — approval and implementation
 - Ask before adding dependencies, external services, persistent skills, plugins, or installing third-party code.
 - Do not install all reference tools as a preset.
 - Make a small vertical slice first, then check whether the result matches the accepted direction.
