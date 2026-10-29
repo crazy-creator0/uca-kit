@@ -8,6 +8,18 @@ description: Route ambiguous, cross-functional, or capability-gap coding tasks t
 ## When to use
 Activate only when the task crosses domains, the right skill is unclear, or a required capability may be missing. For a clear, single-domain task, open that domain skill directly and skip this router. Do not scan the repository or load skills for greetings and simple questions.
 
+## Quick decision table
+
+| Situation | Route |
+|---|---|
+| Clear, small, single-domain request | Skip this router; open the obvious skill or work directly. |
+| Cross-domain task or genuinely unclear skill choice | Use the task-to-skill map; read only the primary skill and distinct specialists needed. |
+| Large repository, clear goal | Start with lightweight reconnaissance and targeted search; do not ask merely because the repo is large. |
+| Broad request where scope changes the work materially | Ask one focused scope question or offer a phased plan. |
+| Audit, logic review, security review, or latest/version-specific claim | Inspect local evidence first; use targeted technical web research when external/current evidence is needed. |
+| External skill recommendation | Search only after the user explicitly requests external skill discovery; preview content and provenance before proposing installation. |
+| Missing tool, inaccessible file, or failed search | Use a safe fallback and disclose the limitation; do not invent success. |
+
 ## Routing workflow
 
 1. **Establish the request.** Identify the user's goal, requested scope, constraints, relevant follow-up context, and acceptance checks. Preserve the current goal across follow-ups unless the user changes it.
