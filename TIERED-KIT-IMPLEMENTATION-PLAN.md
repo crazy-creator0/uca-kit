@@ -76,6 +76,18 @@ Each bullet below is a separate one-file change. After every edit, run `npm test
 10. **Tests**: add budget/frontmatter/tier/invalid-flag/display-only-context/drift/safety/packlist tests and handoff trigger/order/restore/content/last-model-stop tests.
 11. **Evaluation plan**: create `EVALUATION.md` with the five tasks below and a cross-model handoff test; do not claim the evaluation has run.
 
+## Required gap fixes
+
+- **Model switching:** the guard prints `Switch to model N: <name> (tier: <tier>)`; the user or host performs the actual switch. The script does not claim to switch models.
+- **Config shape:** `.uca/config.json` uses `{ "tier": "lite|standard|full", "models": [{ "name": "...", "tier": "lite|standard|full" }], "checks": ["<command>", ...], "allowGit": false }`. The model never edits or reorders `models`. `--tier` sets the default; each model entry can override it.
+- **Restore safety:** snapshot before every restore. Use `git stash -u` only when Git exists and repository-changing Git commands are authorized by `allowGit: true` or explicit user confirmation. Otherwise copy changed files to `.uca/backup/<timestamp>/`. Never run `git reset --hard` without a snapshot.
+- **HANDOFF redaction:** redact values resembling secrets, API keys, tokens, passwords, Authorization headers, and `.env` values from captured output. Installer-managed ignore changes may append `HANDOFF.md` and `.uca/` only when the project already has a `.gitignore`; do not create one without asking.
+- **Guard command:** `node scripts/uca-guard.cjs run -- <check command>` runs the check, appends its result to `.uca/state.json`, and detects repeated identical errors, worse checks than the previous result, 3+ files changed since the last pass, empty/garbled output, and timeout. On trigger, snapshot before restoring last passing state, write HANDOFF.md from redacted tool output only, and print the switch message. After the final configured model fails, print STOP and exit non-zero; never return to an earlier model.
+- **Cycle-check fallback:** use configured checks first, then a known tool only if already installed (import-linter, pydeps, madge, or eslint import/no-cycle), then the existing build/typecheck command. Never install tools. If no check exists, ask the user for a check command.
+- **Cross-platform scripts:** use Node.js scripts, not bash-only syntax; use platform-safe paths such as `path.join` and add a Windows-safe path test.
+- **Policy tests:** if shortening AGENTS.md changes text matched by context-recovery or stack-migration policy tests, update their assertions while preserving the intent tested.
+- **Installer prompt:** when `--tier` is omitted, ask one plain-language question describing the three tiers; do not choose silently. An explicit `--tier` skips the prompt. `--context` only suggests and never changes the selected tier.
+
 ## Multi-model handoff contract
 
 - The user defines the model order in configuration; automation never changes or reorders it.
