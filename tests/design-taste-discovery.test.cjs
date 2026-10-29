@@ -19,6 +19,15 @@ test("skill warns against generic AI-generated UI patterns without banning style
   assert.match(skill, /Do not treat any style checklist as a substitute for product-specific judgment/);
 });
 
+test("skill treats advanced motion as a first-class design goal", () => {
+  assert.match(skill, /## Step 6 — design intentional, distinctive motion when requested/);
+  assert.match(skill, /page-switching transitions/);
+  assert.match(skill, /shared-element transitions/);
+  assert.match(skill, /do not default to the same fade-up-on-scroll effect/);
+  assert.match(skill, /prefers-reduced-motion/);
+  assert.match(skill, /rapid repeated input/);
+});
+
 test("skill prioritizes product purpose and meaningful interface content", () => {
   assert.match(skill, /identify the product's primary job/);
   assert.match(skill, /task input and task list should lead/);
