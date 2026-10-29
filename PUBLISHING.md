@@ -2,7 +2,7 @@
 
 **Written by Crazy Creators**
 
-The CLI source is maintained in [universal-coding-agent-kit](https://github.com/crazy-creator0/universal-coding-agent-kit). GitHub-based npm execution can be used from source; public npm registry publication must be verified separately.
+The CLI source is maintained in [uca-kit](https://github.com/crazy-creator0/uca-kit). GitHub-based npm execution can be used from source; public npm registry publication must be verified separately.
 
 ## Package details
 
@@ -11,7 +11,7 @@ The CLI source is maintained in [universal-coding-agent-kit](https://github.com/
 - Binary command: `create-universal-coding-agent-kit`
 - Runtime dependencies: none
 - Minimum Node.js version: 18
-- Repository: https://github.com/crazy-creator0/universal-coding-agent-kit
+- Repository: https://github.com/crazy-creator0/uca-kit
 - Author metadata: Crazy Creators
 
 ## Before publishing
@@ -28,6 +28,10 @@ The CLI source is maintained in [universal-coding-agent-kit](https://github.com/
 
 5. Test the tarball in a clean temporary project using the generic and at least one platform-specific profile. Confirm existing project files are preserved by default.
 6. Check the final README, author, keywords, repository URLs, version, and license metadata.
+
+## Promotion gate
+
+Publishing a testable early package and promoting the kit widely are separate decisions. Do not broadly promote the product until the Phase 2 benchmark has been run and the results are published. See [the roadmap](docs/ROADMAP.md) and [the demo plan](docs/DEMO.md). Keep every performance or compatibility claim proportional to measured evidence.
 
 ## Publish
 
