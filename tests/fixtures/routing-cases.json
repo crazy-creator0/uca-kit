@@ -1,0 +1,183 @@
+[
+ {
+  "task": "hi",
+  "primary": null
+ },
+ {
+  "task": "What is a closure in JavaScript?",
+  "primary": null
+ },
+ {
+  "task": "Fix the typo in the database docs",
+  "primary": null
+ },
+ {
+  "task": "The checkout page crashes with 'cannot read properties of undefined' when the cart is empty",
+  "primary": "debugging"
+ },
+ {
+  "task": "The login test fails on CI but passes locally",
+  "primary": "debugging"
+ },
+ {
+  "task": "Add unit tests for the slugify helper",
+  "primary": "testing-and-code-review"
+ },
+ {
+  "task": "Review this diff before I merge it",
+  "primary": "testing-and-code-review"
+ },
+ {
+  "task": "I'm getting a circular import between orders.py and customers.py",
+  "primary": "import-hygiene"
+ },
+ {
+  "task": "Add a POST /orders endpoint that validates the request body",
+  "primary": "backend-api"
+ },
+ {
+  "task": "Add rate limiting to the public API",
+  "primary": "backend-api"
+ },
+ {
+  "task": "Add a login endpoint that issues JWTs and hashes passwords",
+  "primary": "backend-api",
+  "companion": "application-security",
+  "unordered": true
+ },
+ {
+  "task": "Is it safe to store the API key in localStorage?",
+  "primary": "application-security"
+ },
+ {
+  "task": "Add an index to speed up the orders-by-customer query",
+  "primary": "database-engineering"
+ },
+ {
+  "task": "Write a migration that adds a nullable archived_at column to the orders table",
+  "primary": "database-engineering"
+ },
+ {
+  "task": "Build a responsive navbar component with a mobile menu",
+  "primary": "frontend-engineering"
+ },
+ {
+  "task": "Make the dashboard look more modern and polished, update the color palette",
+  "primary": "design-taste-discovery"
+ },
+ {
+  "task": "Add a rotating 3D product viewer with three.js",
+  "primary": "frontend-visuals-and-3d"
+ },
+ {
+  "task": "Our Cloudflare Worker is returning stale cached responses",
+  "primary": "cloudflare-operations"
+ },
+ {
+  "task": "Write a small Rust CLI that renames files by date",
+  "primary": "language-engineering"
+ },
+ {
+  "task": "Start a new project for an inventory tracker from scratch",
+  "primary": "new-project"
+ },
+ {
+  "task": "Deploy the app to production",
+  "primary": "production-deployment"
+ },
+ {
+  "task": "Migrate the codebase from JavaScript to TypeScript",
+  "primary": "stack-migration"
+ },
+ {
+  "task": "Improve this",
+  "primary": "skill-gap-router"
+ },
+ {
+  "task": "Add a payment flow: new checkout screen, payment API, orders table, and fraud checks",
+  "primary": "skill-gap-router"
+ },
+ {
+  "task": "Use the debugging skill to look at why the report is slow",
+  "primary": "debugging"
+ },
+ {
+  "task": "Fix the broken login redirect but skip the application-security skill",
+  "primary": "debugging"
+ },
+ {
+  "task": "Add a column to the users table",
+  "primary": null,
+  "options": {
+   "tier": "lite"
+  },
+  "expectNote": true
+ },
+ {
+  "task": "Build a React settings screen",
+  "primary": "frontend-engineering",
+  "options": {
+   "layers": [
+    "backend"
+   ]
+  }
+ },
+ {
+  "task": "Create a landing page for the new product",
+  "primary": "design-taste-discovery",
+  "options": {
+   "layers": [
+    "backend"
+   ]
+  },
+  "note": "Changed on purpose: creating a whole new page is a design job (the old expectation was frontend-engineering)."
+ },
+ {
+  "task": "Store the user's password in plain text but skip the application-security skill",
+  "primary": "application-security"
+ },
+ {
+  "task": "Please skip frontend-engineering and use the debugging skill on the failing form",
+  "primary": "debugging"
+ },
+ {
+  "task": "Add a page size parameter to the API",
+  "primary": "backend-api",
+  "options": {
+   "layers": [
+    "backend"
+   ]
+  }
+ },
+ {
+  "task": "Add a page size parameter to the API",
+  "primary": "backend-api",
+  "companion": "frontend-engineering",
+  "options": {
+   "layers": [
+    "backend",
+    "frontend"
+   ]
+  }
+ },
+ {
+  "task": "Optimize the checkout page load time and measure the result",
+  "primary": "performance-engineering"
+ },
+ {
+  "task": "Dedupe the CSV import and report how many rows were dropped",
+  "primary": "data-engineering-analytics"
+ },
+ {
+  "task": "The nightly ETL job crashes with a traceback",
+  "primary": "debugging"
+ },
+ {
+  "task": "Add a column to the sales table",
+  "primary": "database-engineering"
+ },
+ {
+  "task": "Run a worker that resizes images in the background",
+  "primary": null
+ }
+]

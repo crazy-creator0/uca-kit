@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fee Book</title>
+<style>
+:root{
+  --paper:#F4EFE6; --ink:#1D1B16; --rule:#C9BFA9; --owe:#B3261E; --paid:#2F6B3A; --muted:#6B6455;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.4 var(--serif)}
+main{max-width:720px;margin:0 auto;padding:16px 16px 48px}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;min-height:44px;padding:8px 14px;background:transparent;border:1px solid var(--ink);border-radius:2px}
+button:hover{background:#e9e2d3}
+button.primary{background:var(--ink);color:var(--paper)}
+button.primary:hover{background:#3a362c}
+button.link{border:0;padding:8px 4px;text-decoration:underline;min-height:44px}
+:focus-visible{outline:3px solid #1b5fd1;outline-offset:2px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+h1{font-size:15px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px;color:var(--muted)}
+
+.total{border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:12px}
+.total .big{font-size:clamp(40px,12vw,72px);line-height:1.05;color:var(--owe);font-weight:500;overflow-wrap:anywhere}
+.total .big.zero{color:var(--paid)}
+.total p{margin:4px 0 0;color:var(--muted)}
+
+.monthbar{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.monthbar .label{flex:1;text-align:center;font-weight:600}
+.monthbar .sub{display:block;font-weight:400;color:var(--muted);font-size:15px}
+.monthbar button{width:48px;padding:0}
+.monthbar button[disabled]{opacity:.3;cursor:default}
+
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.tools input[type=search]{flex:1 1 160px;min-height:44px;padding:8px 10px;border:1px solid var(--ink);border-radius:2px;background:#fffdf8}
+.seg{display:flex}
+.seg button{border-radius:0;margin-left:-1px}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+
+.banner{border:1px solid var(--owe);color:var(--owe);padding:10px 12px;margin:0 0 12px;background:#fbeceb}
+.banner.info{border-color:var(--ink);color:var(--ink);background:#fffdf8}
+
+ul.students{list-style:none;margin:0;padding:0}
+.student{border-bottom:1px solid var(--rule);padding:12px 0}
+.row{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.who{min-width:0}
+.name{font-size:20px;font-weight:600;overflow-wrap:anywhere}
+.fee{color:var(--muted);font-size:15px}
+.owes{margin-top:2px;font-size:15px}
+.owes strong{color:var(--owe)}
+.owes.ok{color:var(--paid)}
+.act{flex:none;text-align:right}
+.stamp{border:2px solid var(--paid);color:var(--paid);font-weight:700;letter-spacing:.12em;transform:rotate(-3deg);border-radius:2px;background:transparent;min-width:84px}
+.stamp small{display:block;letter-spacing:0;font-weight:400}
+.na{color:var(--muted);font-size:15px}
+.more{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.months{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.chip{min-height:44px;min-width:76px;font-size:15px;padding:4px 8px}
+.chip.p{border-color:var(--paid);color:var(--paid)}
+.chip.u{border-color:var(--owe);color:var(--owe);background:#fbeceb}
+.empty{padding:28px 4px;color:var(--muted)}
+
+.backup{margin-top:28px;border-top:2px solid var(--ink);padding-top:12px}
+.backup .btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.backup label{display:block;margin-top:8px}
+.backup input[type=text]{width:5em;min-height:40px;padding:6px;border:1px solid var(--ink);border-radius:2px;background:#fffdf8}
+
+.overlay{position:fixed;inset:0;background:rgba(29,27,22,.55);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:16px}
+.overlay[hidden]{display:none}
+.sheet{background:var(--paper);border:1px solid var(--ink);width:100%;max-width:440px;padding:16px;margin-top:4vh}
+.sheet h2{margin:0 0 8px;font-size:22px}
+.sheet label{display:block;margin-top:12px;font-weight:600}
+.sheet input{display:block;width:100%;min-height:44px;padding:8px 10px;margin-top:4px;border:1px solid var(--ink);border-radius:2px;background:#fffdf8;font-weight:400}
+.err{color:var(--owe);min-height:1.4em;margin:8px 0 0}
+.sheet .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <div id="banners"></div>
+  <section class="total" aria-live="polite">
+    <h1>Still pending</h1>
+    <div class="big num" id="total">0</div>
+    <p id="totalSub"></p>
+  </section>
+
+  <div class="monthbar">
+    <button id="prev" aria-label="Previous month">&lsaquo;</button>
+    <div class="label"><span id="monthLabel"></span><span class="sub num" id="monthSub"></span></div>
+    <button id="next" aria-label="Next month">&rsaquo;</button>
+  </div>
+
+  <div class="tools">
+    <input type="search" id="q" placeholder="Search name" aria-label="Search student by name">
+    <div class="seg" role="group" aria-label="Show">
+      <button data-f="all" aria-pressed="true">All</button>
+      <button data-f="owing" aria-pressed="false">Owing</button>
+      <button data-f="clear" aria-pressed="false">Paid up</button>
+    </div>
+    <button class="primary" id="add">+ Add student</button>
+  </div>
+
+  <ul class="students" id="list"></ul>
+
+  <section class="backup">
+    <h1>Backup and settings</h1>
+    <p id="backupNote"></p>
+    <div class="btns">
+      <button id="export">Save backup file</button>
+      <button id="importBtn">Restore from backup</button>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+    </div>
+    <label>Money symbol <input type="text" id="cur" maxlength="4" aria-label="Money symbol"></label>
+  </section>
+</main>
+
+<div class="overlay" id="overlay" hidden>
+  <form class="sheet" id="form" novalidate>
+    <h2 id="formTitle">Add student</h2>
+    <label>Name <input id="fName" autocomplete="off" maxlength="60"></label>
+    <label>Monthly fee <input id="fFee" inputmode="numeric" autocomplete="off" maxlength="7"></label>
+    <label>Owes from month <input id="fStart" type="month" placeholder="YYYY-MM"></label>
+    <p class="na">Months before this one are not counted as owed.</p>
+    <p class="err" id="fErr" role="alert"></p>
+    <div class="btns">
+      <button type="submit" class="primary" id="fSave">Save</button>
+      <button type="button" id="fAnother">Save and add another</button>
+      <button type="button" id="fCancel">Cancel</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="feeTracker.v1";
+var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var RE_MONTH=/^\d{4}-(0[1-9]|1[0-2])$/;
+
+var state={version:1,currency:"₹",lastBackup:null,students:[]};
+var viewMonth=null, expandedId=null, filter="all", query="", editingId=null;
+var storageOK=true, loadProblem=false, saveProblem=false, notice="";
+
+/* ---------- month helpers ---------- */
+function pad(n){return n<10?"0"+n:""+n}
+function curMonth(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)}
+function idx(k){return parseInt(k.slice(0,4),10)*12+parseInt(k.slice(5),10)-1}
+function key(i){return Math.floor(i/12)+"-"+pad(i%12+1)}
+function label(k){return MONTHS[parseInt(k.slice(5),10)-1]+" "+k.slice(0,4)}
+function short(k){return MONTHS[parseInt(k.slice(5),10)-1]}
+
+/* ---------- money logic ---------- */
+function unpaidMonths(s){
+  var out=[], paid={}, i, end=idx(curMonth());
+  s.paid.forEach(function(m){paid[m]=true});
+  for(i=idx(s.start);i<=end;i++){ if(!paid[key(i)]) out.push(key(i)); }
+  return out;
+}
+function owed(s){return unpaidMonths(s).length*s.fee}
+function totalPending(){return state.students.reduce(function(t,s){return t+owed(s)},0)}
+function isPaid(s,m){return s.paid.indexOf(m)!==-1}
+function started(s,m){return idx(m)>=idx(s.start)}
+function setPaid(s,m,val){
+  var has=isPaid(s,m);
+  if(val&&!has) s.paid.push(m);
+  if(!val&&has) s.paid=s.paid.filter(function(x){return x!==m});
+}
+function money(n){return state.currency+" "+n.toLocaleString("en-US")}
+
+/* ---------- validation / storage ---------- */
+function validFee(v){return typeof v==="number"&&isFinite(v)&&v>=1&&v<=1000000&&Math.floor(v)===v}
+function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function clean(obj){
+  if(!obj||typeof obj!=="object"||!Array.isArray(obj.students)) return null;
+  var seen={}, out={version:1,
+    currency:typeof obj.currency==="string"?obj.currency.slice(0,4):"₹",
+    lastBackup:typeof obj.lastBackup==="string"?obj.lastBackup.slice(0,10):null, students:[]};
+  for(var i=0;i<obj.students.length;i++){
+    var s=obj.students[i];
+    if(!s||typeof s.name!=="string"||!s.name.trim()||!validFee(s.fee)||typeof s.start!=="string"||!RE_MONTH.test(s.start)||!Array.isArray(s.paid)) return null;
+    var id=(typeof s.id==="string"&&s.id&&!seen[s.id])?s.id:newId();
+    seen[id]=true;
+    var paid=[];
+    for(var j=0;j<s.paid.length;j++){
+      if(typeof s.paid[j]!=="string"||!RE_MONTH.test(s.paid[j])) return null;
+      if(paid.indexOf(s.paid[j])===-1) paid.push(s.paid[j]);
+    }
+    out.students.push({id:id,name:s.name.trim().slice(0,60),fee:s.fee,start:s.start,paid:paid});
+  }
+  return out;
+}
+function load(){
+  var raw=null;
+  try{ raw=localStorage.getItem(KEY); }catch(e){ storageOK=false; return; }
+  if(raw===null) return;
+  var parsed=null;
+  try{ parsed=clean(JSON.parse(raw)); }catch(e){ parsed=null; }
+  if(parsed){ state=parsed; return; }
+  loadProblem=true;
+  try{ localStorage.setItem(KEY+".damaged",raw); }catch(e){}
+}
+function save(){
+  if(!storageOK){ return; }
+  try{ localStorage.setItem(KEY,JSON.stringify(state)); saveProblem=false; }
+  catch(e){ saveProblem=true; }
+}
+
+/* ---------- tiny DOM helper (text only, never raw HTML) ---------- */
+function el(tag,attrs){
+  var n=document.createElement(tag), k, i, c;
+  attrs=attrs||{};
+  for(k in attrs){
+    if(k==="class") n.className=attrs[k];
+    else if(k==="text") n.textContent=attrs[k];
+    else if(k.slice(0,2)==="on") n.addEventListener(k.slice(2),attrs[k]);
+    else n.setAttribute(k,attrs[k]);
+  }
+  for(i=2;i<arguments.length;i++){ c=arguments[i]; if(c) n.appendChild(c); }
+  return n;
+}
+var $=function(id){return document.getElementById(id)};
+
+/* ---------- actions ---------- */
+function find(id){for(var i=0;i<state.students.length;i++) if(state.students[i].id===id) return state.students[i]; return null}
+function mark(id,m,val){
+  var s=find(id); if(!s) return;
+  setPaid(s,m,val); save(); render("pay-"+id);
+}
+function askUndo(id,m){
+  var s=find(id);
+  if(window.confirm("Undo the "+label(m)+" payment for "+s.name+"? It will count as not paid.")) mark(id,m,false);
+}
+function removeStudent(id){
+  var s=find(id);
+  if(!s) return;
+  if(window.confirm("Remove "+s.name+" and all their payment records? This cannot be undone (unless you have a backup file).")){
+    state.students=state.students.filter(function(x){return x.id!==id});
+    if(expandedId===id) expandedId=null;
+    save(); render("add");
+  }
+}
+
+/* ---------- render ---------- */
+function render(focusKey){
+  var cur=curMonth();
+  if(!viewMonth||idx(viewMonth)>idx(cur)) viewMonth=cur;
+
+  var b=$("banners"); b.textContent="";
+  if(!storageOK) b.appendChild(el("div",{class:"banner",role:"alert",text:"This browser is not letting the page save anything. What you enter will be lost when you close it. Try opening the file in Chrome or Safari, and use \"Save backup file\" often."}));
+  if(saveProblem) b.appendChild(el("div",{class:"banner",role:"alert",text:"The last change could not be saved (the phone may be out of space or in private mode). Save a backup file now."}));
+  if(loadProblem) b.appendChild(el("div",{class:"banner",role:"alert",text:"The saved records in this browser could not be read, so the book started empty. The old data was kept aside and not deleted. If you have a backup file, use \"Restore from backup\"."}));
+  if(notice) b.appendChild(el("div",{class:"banner info",role:"status",text:notice}));
+
+  var tot=totalPending(), owing=state.students.filter(function(s){return owed(s)>0}).length;
+  var t=$("total"); t.textContent=money(tot); t.className="big num"+(tot===0?" zero":"");
+  $("totalSub").textContent=state.students.length===0?"No students added yet.":
+    (owing===0?"Everyone is paid up to "+label(cur)+".":owing+" of "+state.students.length+" students owe, counted up to "+label(cur)+".");
+
+  $("monthLabel").textContent=label(viewMonth);
+  $("next").disabled=idx(viewMonth)>=idx(cur);
+  var inMonth=state.students.filter(function(s){return started(s,viewMonth)});
+  var paidN=inMonth.filter(function(s){return isPaid(s,viewMonth)});
+  var got=paidN.reduce(function(t,s){return t+s.fee},0);
+  $("monthSub").textContent=inMonth.length?paidN.length+" of "+inMonth.length+" paid · "+money(got)+" received":"";
+
+  var list=$("list"); list.textContent="";
+  var q=query.trim().toLowerCase();
+  var shown=state.students.slice().sort(function(a,b){return a.name.localeCompare(b.name)}).filter(function(s){
+    if(q&&s.name.toLowerCase().indexOf(q)===-1) return false;
+    if(filter==="owing") return owed(s)>0;
+    if(filter==="clear") return owed(s)===0;
+    return true;
+  });
+  if(!shown.length){
+    list.appendChild(el("li",{class:"empty",text:state.students.length===0?
+      "Your book is empty. Tap \"+ Add student\" and enter the name and monthly fee of each student.":
+      "No students match. Clear the search or choose \"All\"."}));
+  }
+  shown.forEach(function(s){ list.appendChild(row(s)); });
+
+  if(document.activeElement!==$("cur")) $("cur").value=state.currency;
+  $("backupNote").textContent=backupText();
+
+  if(focusKey){ var f=document.querySelector('[data-k="'+focusKey+'"]'); if(f) f.focus(); }
+}
+function backupText(){
+  var base="Records are kept in this browser on this device only. ";
+  if(!state.students.length) return base+"Save a backup file once you have added students.";
+  if(!state.lastBackup) return base+"You have never saved a backup file. Please do it now and keep it somewhere safe.";
+  return base+"Last backup file saved on "+state.lastBackup+".";
+}
+function row(s){
+  var open=expandedId===s.id, un=unpaidMonths(s), o=un.length*s.fee, m=viewMonth;
+  var owesTxt;
+  if(o===0) owesTxt=el("div",{class:"owes ok",text:"Paid up"});
+  else{
+    var when=un.length<=4?un.map(short).join(", "):un.length+" months, since "+label(un[0]);
+    owesTxt=el("div",{class:"owes"},el("strong",{class:"num",text:"Owes "+money(o)}),el("span",{text:" ("+when+")"}));
+  }
+  var act;
+  if(!started(s,m)) act=el("span",{class:"na",text:"Starts "+label(s.start)});
+  else if(isPaid(s,m)) act=el("button",{class:"stamp","data-k":"pay-"+s.id,"aria-label":"Paid for "+label(m)+". Tap to undo.",onclick:function(){askUndo(s.id,m)}},document.createTextNode("PAID"),el("small",{text:short(m)}));
+  else act=el("button",{class:"primary","data-k":"pay-"+s.id,"aria-label":"Mark "+s.name+" paid for "+label(m),onclick:function(){mark(s.id,m,true)},text:"Mark "+short(m)+" paid"});
+
+  var li=el("li",{class:"student"},
+    el("div",{class:"row"},
+      el("div",{class:"who"},el("div",{class:"name",text:s.name}),el("div",{class:"fee num",text:money(s.fee)+" / month"}),owesTxt),
+      el("div",{class:"act"},act)),
+    el("div",{class:"more"},
+      el("button",{class:"link","data-k":"more-"+s.id,"aria-expanded":open?"true":"false",text:open?"Hide months":"All months",onclick:function(){expandedId=open?null:s.id;render("more-"+s.id)}})));
+  if(open){
+    var box=el("div",{class:"months"});
+    for(var i=idx(s.start);i<=idx(curMonth());i++){
+      (function(k){
+        var p=isPaid(s,k);
+        box.appendChild(el("button",{class:"chip "+(p?"p":"u"),"aria-pressed":p?"true":"false","aria-label":label(k)+(p?" paid. Tap to undo.":" not paid. Tap to mark paid."),
+          onclick:function(){ if(p) askUndo(s.id,k); else mark(s.id,k,true); },text:label(k)+(p?" ✓":"")}));
+      })(key(i));
+    }
+    li.appendChild(box);
+    li.appendChild(el("div",{class:"more"},
+      el("button",{class:"link",onclick:function(){openForm(s.id)},text:"Edit name, fee or start month"}),
+      el("button",{class:"link",onclick:function(){removeStudent(s.id)},text:"Remove student"})));
+  }
+  return li;
+}
+
+/* ---------- add / edit form ---------- */
+function openForm(id){
+  editingId=id||null;
+  var s=id?find(id):null;
+  $("formTitle").textContent=s?"Edit student":"Add student";
+  $("fName").value=s?s.name:"";
+  $("fFee").value=s?String(s.fee):"";
+  $("fStart").value=s?s.start:curMonth();
+  $("fErr").textContent="";
+  $("fAnother").hidden=!!s;
+  $("overlay").hidden=false;
+  $("fName").focus();
+}
+function closeForm(){ $("overlay").hidden=true; editingId=null; $("add").focus(); }
+function submitForm(another){
+  var name=$("fName").value.trim(), feeTxt=$("fFee").value.trim().replace(/,/g,""), start=$("fStart").value.trim(), err="";
+  var fee=/^\d+$/.test(feeTxt)?parseInt(feeTxt,10):NaN;
+  if(!name) err="Please type the student's name.";
+  else if(!validFee(fee)) err="Monthly fee must be a whole number such as 500 or 1500.";
+  else if(!RE_MONTH.test(start)) err="Choose the month the fee starts (like 2026-11).";
+  else if(idx(start)>idx(curMonth())) err="The starting month cannot be in the future.";
+  if(err){ $("fErr").textContent=err; return; }
+  if(!editingId&&state.students.some(function(s){return s.name.toLowerCase()===name.toLowerCase()})
+     &&!window.confirm("You already have a student called "+name+". Add another with the same name?")) return;
+  if(editingId){
+    var s=find(editingId); s.name=name; s.fee=fee; s.start=start;
+  }else{
+    state.students.push({id:newId(),name:name,fee:fee,start:start,paid:[]});
+  }
+  save();
+  if(another&&!editingId){
+    $("fName").value=""; $("fErr").textContent=""; render(); $("fName").focus();
+  }else{ closeForm(); render(); }
+}
+
+/* ---------- backup / restore ---------- */
+function exportFile(){
+  var d=new Date(), day=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+  state.lastBackup=day; save();
+  var blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  var url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download="fee-book-backup-"+day+".json"; document.body.appendChild(a); a.click();
+  setTimeout(function(){URL.revokeObjectURL(url); a.remove();},1000);
+  notice="Backup file saved as fee-book-backup-"+day+".json (look in your Downloads folder).";
+  render();
+}
+function importFile(file){
+  if(!file) return;
+  var r=new FileReader();
+  r.onload=function(){
+    var data=null;
+    try{ data=clean(JSON.parse(String(r.result))); }catch(e){ data=null; }
+    if(!data){ notice="That file is not a valid Fee Book backup, so nothing was changed."; render(); return; }
+    if(window.confirm("Replace everything now in the book with the backup ("+data.students.length+" students)?")){
+      state=data; expandedId=null; save(); notice="Backup restored: "+data.students.length+" students.";
+    }
+    render();
+  };
+  r.onerror=function(){ notice="The file could not be read. Nothing was changed."; render(); };
+  r.readAsText(file);
+}
+
+/* ---------- wiring ---------- */
+$("prev").onclick=function(){ viewMonth=key(idx(viewMonth)-1); render(); };
+$("next").onclick=function(){ if(idx(viewMonth)<idx(curMonth())){ viewMonth=key(idx(viewMonth)+1); render(); } };
+$("add").onclick=function(){ openForm(null); };
+$("q").oninput=function(){ query=this.value; render(); };
+Array.prototype.forEach.call(document.querySelectorAll(".seg button"),function(bt){
+  bt.onclick=function(){
+    filter=bt.getAttribute("data-f");
+    Array.prototype.forEach.call(document.querySelectorAll(".seg button"),function(x){x.setAttribute("aria-pressed",x===bt?"true":"false")});
+    render();
+  };
+});
+$("form").onsubmit=function(e){ e.preventDefault(); submitForm(false); };
+$("fAnother").onclick=function(){ submitForm(true); };
+$("fCancel").onclick=function(){ closeForm(); };
+$("overlay").addEventListener("keydown",function(e){ if(e.key==="Escape") closeForm(); });
+$("export").onclick=exportFile;
+$("importBtn").onclick=function(){ $("importFile").click(); };
+$("importFile").onchange=function(){ importFile(this.files[0]); this.value=""; };
+$("cur").onchange=function(){ state.currency=this.value.trim().slice(0,4); save(); render(); };
+
+load();
+render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+name: npm CLI checks
+
+on:
+  push:
+    branches: [main, audit/skill-token-efficiency, audit/universal-language-skill-consolidation]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# The checks only read the repository.
+permissions:
+  contents: read
+
+jobs:
+  # The package supports Node 18 and newer, so the main suite runs on every supported line.
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: node --version
+      - run: npm run check
+      - run: python3 -I tests/test_sync_skills.py
+      - run: npm pack --dry-run
+
+  # The benchmark sample app uses node:sqlite, which needs Node 22.13 or newer.
+  # It runs on Linux and Windows because the scoring script must work on both.
+  benchmark:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: ['22.13.0', 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: node --version
+      - run: npm run check:bench
+
+  # The installer writes and deletes files, so its path handling is checked on Windows too.
+  installer-windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --version
+      - run: node --test tests/cli.test.cjs tests/tier-install.test.cjs tests/lifecycle.test.cjs tests/install-matrix.test.cjs tests/references.test.cjs
+
+  # The single command a maintainer runs locally, so CI shows the same result.
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node --version
+      - run: npm run verify

@@ -1,0 +1,68 @@
+[
+ {
+  "task": "Users can't sign in anymore after the last deploy",
+  "primary": "debugging"
+ },
+ {
+  "task": "Add pagination to the products list endpoint",
+  "primary": "backend-api"
+ },
+ {
+  "task": "Our nightly job leaks memory",
+  "primary": "debugging"
+ },
+ {
+  "task": "Set up CI to run the tests on every push",
+  "primary": null
+ },
+ {
+  "task": "Why is the products page so slow?",
+  "primary": "debugging"
+ },
+ {
+  "task": "Rename the Order model to Purchase everywhere",
+  "primary": null
+ },
+ {
+  "task": "Add a dark mode toggle to the settings screen",
+  "primary": "frontend-engineering"
+ },
+ {
+  "task": "Encrypt user emails at rest",
+  "primary": "application-security"
+ },
+ {
+  "task": "Explain what the middleware in server.js does",
+  "primary": null
+ },
+ {
+  "task": "The nginx config returns 502 for /api",
+  "primary": "debugging"
+ },
+ {
+  "task": "Convert the Flask app to FastAPI",
+  "primary": "stack-migration"
+ },
+ {
+  "task": "Write a Go service that polls a weather API",
+  "primary": "language-engineering",
+  "knownMiss": true,
+  "note": "The API is something the service calls, not something it serves; the reference router still adds backend-api as a companion."
+ },
+ {
+  "task": "Add alt text and keyboard support to the image gallery",
+  "primary": "frontend-engineering"
+ },
+ {
+  "task": "Update the README with the new install steps",
+  "primary": null
+ },
+ {
+  "task": "Remove the unused dependencies",
+  "primary": null
+ },
+ {
+  "task": "Make the animation on the hero banner smoother",
+  "primary": "frontend-engineering"
+ }
+]

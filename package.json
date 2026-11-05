@@ -1,0 +1,81 @@
+{
+  "name": "create-universal-coding-agent-kit",
+  "version": "0.1.0",
+  "description": "Install UCA Kit, an IDE-agnostic AI coding-agent toolkit with reusable skills, workflows, and engineering guidance.",
+  "author": "Crazy Creators",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "create-universal-coding-agent-kit": "./bin/cli.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "LICENSE",
+    "AGENT-SKILL-MAP.md",
+    "USAGE-PRIVACY.md",
+    "PLATFORM-SETUP.md",
+    "UI-EFFECTS-GUIDE.md",
+    "bin/",
+    "scripts/",
+    "AGENTS.md",
+    ".agents/",
+    ".opencode/agents/",
+    ".opencode/plugins/",
+    ".github/copilot-instructions.md",
+    ".cursor/rules/",
+    ".devin/rules/",
+    ".windsurf/rules/",
+    ".junie/rules/",
+    ".aiassistant/rules/",
+    "CLAUDE.md",
+    "GEMINI.md",
+    "GENERIC-IDE-SETUP.md",
+    "OPENCODE-SETUP.md",
+    "HOST-CAPABILITY-FALLBACK.md",
+    ".cursor/agents/"
+  ],
+  "scripts": {
+    "test": "node --test tests/cli.test.cjs tests/context-recovery-policy.test.cjs tests/stack-migration-policy.test.cjs tests/usage.test.cjs tests/opencode-plugin.test.cjs tests/packlist.test.cjs tests/design-taste-discovery.test.cjs tests/skill-gap-router.test.cjs tests/consistency.test.cjs tests/lite-tier.test.cjs tests/tiers.test.cjs tests/tier-install.test.cjs tests/project-check.test.cjs tests/project-discover.test.cjs tests/debugging-skill.test.cjs tests/router-metadata.test.cjs tests/evaluation.test.cjs tests/routing.test.cjs tests/context-report.test.cjs tests/skill-quality.test.cjs tests/lifecycle.test.cjs tests/install-matrix.test.cjs tests/references.test.cjs tests/repo-hygiene.test.cjs tests/detect.test.cjs tests/design-check.test.cjs tests/directions.test.cjs tests/new-product-wiring.test.cjs tests/design-eval.test.cjs tests/post-install.test.cjs tests/verify.test.cjs tests/guard.test.cjs tests/senior-check.test.cjs",
+    "check": "node --check bin/cli.cjs && npm test",
+    "pack:dry-run": "npm pack --dry-run",
+    "verify": "node tests/verify.cjs",
+    "prepublishOnly": "npm run check && npm run check:bench",
+    "test:bench": "node --test tests/benchmark-fixtures.test.cjs tests/score-run.test.cjs",
+    "check:bench": "node --check benchmarks/score-run.cjs && node --check benchmarks/make-snapshot.cjs && npm run test:bench"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crazy-creator0/uca-kit.git"
+  },
+  "homepage": "https://github.com/crazy-creator0/uca-kit#readme",
+  "bugs": {
+    "url": "https://github.com/crazy-creator0/uca-kit/issues"
+  },
+  "keywords": [
+    "ai-coding-agent",
+    "coding-agent",
+    "ai-agents",
+    "agent-skills",
+    "developer-tools",
+    "ide-agnostic",
+    "claude-code",
+    "cursor",
+    "github-copilot",
+    "gemini-cli",
+    "opencode",
+    "windsurf",
+    "devin",
+    "jetbrains",
+    "full-stack",
+    "python",
+    "code-review",
+    "devops",
+    "developer-workflow",
+    "coding-assistant"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

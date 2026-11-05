@@ -1,0 +1,63 @@
+{
+  "lite": {
+    "description": "Small-context models (about 8k tokens): a short core and four condensed skills.",
+    "core": ".agents/lite/CORE.md",
+    "agents": ".agents/lite/AGENTS.md",
+    "skillsRoot": ".agents/lite",
+    "skills": [
+      "anti-hallucination",
+      "debugging",
+      "anti-ai-slop",
+      "import-hygiene"
+    ],
+    "extras": false,
+    "include": [
+      ".agents/PROJECT-TEMPLATE.md",
+      "scripts/uca-project-check.cjs",
+      "scripts/uca-project-discover.cjs",
+      "scripts/uca-guard.cjs"
+    ]
+  },
+  "standard": {
+    "description": "Default: the standard core, every skill (the router loads one at a time), router, and workflows.",
+    "core": ".agents/standard/CORE.md",
+    "agents": "AGENTS.md",
+    "skillsRoot": ".agents/skills",
+    "skills": [
+      "*"
+    ],
+    "extras": true,
+    "include": [
+      ".agents/PROJECT-TEMPLATE.md",
+      "scripts/uca-project-check.cjs",
+      "scripts/uca-project-discover.cjs",
+      "scripts/uca-route.cjs",
+      "PLATFORM-SETUP.md",
+      "scripts/uca-design-check.cjs",
+      "UI-EFFECTS-GUIDE.md",
+      "scripts/uca-guard.cjs",
+      "scripts/uca-senior-check.cjs"
+    ]
+  },
+  "full": {
+    "description": "Large-context models: every skill, workflows, and subagent dispatch notes.",
+    "core": ".agents/full/CORE.md",
+    "agents": "AGENTS.md",
+    "skillsRoot": ".agents/skills",
+    "skills": [
+      "*"
+    ],
+    "extras": true,
+    "include": [
+      ".agents/PROJECT-TEMPLATE.md",
+      "scripts/uca-project-check.cjs",
+      "scripts/uca-project-discover.cjs",
+      "scripts/uca-route.cjs",
+      "PLATFORM-SETUP.md",
+      "UI-EFFECTS-GUIDE.md",
+      "scripts/uca-design-check.cjs",
+      "scripts/uca-guard.cjs",
+      "scripts/uca-senior-check.cjs"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+order_id,customer,status,total,created_at
+1001,Asha Rao,completed,120.50,2026-01-05
+1002,"Smith, Anna",completed,80.00,2026-01-19
+1003,Li Wei,refunded,45.00,2026-01-20
+1004,Omar Ali,completed,19.99,2026-02-02
+1005,Asha Rao,completed,abc,2026-02-03
+1006,Ben Cho,completed,60.00,2026-02-30
+1004,Omar Ali,completed,19.99,2026-02-02
+1007,Dana Fox,cancelled,15.00,2026-02-10
+
+1008,Eve Park,completed,200.00,2026-03-01
+1009,"Quote ""Q"" Co",completed,30.25,2026-03-15
+1010,Sam Ray,completed,-5.00,2026-03-16
+1011,Tia Moon,completed,10.00

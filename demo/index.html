@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Same request, with and without the kit</title>
+<style>
+:root { --bg:#f6f4ef; --fg:#1d1b17; --muted:#625d54; --line:#d9d4c8; --card:#fffdf8; --accent:#1f5f4a; }
+@media (prefers-color-scheme: dark) { :root { --bg:#17160f; --fg:#efece4; --muted:#a8a294; --line:#3a372c; --card:#201f17; --accent:#7fcfaa; } }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui, sans-serif; }
+main { max-width: 46rem; margin: 0 auto; padding: 2rem 16px 4rem; }
+h1 { font-size: 1.6rem; line-height: 1.2; margin: 0 0 .5rem; }
+h2 { font-size: 1.1rem; margin: 2rem 0 .5rem; }
+p { margin: .5rem 0; }
+.muted { color: var(--muted); }
+.cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin: 1.2rem 0; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; }
+.card h3 { margin: 0 0 .3rem; font-size: 1rem; }
+a.btn { display: inline-block; margin-top: .6rem; padding: .55rem .9rem; border-radius: 8px; background: var(--accent); color: var(--bg); text-decoration: none; font-weight: 600; }
+a { color: var(--accent); }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 30rem; font-size: .95rem; }
+th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.note { border-left: 3px solid var(--accent); padding: .1rem .9rem; background: var(--card); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Same request, with and without the kit</h1>
+  <p class="muted">A fee tracker for a home tutor with 25 students, built twice by the same AI model in two separate sessions from the same request. One session had no kit. The other followed the kit's rules.</p>
+
+  <div class="cards">
+    <div class="card">
+      <h3>Without the kit</h3>
+      <p class="muted">Run A: empty folder. One file.</p>
+      <a class="btn" href="tuition-tracker/without-kit/index.html">Open the app</a>
+      <p><a href="tuition-tracker/without-kit/CLOSING-ANSWER.md">What it told the user</a></p>
+    </div>
+    <div class="card">
+      <h3>With the kit</h3>
+      <p class="muted">Run B: kit installed. App plus README and design notes.</p>
+      <a class="btn" href="tuition-tracker/with-kit/index.html">Open the app</a>
+      <p><a href="tuition-tracker/with-kit/CLOSING-ANSWER.md">What it told the user</a></p>
+    </div>
+  </div>
+
+  <h2>What was measured</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Check</th><th>Without</th><th>With</th></tr></thead>
+    <tbody>
+      <tr><td>Files the assistant left in the project</td><td>1 (index.html)</td><td>4 (index.html, README, design notes, .gitignore)</td></tr>
+      <tr><td>README with run steps</td><td>No</td><td>Yes</td></tr>
+      <tr><td>Automatic tests kept in the project</td><td>None</td><td>None (a browser check script was left in a scratch folder, not included here)</td></tr>
+      <tr><td>Page loads at phone width with no console errors (headless Chrome, checked by me)</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Senior Bar check (static checklist)</td><td>5 of 8</td><td>6 of 9</td></tr>
+      <tr><td>Closing answer says it is not ready yet and lists what was not checked</td><td>Yes</td><td>Yes</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>How to read this</h2>
+  <p class="note">This is one run per side, and the same model wrote both. The scores are close, and in this run the kit did not produce tests. An earlier run with different instructions produced a with-kit build with 14 tests, so results vary from run to run. The Senior Bar check is the kit's own checklist. It does not say which app is better to use. Open both and judge for yourself. Both keep records inside your browser only, so nothing here is sent anywhere.</p>
+  <p>The exact request, the answers given to questions, and the closing question are in <a href="tuition-tracker/PROMPT.md">PROMPT.md</a>. Neither app has been tried on a real phone by anyone. To repeat the run, follow the steps in PROMPT.md.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,112 @@
+# Secrets and environment-specific configuration
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+credentials.json
+service-account*.json
+secrets.json
+secrets.yml
+secrets.yaml
+
+# Local-only notes and agent state
+.private/
+.local/
+.agent-local/
+.agent-state/
+local-notes/
+scratch/
+private/
+*.local.md
+*.private.md
+SESSION-PRIVATE.md
+
+# Python caches, environments, and build outputs
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Node.js dependencies, caches, logs, and generated output
+node_modules/
+.npm/
+.npx/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+dist/
+build/
+.nyc_output/
+coverage/
+*.log
+
+# Test output and temporary artifacts — keep actual test source files tracked
+test-results/
+playwright-report/
+blob-report/
+artifacts/
+tmp/
+temp/
+
+# Large generated ML/data artifacts
+data/raw/
+datasets/private/
+model_weights/
+models/checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Local IDE and operating-system files
+# Private local UCA Kit usage ledger (including custom project-local paths)
+.uca-kit/usage.json
+.uca-kit/usage.json.tmp-*
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Local worktrees and temporary archives
+.worktrees/
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+
+# Internal maintainer notes for this public repository.
+# Keep these files local/private; user-facing release history belongs in README.md.
+/PROJECT-TRACKER.md
+/LICENSE-DECISION.md
+/docs/PROJECT-PLAN.md
+/docs/DECISIONS.md
+/docs/WORKLOG.md
+/.private-maintenance/
+
+# Workbench for optimization experiments
+workbench/
+

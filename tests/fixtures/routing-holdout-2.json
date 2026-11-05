@@ -1,0 +1,50 @@
+[
+ {
+  "task": "Reduce the p95 latency of the search endpoint",
+  "primary": "performance-engineering"
+ },
+ {
+  "task": "Our frontend bundle is 4 MB, get it under 1 MB",
+  "primary": "performance-engineering"
+ },
+ {
+  "task": "Profile the nightly import and find what takes the time",
+  "primary": "performance-engineering"
+ },
+ {
+  "task": "Clean the customers.csv file: remove duplicates and fix the date formats",
+  "primary": "data-engineering-analytics"
+ },
+ {
+  "task": "Build a nightly ETL that loads sales data into the warehouse",
+  "primary": "data-engineering-analytics"
+ },
+ {
+  "task": "Calculate monthly active users from the events export",
+  "primary": "data-engineering-analytics"
+ },
+ {
+  "task": "The CSV export shows the wrong totals",
+  "primary": "debugging"
+ },
+ {
+  "task": "Add an index so the report query runs faster",
+  "primary": "database-engineering"
+ },
+ {
+  "task": "Make the app faster",
+  "primary": "performance-engineering"
+ },
+ {
+  "task": "Write a script that turns the survey spreadsheet into average scores per question",
+  "primary": "data-engineering-analytics"
+ },
+ {
+  "task": "Add a new users table with email and created_at",
+  "primary": "database-engineering"
+ },
+ {
+  "task": "Reduce memory usage of the image resizing worker",
+  "primary": "performance-engineering"
+ }
+]

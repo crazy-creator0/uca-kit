@@ -1,0 +1,60 @@
+[
+ {
+  "task": "Generate a gym membership portal",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "Code a small inventory tool for my shop",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "Create a hotel booking website",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "Build a simple blog",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "Make a quiz game for kids",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "Create a CRM for my freelance work",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "I want to open a restaurant, make me something to track tables and orders",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "Create a cafe menu page",
+  "primary": "design-taste-discovery"
+ },
+ {
+  "task": "Develop a pharmacy stock manager",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "Make a habit tracker for my phone",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ }
+]

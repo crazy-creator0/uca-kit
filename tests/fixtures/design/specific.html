@@ -1,0 +1,14 @@
+<!doctype html>
+<html><head>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=Newsreader" rel="stylesheet">
+<style>
+:root { --paper: #f4efe6; --ink: #1d1b16; --rule: #c9bfa9; --stamp: #b3261e; --radius: 2px; }
+body { font-family: "Newsreader", Georgia, serif; background: var(--paper); color: var(--ink); }
+.ledger { font-family: "IBM Plex Mono", monospace; border-top: 2px solid var(--ink); }
+.row { border-bottom: 1px solid var(--rule); display: grid; grid-template-columns: 6rem 1fr 8rem; }
+.overdue { color: var(--stamp); }
+</style></head><body>
+<h1>Invoices due this week</h1>
+<div class="ledger"><div class="row"><span>0412</span><span>Harbour Print Co.</span><span class="overdue">3 days late</span></div></div>
+<button>Record payment</button>
+</body></html>

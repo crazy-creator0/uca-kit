@@ -1,0 +1,78 @@
+[
+ {
+  "task": "Create a cafe management file",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "Build a booking site for my yoga studio",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "Make a school management system",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "I need an admin dashboard for my bakery",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "Create a simple expense tracker app",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "Design a website for my dental clinic",
+  "primary": "design-taste-discovery"
+ },
+ {
+  "task": "Make a recipe sharing web app",
+  "primary": "new-project",
+  "companion": "design-taste-discovery",
+  "note": "Changed on purpose when whole new products started the new-project workflow with the design skill beside it (was: design primary)."
+ },
+ {
+  "task": "Build a REST API for orders with FastAPI",
+  "primary": "backend-api"
+ },
+ {
+  "task": "Write a unit test for the parse_date function",
+  "primary": "testing-and-code-review"
+ },
+ {
+  "task": "Create a database migration that adds a status column to orders",
+  "primary": "database-engineering"
+ },
+ {
+  "task": "The login page throws a 500 error after the update",
+  "primary": "debugging"
+ },
+ {
+  "task": "Store user passwords safely and add a login check",
+  "primary": "application-security"
+ },
+ {
+  "task": "Create a React component for a date picker",
+  "primary": "frontend-engineering"
+ },
+ {
+  "task": "Make the dashboard load faster",
+  "primary": "performance-engineering"
+ },
+ {
+  "task": "Build a cafe management API with Django",
+  "primary": "backend-api"
+ },
+ {
+  "task": "Explain how a mutex works",
+  "primary": null
+ }
+]

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fee Tracker</title>
+<style>
+  :root{--bg:#f4f5f7;--card:#fff;--ink:#1d2433;--mute:#667085;--line:#e3e6ec;--accent:#2457d6;--ok:#16794c;--okbg:#e4f5ec;--bad:#b42318;--badbg:#fdeceb}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:720px;margin:0 auto;padding:12px 14px 80px}
+  h1{font-size:20px;margin:6px 0 10px}
+  .summary{background:var(--accent);color:#fff;border-radius:14px;padding:16px;display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap}
+  .summary .big{font-size:32px;font-weight:700;line-height:1.1}
+  .summary .small{font-size:13px;opacity:.9}
+  .warn{background:#fff4d6;border:1px solid #f0d27a;border-radius:10px;padding:10px 12px;margin:10px 0;font-size:14px}
+  .bar{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+  input,select,button{font:inherit}
+  input,select{padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;min-width:0}
+  .bar input[type=search]{flex:1 1 140px}
+  button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.good{background:var(--ok);border-color:var(--ok);color:#fff}
+  button.danger{color:var(--bad);border-color:#f2c1bd}
+  button.small{padding:6px 10px;font-size:14px}
+  .student{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+  .head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+  .name{font-weight:600;overflow-wrap:anywhere}
+  .sub{font-size:13px;color:var(--mute)}
+  .owe{text-align:right;white-space:nowrap}
+  .owe b{font-size:18px}
+  .owe.due b{color:var(--bad)} .owe.clear b{color:var(--ok)}
+  .body{border-top:1px solid var(--line);padding:12px 14px;background:#fafbfc}
+  .months{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin:8px 0 12px}
+  .m{border:1px solid var(--line);border-radius:10px;padding:8px;background:#fff;text-align:left;font-size:14px}
+  .m.paid{background:var(--okbg);border-color:#b7e2c8;color:var(--ok)}
+  .m.unpaid{background:var(--badbg);border-color:#f4c7c3;color:var(--bad)}
+  .m small{display:block;opacity:.85}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .empty{text-align:center;color:var(--mute);padding:30px 10px}
+  dialog{border:none;border-radius:14px;padding:18px;width:min(92vw,460px);box-shadow:0 10px 40px rgba(0,0,0,.3)}
+  dialog::backdrop{background:rgba(0,0,0,.4)}
+  label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
+  dialog input,dialog select,dialog textarea{width:100%}
+  textarea{font:inherit;padding:10px;border:1px solid var(--line);border-radius:10px;min-height:140px}
+  .foot{margin-top:24px;font-size:13px;color:var(--mute)}
+  .fab{position:fixed;right:16px;bottom:16px;box-shadow:0 4px 14px rgba(0,0,0,.25);border-radius:999px;padding:14px 20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Student Fee Tracker</h1>
+
+  <div class="summary">
+    <div>
+      <div class="small">Total still pending (up to <span id="nowLabel"></span>)</div>
+      <div class="big" id="totalPending">0</div>
+    </div>
+    <div class="small" id="summaryCount"></div>
+  </div>
+
+  <div id="warn" class="warn" hidden></div>
+
+  <div class="bar">
+    <input type="search" id="search" placeholder="Search student name">
+    <select id="filter">
+      <option value="all">All students</option>
+      <option value="owing">Only those who owe</option>
+      <option value="clear">Only fully paid</option>
+    </select>
+  </div>
+
+  <div id="list"></div>
+
+  <div class="foot">
+    <div class="row">
+      <button id="bulkBtn">Add many students</button>
+      <button id="exportBtn">Save backup file</button>
+      <button id="importBtn">Restore backup</button>
+      <button id="currBtn">Currency label</button>
+    </div>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
+    <p>Your records are saved inside this browser on this device only. Use "Save backup file" now and then (for example at the end of each month) so you never lose them.</p>
+  </div>
+</div>
+
+<button class="primary fab" id="addBtn">+ Add student</button>
+
+<dialog id="studentDlg">
+  <form method="dialog" id="studentForm">
+    <h2 id="studentTitle" style="margin:0 0 4px">Student</h2>
+    <label for="fName">Name</label>
+    <input id="fName" required maxlength="80">
+    <label for="fFee">Monthly fee</label>
+    <input id="fFee" type="number" inputmode="numeric" min="0" step="any" required>
+    <label for="fStart">Fees start from (month)</label>
+    <input id="fStart" type="month" required>
+    <div class="row" style="justify-content:flex-end;margin-top:16px">
+      <button type="button" id="studentCancel">Cancel</button>
+      <button type="submit" class="primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="bulkDlg">
+  <form method="dialog" id="bulkForm">
+    <h2 style="margin:0 0 4px">Add many students</h2>
+    <div class="sub">One student per line: name, then a comma, then the monthly fee. Example:<br>Asha, 1200<br>Ravi, 800</div>
+    <label for="bStart">Fees start from (month)</label>
+    <input id="bStart" type="month" required>
+    <label for="bText">Students</label>
+    <textarea id="bText" placeholder="Asha, 1200&#10;Ravi, 800"></textarea>
+    <div class="row" style="justify-content:flex-end;margin-top:16px">
+      <button type="button" id="bulkCancel">Cancel</button>
+      <button type="submit" class="primary">Add</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* ===== LOGIC (no screen code here) ===== */
+// LOGIC-START
+function monthIndex(key){ var p=key.split('-'); return parseInt(p[0],10)*12+(parseInt(p[1],10)-1); }
+function monthKey(idx){ var y=Math.floor(idx/12), m=idx%12+1; return y+'-'+(m<10?'0':'')+m; }
+function nowKey(d){ d=d||new Date(); return d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1); }
+var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function monthLabel(key){ var p=key.split('-'); return MONTHS[parseInt(p[1],10)-1]+' '+p[0]; }
+function monthsDue(student, currentKey){
+  var out=[], a=monthIndex(student.start), b=monthIndex(currentKey);
+  for(var i=a;i<=b;i++) out.push(monthKey(i));
+  return out;
+}
+function unpaidMonths(student, currentKey){
+  return monthsDue(student,currentKey).filter(function(k){ return !(k in student.paid); });
+}
+function owed(student, currentKey){ return unpaidMonths(student,currentKey).length*student.fee; }
+function totalPending(students, currentKey){
+  return students.reduce(function(s,st){ return s+owed(st,currentKey); },0);
+}
+function parseBulk(text){
+  var ok=[], bad=[];
+  text.split(/\r?\n/).forEach(function(line){
+    line=line.trim(); if(!line) return;
+    var i=line.lastIndexOf(',');
+    if(i<1){ bad.push(line); return; }
+    var name=line.slice(0,i).trim(), fee=Number(line.slice(i+1).trim());
+    if(!name || !isFinite(fee) || fee<0 || line.slice(i+1).trim()==='' || /,\s*\d+$/.test(name)){ bad.push(line); return; }
+    ok.push({name:name,fee:fee});
+  });
+  return {ok:ok,bad:bad};
+}
+function validData(d){
+  if(!d || !Array.isArray(d.students)) return false;
+  return d.students.every(function(s){
+    return s && typeof s.name==='string' && typeof s.fee==='number' && isFinite(s.fee) &&
+      typeof s.start==='string' && /^\d{4}-\d{2}$/.test(s.start) && s.paid && typeof s.paid==='object';
+  });
+}
+// LOGIC-END
+
+/* ===== SCREEN + STORAGE ===== */
+var KEY='feeTracker.v1';
+var state={students:[],currency:''};
+var current=nowKey();
+var expanded={};
+var storageOK=true;
+
+function uid(){ return 's'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function load(){
+  try{
+    var raw=localStorage.getItem(KEY);
+    if(raw){ var d=JSON.parse(raw); if(validData(d)){ state.students=d.students; state.currency=d.currency||''; } else showWarn('Saved data looked damaged and was not loaded. Your old data is still in the browser; do not add anything until you ask for help.'); }
+  }catch(e){ storageOK=false; showWarn('This browser is blocking saving. You can use the app, but nothing will be remembered after you close it.'); }
+}
+function save(){
+  try{ localStorage.setItem(KEY,JSON.stringify(state)); }
+  catch(e){ storageOK=false; showWarn('Could not save! Your last change is NOT stored. Use "Save backup file" now.'); }
+}
+function showWarn(t){ var w=document.getElementById('warn'); w.textContent=t; w.hidden=false; }
+function money(n){ var s=Math.round(n*100)/100; s=s.toLocaleString(undefined,{maximumFractionDigits:2}); return (state.currency?state.currency+' ':'')+s; }
+function el(tag,cls,text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!==undefined) e.textContent=text; return e; }
+
+function render(){
+  document.getElementById('nowLabel').textContent=monthLabel(current);
+  document.getElementById('totalPending').textContent=money(totalPending(state.students,current));
+  var owing=state.students.filter(function(s){return owed(s,current)>0;}).length;
+  document.getElementById('summaryCount').textContent=state.students.length+' students, '+owing+' owe money';
+
+  var q=document.getElementById('search').value.trim().toLowerCase();
+  var f=document.getElementById('filter').value;
+  var list=state.students.filter(function(s){
+    if(q && s.name.toLowerCase().indexOf(q)<0) return false;
+    var o=owed(s,current);
+    if(f==='owing' && o<=0) return false;
+    if(f==='clear' && o>0) return false;
+    return true;
+  }).sort(function(a,b){ return a.name.localeCompare(b.name); });
+
+  var box=document.getElementById('list'); box.textContent='';
+  if(!state.students.length){ box.appendChild(el('div','empty','No students yet. Tap "+ Add student" or "Add many students" below.')); return; }
+  if(!list.length){ box.appendChild(el('div','empty','No students match.')); return; }
+  list.forEach(function(s){ box.appendChild(card(s)); });
+}
+
+function card(s){
+  var o=owed(s,current), un=unpaidMonths(s,current);
+  var c=el('div','student');
+  var h=el('div','head');
+  var left=el('div');
+  left.appendChild(el('div','name',s.name));
+  left.appendChild(el('div','sub','Fee '+money(s.fee)+' per month'));
+  var right=el('div','owe '+(o>0?'due':'clear'));
+  right.appendChild(el('b',null,o>0?money(o):'Paid up'));
+  right.appendChild(el('div','sub',o>0?(un.length+(un.length===1?' month':' months')+' unpaid'):'nothing due'));
+  h.appendChild(left); h.appendChild(right);
+  h.onclick=function(){ expanded[s.id]=!expanded[s.id]; render(); };
+  c.appendChild(h);
+
+  if(expanded[s.id]){
+    var b=el('div','body');
+    b.appendChild(el('div','sub','Tap a month to switch it between paid and unpaid.'));
+    var grid=el('div','months');
+    monthsDue(s,current).forEach(function(k){
+      var paid=(k in s.paid);
+      var m=el('button','m '+(paid?'paid':'unpaid'));
+      m.type='button';
+      m.appendChild(document.createTextNode(monthLabel(k)));
+      m.appendChild(el('small',null,paid?('Paid '+money(s.paid[k])):('Owes '+money(s.fee))));
+      m.onclick=function(ev){ ev.stopPropagation(); toggle(s,k); };
+      grid.appendChild(m);
+    });
+    b.appendChild(grid);
+    var row=el('div','row');
+    if(un.length){
+      var one=el('button','good','Mark '+monthLabel(un[0])+' paid'); one.type='button';
+      one.onclick=function(){ toggle(s,un[0]); };
+      row.appendChild(one);
+      if(un.length>1){
+        var all=el('button',null,'Mark all '+un.length+' paid'); all.type='button';
+        all.onclick=function(){ if(confirm('Mark all '+un.length+' unpaid months of '+s.name+' as paid?')){ un.forEach(function(k){ s.paid[k]=s.fee; }); save(); render(); } };
+        row.appendChild(all);
+      }
+    }
+    var ed=el('button',null,'Edit'); ed.type='button'; ed.onclick=function(){ openStudent(s); };
+    var del=el('button','danger','Delete'); del.type='button';
+    del.onclick=function(){ if(confirm('Delete '+s.name+' and all their payment records? This cannot be undone.')){ state.students=state.students.filter(function(x){return x.id!==s.id;}); save(); render(); } };
+    row.appendChild(ed); row.appendChild(del);
+    b.appendChild(row);
+    c.appendChild(b);
+  }
+  return c;
+}
+
+function toggle(s,k){
+  if(k in s.paid) delete s.paid[k]; else s.paid[k]=s.fee;
+  save(); render();
+}
+
+/* student dialog */
+var editing=null;
+var sd=document.getElementById('studentDlg');
+function openStudent(s){
+  editing=s||null;
+  document.getElementById('studentTitle').textContent=s?'Edit student':'Add student';
+  document.getElementById('fName').value=s?s.name:'';
+  document.getElementById('fFee').value=s?s.fee:'';
+  document.getElementById('fStart').value=s?s.start:current;
+  sd.showModal();
+}
+document.getElementById('addBtn').onclick=function(){ openStudent(null); };
+document.getElementById('studentCancel').onclick=function(){ sd.close(); };
+document.getElementById('studentForm').onsubmit=function(){
+  var name=document.getElementById('fName').value.trim();
+  var fee=Number(document.getElementById('fFee').value);
+  var start=document.getElementById('fStart').value;
+  if(!name||!isFinite(fee)||fee<0||!/^\d{4}-\d{2}$/.test(start)) return;
+  if(editing){ editing.name=name; editing.fee=fee; editing.start=start; }
+  else{ var s={id:uid(),name:name,fee:fee,start:start,paid:{}}; state.students.push(s); expanded[s.id]=true; }
+  save(); render();
+};
+
+/* bulk dialog */
+var bd=document.getElementById('bulkDlg');
+document.getElementById('bulkBtn').onclick=function(){ document.getElementById('bStart').value=current; document.getElementById('bText').value=''; bd.showModal(); };
+document.getElementById('bulkCancel').onclick=function(){ bd.close(); };
+document.getElementById('bulkForm').onsubmit=function(ev){
+  var start=document.getElementById('bStart').value;
+  var r=parseBulk(document.getElementById('bText').value);
+  if(r.bad.length){
+    ev.preventDefault();
+    alert('Nothing was added. Please fix these lines (use: name, fee):\n\n'+r.bad.join('\n'));
+    return;
+  }
+  r.ok.forEach(function(x){ state.students.push({id:uid(),name:x.name,fee:x.fee,start:start,paid:{}}); });
+  save(); render();
+  if(r.ok.length) alert('Added '+r.ok.length+' students.');
+};
+
+/* backup / restore / currency */
+document.getElementById('exportBtn').onclick=function(){
+  var blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='fee-backup-'+nowKey()+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+};
+document.getElementById('importBtn').onclick=function(){ document.getElementById('importFile').click(); };
+document.getElementById('importFile').onchange=function(ev){
+  var file=ev.target.files[0]; if(!file) return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var d=JSON.parse(r.result);
+      if(!validData(d)) throw new Error('bad');
+      if(!confirm('Replace everything currently in the app with this backup ('+d.students.length+' students)?')) return;
+      state.students=d.students; state.currency=d.currency||''; save(); render();
+    }catch(e){ alert('That file is not a valid backup. Nothing was changed.'); }
+  };
+  r.readAsText(file); ev.target.value='';
+};
+document.getElementById('currBtn').onclick=function(){
+  var v=prompt('Currency label shown before amounts (for example Rs or $). Leave empty for none:',state.currency);
+  if(v===null) return;
+  state.currency=v.trim().slice(0,5); save(); render();
+};
+
+document.getElementById('search').oninput=render;
+document.getElementById('filter').onchange=render;
+load(); render();
+</script>
+</body>
+</html>

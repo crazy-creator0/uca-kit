@@ -1,0 +1,61 @@
+{
+  "all": {
+    "description": "Every canonical skill. Largest context footprint; the router still loads only one primary skill (plus at most one companion) per task.",
+    "skills": [
+      "*"
+    ]
+  },
+  "minimal": {
+    "description": "Evergreen guardrails only. Smallest install for vibe coders who want safety without stack knowledge.",
+    "skills": [
+      "anti-ai-slop",
+      "anti-hallucination",
+      "skill-gap-router"
+    ]
+  },
+  "fullstack": {
+    "description": "Guardrails plus testing, backend/API, database, and debugging skills for typical web and app repos.",
+    "skills": [
+      "anti-ai-slop",
+      "anti-hallucination",
+      "skill-gap-router",
+      "testing-and-code-review",
+      "backend-api",
+      "database-engineering",
+      "debugging",
+      "import-hygiene",
+      "performance-engineering",
+      "data-engineering-analytics"
+    ]
+  },
+  "frontend": {
+    "description": "Fullstack plus frontend engineering, visuals/3D, and design-taste discovery for projects with a UI layer.",
+    "skills": [
+      "anti-ai-slop",
+      "anti-hallucination",
+      "skill-gap-router",
+      "testing-and-code-review",
+      "backend-api",
+      "database-engineering",
+      "debugging",
+      "import-hygiene",
+      "frontend-engineering",
+      "frontend-visuals-and-3d",
+      "design-taste-discovery",
+      "language-engineering",
+      "performance-engineering",
+      "data-engineering-analytics"
+    ]
+  },
+  "security-focused": {
+    "description": "Guardrails plus application security for projects where secrets, auth, or data protection dominate.",
+    "skills": [
+      "anti-ai-slop",
+      "anti-hallucination",
+      "skill-gap-router",
+      "testing-and-code-review",
+      "application-security",
+      "debugging"
+    ]
+  }
+}

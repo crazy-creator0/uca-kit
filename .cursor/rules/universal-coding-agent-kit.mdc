@@ -1,0 +1,12 @@
+---
+description: Pointer to the shared UCA Kit project instructions
+alwaysApply: true
+---
+
+Follow root `AGENTS.md`.
+
+Skills are in `.agents/skills/<name>/SKILL.md`. Open only the skill the task needs, and read it before relying on it.
+
+Cursor can delegate to project subagents under `.cursor/agents/` when the task and their descriptions justify it: `designer` for meaningful user-facing design work and `service-strategist` for business or service-offering planning. Do not use them for simple tasks. If Cursor does not offer or run subagents, do the work one step at a time and say delegation was unavailable. `HOST-CAPABILITY-FALLBACK.md` has details when it is installed.
+
+Use a local budget integration only if it is available and verified. The OpenCode usage plugin does not apply to Cursor.
