@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UCA Kit field manual</title>
+<meta name="description" content="What the UCA Kit does for an AI coding assistant, how to install it, and what it does not do.">
+<style>
+/* Brief: a printed field manual. Paper and ink, one rust accent, ruled lines, no shadows, 2px corners.
+   Type: Georgia for reading, Consolas or the system monospace for commands. 8px spacing step. */
+:root {
+  --paper: #f4f1ea; --panel: #ebe6da; --ink: #1b1a17; --muted: #5d584d; --rule: #cfc8b8;
+  --accent: #b4491f; --ok: #2f6b3f; --stop: #a32d2d;
+  --serif: Georgia, "Times New Roman", serif;
+  --mono: Consolas, "SFMono-Regular", "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --paper: #181713; --panel: #221f19; --ink: #ece8dd; --muted: #a39d8e; --rule: #3a362c; --accent: #e8855a; --ok: #6fc28a; --stop: #ee8a8a; }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/1.65 var(--serif); }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 64rem; margin: 0 auto; padding: 0 16px; }
+header.top { border-bottom: 2px solid var(--ink); padding: 32px 0 16px; }
+header.top .mark { font: 700 13px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+header.top h1 { font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.08; margin: 8px 0 8px; font-weight: 700; }
+header.top p { margin: 0; max-width: 40rem; color: var(--muted); }
+.cols { display: block; }
+nav.toc { border-bottom: 1px solid var(--rule); padding: 16px 0; font: 15px/1.9 var(--mono); }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 16px; }
+nav.toc a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
+nav.toc a:hover { border-color: var(--accent); }
+main { max-width: 42rem; padding-bottom: 64px; }
+section { padding-top: 40px; }
+h2 { font-size: 1.5rem; line-height: 1.2; margin: 0 0 16px; padding-top: 8px; border-top: 1px solid var(--ink); }
+h2 .n { font: 700 14px var(--mono); color: var(--accent); margin-right: 8px; }
+h3 { font-size: 1.05rem; margin: 24px 0 8px; }
+p { margin: 0 0 16px; }
+code { font: 0.86em var(--mono); background: var(--panel); padding: 1px 5px; border-radius: 2px; }
+.cmd { position: relative; margin: 0 0 16px; background: var(--panel); border-left: 3px solid var(--accent); border-radius: 2px; }
+.cmd pre { margin: 0; padding: 12px 88px 12px 16px; overflow-x: auto; font: 15px/1.5 var(--mono); }
+.cmd button { position: absolute; top: 8px; right: 8px; font: 13px var(--mono); background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 2px; padding: 4px 8px; cursor: pointer; }
+.cmd button[hidden] { display: none; }
+table { border-collapse: collapse; width: 100%; font-size: 16px; margin: 0 0 16px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); }
+th { font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.scroll { overflow-x: auto; }
+.scroll table { min-width: 34rem; }
+.fig { margin: 24px 0; padding: 16px; background: var(--panel); border-radius: 2px; }
+.fig .row { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+.fig ol { margin: 0; padding-left: 24px; flex: 1 1 14rem; }
+.fig ol li { margin: 0 0 8px; }
+.fig svg { flex: 0 0 auto; width: 100%; max-width: 15rem; height: auto; }
+.fig .cap { margin: 12px 0 0; font: 13px/1.5 var(--mono); color: var(--muted); }
+.pause { font: 13px var(--mono); background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 2px; padding: 4px 8px; cursor: pointer; margin-top: 12px; }
+.pause[hidden] { display: none; }
+.note { border-left: 3px solid var(--ink); padding: 0 16px; margin: 0 0 16px; color: var(--muted); }
+.stop { color: var(--stop); font-weight: 700; }
+details { margin: 0 0 16px; }
+summary { cursor: pointer; font: 15px var(--mono); }
+details ul { margin: 8px 0 0; padding-left: 20px; font-size: 16px; }
+footer { border-top: 2px solid var(--ink); padding: 24px 0 64px; font-size: 15px; color: var(--muted); }
+footer p { margin: 0 0 12px; max-width: 42rem; }
+@media (min-width: 60rem) {
+  .cols { display: grid; grid-template-columns: 12rem 1fr; gap: 48px; }
+  nav.toc { border-bottom: 0; padding-top: 40px; position: sticky; top: 0; align-self: start; }
+  nav.toc ol { display: block; }
+  nav.toc li { margin-bottom: 4px; }
+}
+
+/* Animated figures: each station lights up in turn. Pure CSS, loops, pausable. */
+.anim .st { opacity: .5; animation: lit 10s infinite; animation-delay: calc(var(--i) * 1.5s); }
+.anim.paused .st, .anim.paused .tick { animation-play-state: paused; }
+.anim .line { stroke: var(--rule); }
+.anim .dot { fill: var(--paper); stroke: var(--ink); stroke-width: 2; }
+.anim .lbl { font: 700 11px var(--mono); fill: var(--ink); }
+.anim .sub { font: 10px var(--mono); fill: var(--muted); }
+.anim .hot .dot { stroke: var(--accent); fill: var(--accent); }
+.anim .bad .dot, .anim .bad .tick { stroke: var(--stop); }
+.anim .tick { fill: none; stroke: var(--ok); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 10s infinite; animation-delay: calc(var(--i) * 1.5s); }
+@keyframes lit { 0% { opacity: .5; } 4%, 14% { opacity: 1; } 22%, 100% { opacity: .7; } }
+@keyframes draw { 0% { stroke-dashoffset: 1; } 5%, 100% { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .anim .st { animation: none; opacity: 1; }
+  .anim .tick { animation: none; stroke-dashoffset: 0; }
+  .pause { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="mark">UCA Kit · field manual</div>
+  <h1>Rules, checks and a paper trail for an AI coding assistant.</h1>
+  <p>The kit is a set of instructions and small read-only scripts you install into a project. It makes the assistant plan first, check its work, and say what it did not check. It does not write code itself and it does not guarantee results.</p>
+</header>
+
+<div class="cols">
+<nav class="toc" aria-label="Contents">
+  <ol>
+    <li><a href="#what">1 What it is</a></li>
+    <li><a href="#install">2 Install</a></li>
+    <li><a href="#flow">3 A task, step by step</a></li>
+    <li><a href="#tiers">4 Tiers</a></li>
+    <li><a href="#guard">5 Handoff guard</a></li>
+    <li><a href="#bar">6 Senior Bar check</a></li>
+    <li><a href="#demo">7 Side-by-side demo</a></li>
+    <li><a href="#limits">8 Limits</a></li>
+  </ol>
+</nav>
+
+<main>
+<section id="what">
+  <h2><span class="n">01</span>What it is</h2>
+  <p>You install it once per project. Your coding assistant reads the instructions in that folder and follows them. The kit is plain files: a short core rulebook, optional skills for jobs such as debugging or design, workflows, and a few scripts that only read your project.</p>
+  <p>What you get, in practice:</p>
+  <ul>
+    <li>A short plan before a new app is built, with at most three questions, each with a default.</li>
+    <li>A finishing scorecard that has to say Done, Left, or Not checked for each line.</li>
+    <li>A guard that notices when the assistant is stuck and prepares a handoff to another model.</li>
+    <li>A read-only checklist, the Senior Bar check, for the basics every project should have.</li>
+  </ul>
+  <p class="note">It is a set of instructions, so it is only as reliable as the model following them. Scripts check things in code. Instructions ask.</p>
+</section>
+
+<section id="install">
+  <h2><span class="n">02</span>Install</h2>
+  <p>You need Node.js 18 or newer. Run this in the root of your project:</p>
+  <div class="cmd"><pre><code>npx --yes github:crazy-creator0/uca-kit init . --platform generic</code></pre><button type="button" hidden data-copy>Copy</button></div>
+  <p>Omit <code>--platform</code> to choose from a list, or add <code>--dry-run</code> to preview the files without writing anything. Git is recommended but never required, and the kit asks before it runs <code>git init</code>.</p>
+  <p>To remove it later, use the installer's <code>uninstall</code> command. Files you edited are kept.</p>
+</section>
+
+<section id="flow">
+  <h2><span class="n">03</span>A task, step by step</h2>
+  <p>For a new app, the assistant is told to follow the new-project workflow in <code>.agents/workflows/new-project.md</code>. This is the order it follows.</p>
+  <div class="fig anim" id="fig-flow">
+    <div class="row">
+      <svg viewBox="0 0 240 400" aria-hidden="true" focusable="false">
+        <line class="line" x1="28" y1="30" x2="28" y2="350" stroke-width="2"/>
+        <g class="st" style="--i:0"><circle class="dot" cx="28" cy="30" r="9"/><text class="lbl" x="48" y="34">Read</text></g>
+        <g class="st" style="--i:1"><circle class="dot" cx="28" cy="94" r="9"/><text class="lbl" x="48" y="98">Ask (max 3)</text></g>
+        <g class="st" style="--i:2"><circle class="dot" cx="28" cy="158" r="9"/><text class="lbl" x="48" y="162">Plan</text></g>
+        <g class="st" style="--i:3"><circle class="dot" cx="28" cy="222" r="9"/><text class="lbl" x="48" y="226">Build one slice</text></g>
+        <g class="st" style="--i:4"><circle class="dot" cx="28" cy="286" r="9"/><text class="lbl" x="48" y="290">Check</text></g>
+        <g class="st hot" style="--i:5"><circle class="dot" cx="28" cy="350" r="9"/><text class="lbl" x="48" y="354">Scorecard</text></g>
+      </svg>
+      <ol>
+        <li><strong>Read.</strong> The request, attached files and the folder come first. Nothing already answered is asked again.</li>
+        <li><strong>Ask.</strong> At most three questions that change the build, each with a default so "go ahead" works.</li>
+        <li><strong>Plan.</strong> Who uses it, the main objects, the stack and why, the files, the first slice, and how it will be checked.</li>
+        <li><strong>Build one slice.</strong> One small working piece, not the whole app in one go.</li>
+        <li><strong>Check.</strong> Run the project's tests, then the Senior Bar check when installed.</li>
+        <li><strong>Scorecard.</strong> At most 12 lines: what is Done, what is Left, what was not checked.</li>
+      </ol>
+    </div>
+    <button type="button" class="pause" hidden data-pause="fig-flow">Pause animation</button>
+    <p class="cap">The highlight only shows the order. It is not a progress bar.</p>
+  </div>
+</section>
+
+<section id="tiers">
+  <h2><span class="n">04</span>Tiers</h2>
+  <p>The tier decides how much guidance is installed, so it fits your model's context size.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Tier</th><th>Use it for</th><th>What is installed</th></tr></thead>
+    <tbody>
+      <tr><td><code>lite</code></td><td>Small models, about 8k tokens of context</td><td>A short core and four condensed skills</td></tr>
+      <tr><td><code>standard</code></td><td>The default</td><td>The standard core, every skill (loaded one at a time), the router and the workflows</td></tr>
+      <tr><td><code>full</code></td><td>Large-context models</td><td>Every skill, the workflows and subagent dispatch notes</td></tr>
+    </tbody>
+  </table></div>
+  <div class="cmd"><pre><code>npx --yes github:crazy-creator0/uca-kit init . --platform claude --tier standard</code></pre><button type="button" hidden data-copy>Copy</button></div>
+</section>
+
+<section id="guard">
+  <h2><span class="n">05</span>Handoff guard</h2>
+  <p>When you list several models in <code>.uca/config.json</code>, the assistant runs its checks through <code>scripts/uca-guard.cjs</code>. If it fails the same way twice, gets worse, or changes too much at once, the script prepares a handoff instead of letting the assistant keep guessing.</p>
+  <div class="fig anim" id="fig-guard">
+    <div class="row">
+      <svg viewBox="0 0 240 400" aria-hidden="true" focusable="false">
+        <line class="line" x1="28" y1="30" x2="28" y2="350" stroke-width="2"/>
+        <g class="st" style="--i:0"><circle class="dot" cx="28" cy="30" r="9"/><text class="lbl" x="48" y="34">Run the check</text></g>
+        <g class="st bad" style="--i:1"><circle class="dot" cx="28" cy="94" r="9"/><text class="lbl" x="48" y="98">Same error twice</text></g>
+        <g class="st" style="--i:2"><circle class="dot" cx="28" cy="158" r="9"/><text class="lbl" x="48" y="162">Snapshot</text></g>
+        <g class="st" style="--i:3"><circle class="dot" cx="28" cy="222" r="9"/><text class="lbl" x="48" y="226">Restore last pass</text></g>
+        <g class="st" style="--i:4"><circle class="dot" cx="28" cy="286" r="9"/><text class="lbl" x="48" y="290">Write HANDOFF.md</text></g>
+        <g class="st hot" style="--i:5"><circle class="dot" cx="28" cy="350" r="9"/><text class="lbl" x="48" y="354">Switch model</text></g>
+      </svg>
+      <ol>
+        <li><strong>Run the check</strong> through the guard, for example your test command.</li>
+        <li><strong>A trigger fires:</strong> the same error twice, results worse than before, three or more files changed, empty or garbled output, or a timeout.</li>
+        <li><strong>Snapshot</strong> of the current state goes to <code>.uca/backup/</code> first.</li>
+        <li><strong>Restore</strong> the last passing copy, which the guard keeps itself. It never runs Git.</li>
+        <li><strong>HANDOFF.md</strong> is written from tool output only, with common secrets masked. No model writes conclusions in it.</li>
+        <li><strong>Switch</strong> message names the next model. After the last model it prints <span class="stop">STOP</span> and exits with code 4.</li>
+      </ol>
+    </div>
+    <button type="button" class="pause" hidden data-pause="fig-guard">Pause animation</button>
+    <p class="cap">Exit codes: 0 passed, 1 failed with no trigger yet, 2 usage or config error, 3 handoff written, 4 stop.</p>
+  </div>
+  <p class="note">The guard guards against honest mistakes. It is not a security boundary, and the redaction of secrets is best effort. A failure right after a pass counts as "worse", so it is strict.</p>
+</section>
+
+<section id="bar">
+  <h2><span class="n">06</span>Senior Bar check</h2>
+  <p><code>node scripts/uca-senior-check.cjs .</code> looks at a project and reports the basics that are present or missing. It reads files only. It never runs your code, never writes, never opens <code>.env</code> or key files, and never prints a secret.</p>
+  <div class="fig anim" id="fig-bar">
+    <div class="row">
+      <svg viewBox="0 0 240 240" aria-hidden="true" focusable="false">
+        <g class="st" style="--i:0"><text class="lbl" x="34" y="34">README exists</text><path class="tick" pathLength="1" style="--i:0" d="M6 28 l6 6 l12 -14"/></g>
+        <g class="st bad" style="--i:1"><text class="lbl" x="34" y="84">Test command declared</text><path class="tick" pathLength="1" style="--i:1" d="M8 70 l16 16 M24 70 l-16 16"/></g>
+        <g class="st" style="--i:2"><text class="lbl" x="34" y="134">.env kept out of Git</text><path class="tick" pathLength="1" style="--i:2" d="M6 128 l6 6 l12 -14"/></g>
+        <g class="st bad" style="--i:3"><text class="lbl" x="34" y="184">Lockfile present</text><path class="tick" pathLength="1" style="--i:3" d="M8 170 l16 16 M24 170 l-16 16"/></g>
+        <text class="sub" x="6" y="226">example rows, not a real project</text>
+      </svg>
+      <div style="flex:1 1 14rem">
+        <p>Each check is a plain yes or no. Hints, such as risky patterns like <code>eval</code> or <code>innerHTML</code>, are listed with file and line but not scored.</p>
+        <p>A high score does not prove a project is well built. A low one is a to-do list, not a verdict.</p>
+      </div>
+    </div>
+    <button type="button" class="pause" hidden data-pause="fig-bar">Pause animation</button>
+  </div>
+  <details>
+    <summary>The 16 scored checks</summary>
+    <ul>
+      <li>Code is not piled into one big file</li>
+      <li>Dependencies are declared in a manifest</li>
+      <li>A README exists, and says how to run the project</li>
+      <li><code>.env</code> files are kept out of Git, and an <code>.env.example</code> documents the settings</li>
+      <li>No secret is written into the source</li>
+      <li>Test files exist, and a test command is declared</li>
+      <li>Dependency versions are locked</li>
+      <li>A start or build command is declared, and the runtime version is declared</li>
+      <li><code>.gitignore</code> keeps dependency and build folders out of Git</li>
+      <li>Images have <code>alt</code>, pages declare a language, and pages set a viewport</li>
+    </ul>
+  </details>
+</section>
+
+<section id="demo">
+  <h2><span class="n">07</span>Side-by-side demo</h2>
+  <p>The same request, a fee tracker for a home tutor with 25 students, was given twice to the same AI model, with an identical prompt. One folder was empty. The other had the kit installed.</p>
+  <p><a href="../index.html">Open the comparison</a>, or read <a href="../tuition-tracker/PROMPT.md">the exact prompt</a> and repeat it yourself.</p>
+  <p class="note">It is one run per side. In this run the two results were close, and results vary from run to run. It shows how to test the kit. It is not proof that the kit works.</p>
+</section>
+
+<section id="limits">
+  <h2><span class="n">08</span>Limits</h2>
+  <ul>
+    <li><strong>Not benchmarked.</strong> No scored runs against real models have been published yet. The benchmark kit is in the repository for anyone to run.</li>
+    <li><strong>Host support is untested.</strong> The compatibility table in <code>docs/TOOL-COMPATIBILITY.md</code> marks every tool as untested until someone records a versioned test.</li>
+    <li><strong>Instructions are not enforcement.</strong> A model can ignore them. The scripts are checks you can run yourself.</li>
+    <li><strong>The static checks are shallow.</strong> They read text. They cannot tell whether code is correct or secure.</li>
+    <li><strong>Mostly tested on Linux.</strong> Windows is covered lightly in CI.</li>
+  </ul>
+  <p>Found a problem or a wrong claim on this page? <a href="https://github.com/crazy-creator0/uca-kit/issues">Open an issue</a>.</p>
+</section>
+</main>
+</div>
+
+<footer>
+  <p><strong>Created with UCA Kit.</strong> This page was written by an AI assistant working under the kit's own rules: a short plan and design brief first, then the kit's design check (<code>scripts/uca-design-check.cjs</code>) and the repository's test suite. That is how the kit is meant to be used. It is not proof that the kit improves results.</p>
+  <p>MIT licensed. © 2026 Crazy Creators.</p>
+</footer>
+</div>
+<script>
+(function () {
+  try {
+    document.querySelectorAll("[data-copy]").forEach(function (b) {
+      if (!navigator.clipboard) return;
+      b.hidden = false;
+      b.addEventListener("click", function () {
+        var text = b.parentNode.querySelector("code").textContent;
+        navigator.clipboard.writeText(text).then(function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1500); }, function () {});
+      });
+    });
+    document.querySelectorAll("[data-pause]").forEach(function (b) {
+      var fig = document.getElementById(b.getAttribute("data-pause"));
+      if (!fig) return;
+      b.hidden = false;
+      b.addEventListener("click", function () {
+        var paused = fig.classList.toggle("paused");
+        b.textContent = paused ? "Play animation" : "Pause animation";
+      });
+    });
+  } catch (e) { /* the page works without any script */ }
+})();
+</script>
+</body>
+</html>
