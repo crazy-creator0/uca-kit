@@ -16,6 +16,32 @@ It is designed to help developers plan before coding, understand unfamiliar code
 
 [Quick start](#quick-start) · [Workflow](#scope-first-workflow) · [Features](#what-is-included) · [Roadmap](docs/ROADMAP.md) · [Demo plan](docs/DEMO.md) · [Tool compatibility](docs/TOOL-COMPATIBILITY.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Platform guide](PLATFORM-SETUP.md)
 
+## Read this first
+
+**What this is.** A set of instructions and small read-only scripts that you install into a project folder. Your AI coding assistant reads them and is asked to plan first, check its work, and say what it did not check.
+
+**What it is not.**
+- **Not a guarantee.** A model follows instructions, and a model can ignore them. The scripts are checks you can run yourself.
+- **Not benchmarked.** No scored runs against real models have been published. The procedure for running your own is in `benchmarks/senior/README.md`.
+- **Not tested on every tool.** `docs/TOOL-COMPATIBILITY.md` marks every host as untested until someone records a versioned test.
+- **Not an audit.** The Senior Bar check and the design check read text. They cannot tell whether code is correct or secure.
+- **Not affiliated with, endorsed by, or sponsored by** the products it names, such as Claude Code, Cursor, GitHub Copilot, Gemini CLI, OpenAI Codex, OpenCode, Windsurf, Devin and JetBrains. The names say which tools the installed files are meant for. Product names belong to their owners.
+
+**Before you install**
+1. Preview first. `--dry-run` lists every file the installer would write and writes nothing:
+   ```bash
+   npx --yes github:crazy-creator0/uca-kit init . --dry-run
+   ```
+2. Pin a release if you want a fixed version. Without a tag you get the current `main`. Releases are listed in [CHANGELOG.md](CHANGELOG.md):
+   ```bash
+   npx --yes github:crazy-creator0/uca-kit#v0.1.0 init . --platform generic
+   ```
+3. Know what it does. The installer copies files into the folder you give it, prints each one, and records a hash of each in `.uca/manifest.json`. It makes no network requests and starts no other programs. `npx` downloads the package from GitHub before the installer runs. `uninstall` removes only the files it installed and never one you edited.
+4. Know what the scripts do. Two helper scripts call `git` to list files. The handoff guard runs only the check command you configure. Nothing is sent anywhere. The package has no dependencies and no install-time scripts.
+5. Review the copied files before you commit them. They are plain text.
+
+Found a wrong or overclaimed statement in these docs? Please [open an issue](https://github.com/crazy-creator0/uca-kit/issues/new/choose). Security problems go through [SECURITY.md](SECURITY.md).
+
 ## Quick start
 
 **Requirements:** Node.js 18 or newer and npm. Git is recommended for project history, reviewing diffs, recovering from mistakes, and collaboration—but it is not required to keep working locally. The GitHub-based `npx` installer may require Git to fetch this repository.
