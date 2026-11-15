@@ -152,3 +152,24 @@ test("show refuses to read a ledger through a linked folder", (t) => {
   assert.equal(show.status, 1, show.stdout);
   assert.match(show.stderr, /link or not a folder/);
 });
+
+test("a writer clearing a stale lock never removes a newer live lock that replaced it", async (t) => {
+  const { file, env } = fixture(t);
+  assert.equal(invoke(["record", "--source", "exact", "--input-tokens", "1"], env).status, 0);
+  const lock = `${file}.lock`;
+  // A lock from a process that has exited, old enough to be judged stale.
+  fs.writeFileSync(lock, JSON.stringify({ pid: 2 ** 22 + 54321, at: "2026-01-01T00:00:00.000Z", token: "dead" }));
+  const old = new Date(Date.now() - 5_000);
+  fs.utimesSync(lock, old, old);
+  // The writer pauses after judging it stale; meanwhile a live writer (this test) takes a new lock.
+  const writer = runAsync(["record", "--source", "exact", "--input-tokens", "1"], { ...env, UCA_USAGE_TEST_STALE_DELAY_MS: "1500", UCA_USAGE_LOCK_WAIT_MS: "3000" });
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  const live = JSON.stringify({ pid: process.pid, at: new Date().toISOString(), token: "live" });
+  fs.writeFileSync(lock, live);
+  const result = await writer;
+  assert.equal(fs.existsSync(lock) && fs.readFileSync(lock, "utf8"), live, "the live lock was removed");
+  assert.equal(ledger(file).totals.exact.inputTokens, 1, "the writer wrote while another writer held the lock");
+  assert.equal(result.status, 1, "the writer should give up while the live lock is held");
+  fs.rmSync(lock);
+  assert.deepEqual(fs.readdirSync(path.dirname(file)).filter((name) => name.includes(".stale-")), [], "a moved-aside lock was left behind");
+});

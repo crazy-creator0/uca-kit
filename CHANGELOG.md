@@ -9,7 +9,7 @@ Fixes from the first safety audit (playbook items P0.1 to P0.4). Each bug was fi
 Fixed
 - Handoff guard: a tampered `.uca/state.json` could make a passing run delete a file outside the project; a dangling link could make a restore write outside; a linked `.uca`, mirror or backup folder redirected reset, copies and snapshots; a wrongly shaped state ended in success. The guard now refuses linked folders and checks the state file field by field.
 - Install, update and uninstall: an update that failed halfway left kit files looking like your edits; a manifest edited to list your own file made `uninstall` and `update --prune` delete it; a linked `.uca` folder made `uninstall` delete a file outside the project. Updates now record what they wrote, and deletes are limited to paths the kit installs.
-- Usage ledger: writers running at the same time lost counts (8 of 17 kept in a test with 16 writers); fractional or oversized counts, unknown fields and bad dates were accepted. Writes now hold a lock, and every field is checked.
+- Usage ledger: writers running at the same time lost counts (8 of 17 kept in a test with 16 writers); fractional or oversized counts, unknown fields and bad dates were accepted. Writes now hold a lock, and every field is checked. A writer clearing a lock left by an exited process first moves it aside and checks it is still that lock, so it can never remove a newer writer's lock (CI caught one lost count before this).
 - Package: a `.env`, key, certificate or log file left in a shipped folder would have been published. Secret-looking files are now excluded.
 
 Added
