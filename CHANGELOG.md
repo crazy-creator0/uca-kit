@@ -2,6 +2,24 @@
 
 All notable changes are listed here. The project is early-stage, and nothing below has been benchmarked against real models.
 
+## 0.1.1 (2026-11-15)
+
+Fixes from the first safety audit (playbook items P0.1 to P0.4). Each bug was first reproduced as a failing test, then fixed; the tests stay in the suite.
+
+Fixed
+- Handoff guard: a tampered `.uca/state.json` could make a passing run delete a file outside the project; a dangling link could make a restore write outside; a linked `.uca`, mirror or backup folder redirected reset, copies and snapshots; a wrongly shaped state ended in success. The guard now refuses linked folders and checks the state file field by field.
+- Install, update and uninstall: an update that failed halfway left kit files looking like your edits; a manifest edited to list your own file made `uninstall` and `update --prune` delete it; a linked `.uca` folder made `uninstall` delete a file outside the project. Updates now record what they wrote, and deletes are limited to paths the kit installs.
+- Usage ledger: writers running at the same time lost counts (8 of 17 kept in a test with 16 writers); fractional or oversized counts, unknown fields and bad dates were accepted. Writes now hold a lock, and every field is checked.
+- Package: a `.env`, key, certificate or log file left in a shipped folder would have been published. Secret-looking files are now excluded.
+
+Added
+- Adversarial test files for the guard, lifecycle, usage ledger and package boundary.
+- A run-time check that the installer and scripts make no network requests and start no program except read-only git.
+
+Changed
+- `uninstall` and `update --prune` keep a file outside the kit's known paths and ask you to delete it by hand.
+- README and SECURITY name the project scanner's `--verify` option, which runs the command you give it.
+
 ## 0.1.0 (2026-11-06)
 
 First public release.
