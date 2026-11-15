@@ -3,19 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>UCA Kit field manual</title>
-<meta name="description" content="What the UCA Kit does for an AI coding assistant, how to install it, and what it does not do.">
+<title>UCA Kit: rules and checks for AI coding assistants</title>
+<meta name="description" content="UCA Kit makes an AI coding assistant plan first, check its work, and say what it did not check. Plain files, read-only scripts, no dependencies.">
 <style>
-/* Brief: a printed field manual. Paper and ink, one rust accent, ruled lines, no shadows, 2px corners.
-   Type: Georgia for reading, Consolas or the system monospace for commands. 8px spacing step. */
+/* Brief: a field manual with a loud cover. Paper and ink, one rust accent, ruled lines, 2px corners, no shadows.
+   Display: the system sans at heavy weight. Reading: Georgia. Commands: the system monospace. 8px spacing step. */
 :root {
   --paper: #f4f1ea; --panel: #ebe6da; --ink: #1b1a17; --muted: #5d584d; --rule: #cfc8b8;
-  --accent: #b4491f; --ok: #2f6b3f; --stop: #a32d2d;
+  --accent: #b4491f; --ok: #2f6b3f; --stop: #a32d2d; --cover: #1b1a17; --cover-ink: #f4f1ea; --cover-muted: #b9b2a3;
   --serif: Georgia, "Times New Roman", serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: Consolas, "SFMono-Regular", "Liberation Mono", monospace;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --paper: #181713; --panel: #221f19; --ink: #ece8dd; --muted: #a39d8e; --rule: #3a362c; --accent: #e8855a; --ok: #6fc28a; --stop: #ee8a8a; }
+  :root { --paper: #181713; --panel: #221f19; --ink: #ece8dd; --muted: #a39d8e; --rule: #3a362c; --accent: #e8855a; --ok: #6fc28a; --stop: #ee8a8a; --cover: #0f0e0b; --cover-ink: #ece8dd; --cover-muted: #a39d8e; }
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -23,38 +24,95 @@ html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/1.65 var(--serif); }
 a { color: var(--accent); text-underline-offset: 3px; }
 a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.wrap { max-width: 64rem; margin: 0 auto; padding: 0 16px; }
-header.top { border-bottom: 2px solid var(--ink); padding: 16px 0 16px; }
-.bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 0 0 24px; font: 14px var(--mono); }
+.wrap { max-width: 68rem; margin: 0 auto; padding: 0 16px; }
+
+/* cover */
+.cover { background: var(--cover); color: var(--cover-ink); }
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 0; border-bottom: 1px solid #3a362c; font: 14px var(--mono); }
+.bar .mark { font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-size: 13px; }
 .bar nav { display: flex; gap: 16px; flex-wrap: wrap; }
-.bar nav a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
-.bar nav a:hover, .bar nav a[aria-current] { border-color: var(--accent); }
-.bar .go { color: var(--paper); background: var(--accent); border: 0; padding: 6px 12px; border-radius: 2px; }
-header.top .mark { font: 700 13px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
-header.top h1 { font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.08; margin: 8px 0 8px; font-weight: 700; }
-header.top p { margin: 0; max-width: 40rem; color: var(--muted); }
-.cols { display: block; }
-nav.toc { border-bottom: 1px solid var(--rule); padding: 16px 0; font: 15px/1.9 var(--mono); }
-nav.toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 16px; }
-nav.toc a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
-nav.toc a:hover { border-color: var(--accent); }
-main { max-width: 42rem; padding-bottom: 64px; }
-section { padding-top: 40px; }
-h2 { font-size: 1.5rem; line-height: 1.2; margin: 0 0 16px; padding-top: 8px; border-top: 1px solid var(--ink); }
-h2 .n { font: 700 14px var(--mono); color: var(--accent); margin-right: 8px; }
-h3 { font-size: 1.05rem; margin: 24px 0 8px; }
+.bar nav a { color: var(--cover-ink); text-decoration: none; border-bottom: 1px solid #5d584d; }
+.bar nav a[aria-current] { border-color: var(--accent); }
+.hero { display: grid; gap: 40px; padding: 56px 0 64px; }
+.hero > *, .steps li > div, .grid > *, .facts > * { min-width: 0; }
+.eyebrow { font: 700 13px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin: 0 0 16px; }
+.hero h1 { font: 800 clamp(2.4rem, 7vw, 4.4rem)/1.02 var(--sans); letter-spacing: -.02em; margin: 0 0 24px; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero .lede { font-size: 1.15rem; color: var(--cover-muted); max-width: 36rem; margin: 0 0 32px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn { display: inline-block; font: 700 15px var(--sans); text-decoration: none; padding: 12px 18px; border-radius: 2px; border: 2px solid var(--accent); }
+.btn.solid { background: var(--accent); color: var(--cover); }
+.btn.line { color: var(--cover-ink); border-color: #5d584d; }
+.btn.line:hover { border-color: var(--cover-ink); }
+.cover .cmd { background: #26241f; border-left-color: var(--accent); margin: 0 0 24px; }
+.cover .cmd pre { color: var(--cover-ink); }
+.cover .cmd button { background: var(--cover); color: var(--cover-ink); border-color: #5d584d; }
+
+/* scorecard on the cover */
+.card { border: 1px solid #3a362c; border-radius: 2px; background: #22201b; font: 14px/1.5 var(--mono); }
+.card header { display: flex; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #3a362c; color: var(--cover-muted); }
+.card ol { list-style: none; margin: 0; padding: 8px 0; }
+.card li { display: grid; grid-template-columns: 6.5rem 1fr; gap: 8px; padding: 8px 16px; opacity: .35; animation: row 9s infinite; animation-delay: calc(var(--i) * 1.1s); }
+.card li b { font-weight: 700; }
+.card .done b { color: #6fc28a; } .card .left b { color: #e8c25a; } .card .nc b { color: #ee8a8a; }
+.card footer { padding: 12px 16px; border-top: 1px solid #3a362c; color: var(--cover-muted); font-size: 12px; }
+.card.paused li { animation-play-state: paused; }
+@keyframes row { 0% { opacity: .35; } 6%, 100% { opacity: 1; } }
+.cover .pause { background: var(--cover); color: var(--cover-ink); border-color: #5d584d; }
+
+/* facts strip */
+.facts { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 16px; border-bottom: 2px solid var(--ink); }
+.facts div { padding: 20px 0 16px; border-bottom: 1px solid var(--rule); }
+.facts div:last-child { border-bottom: 0; }
+@media (min-width: 48rem) {
+  .facts { grid-template-columns: repeat(5, 1fr); column-gap: 0; }
+  .facts div { padding: 24px 16px 20px; border-bottom: 0; border-right: 1px solid var(--rule); }
+  .facts div:first-child { padding-left: 0; }
+  .facts div:last-child { border-right: 0; }
+}
+.facts b { display: block; font: 800 2.2rem/1 var(--sans); }
+.facts span { display: block; margin-top: 8px; font: 13px/1.4 var(--mono); color: var(--muted); }
+
+/* sections */
+main { padding-bottom: 32px; }
+section { padding-top: 56px; }
+h2 { font: 800 clamp(1.6rem, 3.6vw, 2.2rem)/1.15 var(--sans); letter-spacing: -.01em; margin: 0 0 16px; padding-top: 12px; border-top: 2px solid var(--ink); }
+h2 .n { font: 700 14px var(--mono); color: var(--accent); margin-right: 10px; vertical-align: middle; }
+h3 { font: 700 1.1rem var(--sans); margin: 0 0 8px; }
 p { margin: 0 0 16px; }
+.narrow { max-width: 44rem; }
 code { font: 0.86em var(--mono); background: var(--panel); padding: 1px 5px; border-radius: 2px; }
 .cmd { position: relative; margin: 0 0 16px; background: var(--panel); border-left: 3px solid var(--accent); border-radius: 2px; }
-.cmd pre { margin: 0; padding: 12px 88px 12px 16px; overflow-x: auto; font: 15px/1.5 var(--mono); }
+.cmd pre { margin: 0; padding: 12px 88px 12px 16px; white-space: pre-wrap; overflow-wrap: anywhere; font: 15px/1.5 var(--mono); }
+.cmd code { background: none; padding: 0; }
 .cmd button { position: absolute; top: 8px; right: 8px; font: 13px var(--mono); background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 2px; padding: 4px 8px; cursor: pointer; }
 .cmd button[hidden] { display: none; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 16px; }
+.box { background: var(--panel); border: 1px solid var(--rule); border-radius: 2px; padding: 20px; }
+.box .k { font: 700 12px var(--mono); color: var(--accent); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 8px; }
+.box p { font-size: 16px; margin: 0; color: var(--muted); }
+.box p + p { margin-top: 8px; }
+.box svg { width: 40px; height: 40px; margin-bottom: 12px; }
+.box svg * { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.box svg .a { stroke: var(--accent); }
+.samples a.box { color: var(--ink); text-decoration: none; display: flex; flex-direction: column; gap: 6px; }
+.samples a.box:hover { border-color: var(--accent); }
+.samples .score { font: 13px var(--mono); color: var(--muted); border-top: 1px solid var(--rule); padding-top: 10px; margin-top: auto; }
+.samples .tag { font: 12px var(--mono); color: var(--muted); }
+.steps { counter-reset: s; list-style: none; padding: 0; margin: 0 0 24px; display: grid; gap: 16px; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 2.5rem 1fr; gap: 12px; }
+.steps li::before { content: counter(s); font: 800 1.6rem/1 var(--sans); color: var(--accent); }
+.steps li > div > p { margin: 0 0 8px; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0 0 16px; padding: 0; }
+.tools li { font: 13px var(--mono); border: 1px solid var(--rule); border-radius: 2px; padding: 5px 9px; }
+.tiers .box code { font-size: 1rem; }
+.tiers .box .ctx { font: 13px var(--mono); color: var(--ink); margin: 4px 0 10px; }
+.note { border-left: 3px solid var(--ink); padding: 0 16px; margin: 0 0 16px; color: var(--muted); }
+.stop { color: var(--stop); font-weight: 700; }
 table { border-collapse: collapse; width: 100%; font-size: 16px; margin: 0 0 16px; }
 th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); }
 th { font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.scroll { overflow-x: auto; }
-.scroll table { min-width: 34rem; }
-.fig { margin: 24px 0; padding: 16px; background: var(--panel); border-radius: 2px; }
+.fig { margin: 24px 0; padding: 16px; background: var(--panel); border-radius: 2px; max-width: 48rem; }
 .fig .row { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
 .fig ol { margin: 0; padding-left: 24px; flex: 1 1 14rem; }
 .fig ol li { margin: 0 0 8px; }
@@ -62,21 +120,18 @@ th { font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .06e
 .fig .cap { margin: 12px 0 0; font: 13px/1.5 var(--mono); color: var(--muted); }
 .pause { font: 13px var(--mono); background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 2px; padding: 4px 8px; cursor: pointer; margin-top: 12px; }
 .pause[hidden] { display: none; }
-.note { border-left: 3px solid var(--ink); padding: 0 16px; margin: 0 0 16px; color: var(--muted); }
-.stop { color: var(--stop); font-weight: 700; }
-details { margin: 0 0 16px; }
-summary { cursor: pointer; font: 15px var(--mono); }
-details ul { margin: 8px 0 0; padding-left: 20px; font-size: 16px; }
-footer { border-top: 2px solid var(--ink); padding: 24px 0 64px; font-size: 15px; color: var(--muted); }
-footer p { margin: 0 0 12px; max-width: 42rem; }
+details { margin: 0 0 16px; max-width: 48rem; }
+summary { cursor: pointer; font: 700 16px var(--sans); padding: 12px 0; border-bottom: 1px solid var(--rule); }
+details ul, details p { margin: 12px 0 0; font-size: 16px; }
+details ul { padding-left: 20px; }
+.faq details p { color: var(--muted); }
+footer.end { border-top: 2px solid var(--ink); margin-top: 56px; padding: 24px 0 64px; font-size: 15px; color: var(--muted); }
+footer.end p { margin: 0 0 12px; max-width: 46rem; }
 @media (min-width: 60rem) {
-  .cols { display: grid; grid-template-columns: 12rem 1fr; gap: 48px; }
-  nav.toc { border-bottom: 0; padding-top: 40px; position: sticky; top: 0; align-self: start; }
-  nav.toc ol { display: block; }
-  nav.toc li { margin-bottom: 4px; }
+  .hero { grid-template-columns: 1.25fr 1fr; align-items: center; }
 }
 
-/* Animated figures: each station lights up in turn. Pure CSS, loops, pausable. */
+/* figures: each station lights up in turn. Pure CSS, loops, pausable. */
 .anim .st { opacity: .5; animation: lit 10s infinite; animation-delay: calc(var(--i) * 1.5s); }
 .anim.paused .st, .anim.paused .tick { animation-play-state: paused; }
 .anim .line { stroke: var(--rule); }
@@ -89,65 +144,112 @@ footer p { margin: 0 0 12px; max-width: 42rem; }
 @keyframes lit { 0% { opacity: .5; } 4%, 14% { opacity: 1; } 22%, 100% { opacity: .7; } }
 @keyframes draw { 0% { stroke-dashoffset: 1; } 5%, 100% { stroke-dashoffset: 0; } }
 @media (prefers-reduced-motion: reduce) {
-  .anim .st { animation: none; opacity: 1; }
+  .anim .st, .card li { animation: none; opacity: 1; }
   .anim .tick { animation: none; stroke-dashoffset: 0; }
   .pause { display: none; }
 }
 </style>
 </head>
 <body>
+<div class="cover">
 <div class="wrap">
-<header class="top">
-  <div class="bar">
-    <div class="mark">UCA Kit · field manual</div>
-    <nav aria-label="Site">
-      <a href="./" aria-current="page">Docs</a>
-      <a class="go" href="samples/">Samples: with and without the kit</a>
-      <a href="https://github.com/crazy-creator0/uca-kit">GitHub</a>
-    </nav>
+<div class="bar">
+  <div class="mark">UCA Kit</div>
+  <nav aria-label="Site">
+    <a href="./" aria-current="page">Docs</a>
+    <a href="samples/">Samples</a>
+    <a href="https://github.com/crazy-creator0/uca-kit">GitHub</a>
+  </nav>
+</div>
+<div class="hero">
+  <div>
+    <p class="eyebrow">v0.1.1 · MIT · open source</p>
+    <h1>Your AI coding assistant, <em>with rules it has to show.</em></h1>
+    <p class="lede">UCA Kit is a folder of instructions and read-only scripts you install into a project. The assistant plans before it builds, checks its own work, and ends with a scorecard that says what it did not check.</p>
+    <div class="cmd"><pre><code>npx --yes github:crazy-creator0/uca-kit init . --platform generic</code></pre><button type="button" hidden data-copy>Copy</button></div>
+    <div class="cta">
+      <a class="btn solid" href="samples/">See it side by side</a>
+      <a class="btn line" href="#install">How to install</a>
+    </div>
   </div>
-  <h1>Rules, checks and a paper trail for an AI coding assistant.</h1>
-  <p>The kit is a set of instructions and small read-only scripts you install into a project. It makes the assistant plan first, check its work, and say what it did not check. It does not write code itself and it does not guarantee results.</p>
-</header>
+  <div>
+    <div class="card anim" id="fig-card">
+      <header><span>Scorecard</span><span>end of a task</span></header>
+      <ol>
+        <li class="done" style="--i:0"><b>Done</b><span>Fee list and pending total</span></li>
+        <li class="done" style="--i:1"><b>Done</b><span>Tests pass: npm test</span></li>
+        <li class="done" style="--i:2"><b>Done</b><span>Loads at phone width</span></li>
+        <li class="left" style="--i:3"><b>Left</b><span>Export to a spreadsheet</span></li>
+        <li class="nc" style="--i:4"><b>Not checked</b><span>Safari on a real phone</span></li>
+        <li class="nc" style="--i:5"><b>Not checked</b><span>Backups of the browser data</span></li>
+      </ol>
+      <footer>An example of the format the kit asks for. Every line is Done, Left or Not checked.</footer>
+    </div>
+    <button type="button" class="pause" hidden data-pause="fig-card">Pause animation</button>
+  </div>
+</div>
+</div>
+</div>
 
-<div class="cols">
-<nav class="toc" aria-label="Contents">
-  <ol>
-    <li><a href="#what">1 What it is</a></li>
-    <li><a href="#install">2 Install</a></li>
-    <li><a href="#flow">3 A task, step by step</a></li>
-    <li><a href="#tiers">4 Tiers</a></li>
-    <li><a href="#guard">5 Handoff guard</a></li>
-    <li><a href="#bar">6 Senior Bar check</a></li>
-    <li><a href="#demo">7 Samples</a></li>
-    <li><a href="#limits">8 Limits</a></li>
-  </ol>
-</nav>
+<div class="wrap">
+<div class="facts" aria-label="At a glance">
+  <div><b>11</b><span>setups: 10 named tools and a generic one</span></div>
+  <div><b>3</b><span>tiers, small to large models</span></div>
+  <div><b>16</b><span>skills, loaded one at a time</span></div>
+  <div><b>5</b><span>workflows</span></div>
+  <div><b>0</b><span>runtime dependencies</span></div>
+</div>
 
 <main>
 <section id="what">
-  <h2><span class="n">01</span>What it is</h2>
-  <p>You install it once per project. Your coding assistant reads the instructions in that folder and follows them. The kit is plain files: a short core rulebook, optional skills for jobs such as debugging or design, workflows, and a few scripts that only read your project.</p>
-  <p>What you get, in practice:</p>
-  <ul>
-    <li>A short plan before a new app is built, with at most three questions, each with a default.</li>
-    <li>A finishing scorecard that has to say Done, Left, or Not checked for each line.</li>
-    <li>A guard that notices when the assistant is stuck and prepares a handoff to another model.</li>
-    <li>A read-only checklist, the Senior Bar check, for the basics every project should have.</li>
-  </ul>
-  <p class="note">It is a set of instructions, so it is only as reliable as the model following them. Scripts check things in code. Instructions ask.</p>
+  <h2><span class="n">01</span>What changes when it is installed</h2>
+  <p class="narrow">The kit does not write code. It gives your assistant a short rulebook and a few tools, so the way it works becomes something you can see and check.</p>
+  <div class="grid">
+    <div class="box"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 8h24v24H8z"/><path class="a" d="M13 15h14M13 21h10M13 27h6"/></svg><p class="k">Plans first</p><p>A short plan before a new app: who it is for, the stack and why, the first small slice. At most three questions, each with a default.</p></div>
+    <div class="box"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="13"/><path class="a" d="M13 20l5 5 9-10"/></svg><p class="k">Checks its work</p><p>It runs the project's tests and the kit's read-only checks, and says which ones it ran.</p></div>
+    <div class="box"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 10h24M8 20h24M8 30h14"/><path class="a" d="M28 26l6 6M34 26l-6 6"/></svg><p class="k">Owns up</p><p>It ends with a scorecard of Done, Left and Not checked, instead of "all done".</p></div>
+    <div class="box"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 20h18"/><path class="a" d="M18 13l7 7-7 7"/><path d="M28 8h6v24h-6"/></svg><p class="k">Hands off when stuck</p><p>A guard spots the same error twice or results getting worse, restores the last passing copy and writes a handoff for the next model.</p></div>
+  </div>
+</section>
+
+<section id="samples" class="samples">
+  <h2><span class="n">02</span>Same prompt, without and with the kit</h2>
+  <p class="narrow">Each sample is one small idea, given word for word to the same AI model twice: once in an empty folder, once with the kit installed. Nothing was fixed by hand.</p>
+  <div class="grid">
+    <a class="box" href="samples/weather-mood-card/"><p class="k">Sample 02 · 2D · shape morph</p><h3>Weather mood card</h3><p>A sidebar card whose drawing changes shape when the weather changes.</p><p class="score">Senior Bar: without 7 of 10 · with 12 of 14. With the kit it also left 7 tests and a README.</p></a>
+    <a class="box" href="samples/solar-system/"><p class="k">Sample 03 · 3D · orbit</p><h3>Solar system in 3D</h3><p>Planets orbit the Sun; drag to turn, tap a planet for a fact.</p><p class="score">Senior Bar: without 5 of 9 · with 6 of 9. Close: both drew the 3D by hand.</p></a>
+    <a class="box" href="samples/tuition-tracker/"><p class="k">Sample 01 · 2D · tool</p><h3>Tuition fee tracker</h3><p>A home tutor marks fees paid and sees what is still pending.</p><p class="score">Senior Bar: without 6 of 9 · with 7 of 10. Both said "not ready yet".</p></a>
+  </div>
+  <p style="margin-top:16px"><a href="samples/">All samples, with prompts and closing answers</a></p>
+  <p class="note">One run per side, and results vary from run to run. The samples show how to test the kit. They are not proof that it works.</p>
 </section>
 
 <section id="install">
-  <h2><span class="n">02</span>Install</h2>
-  <p>You need Node.js 18 or newer. Run this in the root of your project:</p>
-  <div class="cmd"><pre><code>npx --yes github:crazy-creator0/uca-kit init . --platform generic</code></pre><button type="button" hidden data-copy>Copy</button></div>
-  <p>Omit <code>--platform</code> to choose from a list, or add <code>--dry-run</code> to preview the files without writing anything. Git is recommended but never required, and the kit asks before it runs <code>git init</code>.</p>
-  <p>To remove it later, use the installer's <code>uninstall</code> command. Files you edited are kept.</p>
+  <h2><span class="n">03</span>Install in three steps</h2>
+  <p class="narrow">You need Node.js 18 or newer. Run these in the root of your project.</p>
+  <ol class="steps">
+    <li><div><p><strong>Preview.</strong> Lists every file it would write, and writes nothing.</p><div class="cmd"><pre><code>npx --yes github:crazy-creator0/uca-kit init . --platform generic --dry-run</code></pre><button type="button" hidden data-copy>Copy</button></div></div></li>
+    <li><div><p><strong>Install.</strong> Pick your tool with <code>--platform</code>, or leave it out to choose from a list.</p><div class="cmd"><pre><code>npx --yes github:crazy-creator0/uca-kit init . --platform generic</code></pre><button type="button" hidden data-copy>Copy</button></div></div></li>
+    <li><div><p><strong>Check it.</strong> Confirms every installed file is present, and lists any you have edited.</p><div class="cmd"><pre><code>npx --yes github:crazy-creator0/uca-kit doctor .</code></pre><button type="button" hidden data-copy>Copy</button></div></div></li>
+  </ol>
+  <p>Set up for:</p>
+  <ul class="tools"><li>Claude Code</li><li>Cursor</li><li>GitHub Copilot</li><li>Gemini CLI</li><li>OpenAI Codex</li><li>OpenCode</li><li>Windsurf</li><li>Devin</li><li>JetBrains Junie</li><li>JetBrains AI Assistant</li><li>Any other tool (generic)</li></ul>
+  <p class="narrow">To remove it, run <code>uninstall</code>: it removes only the files it installed and keeps any you edited. Git is recommended but never required, and the kit asks before it runs <code>git init</code>.</p>
+</section>
+
+<section id="tiers" class="tiers">
+  <h2><span class="n">04</span>Pick a tier for your model</h2>
+  <p class="narrow">The tier decides how much guidance is installed, so it fits in your model's context.</p>
+  <div class="grid">
+    <div class="box"><p class="k">Small models</p><code>lite</code><p class="ctx">about 8k tokens of context</p><p>A short core and four condensed skills: avoiding guesses, debugging, avoiding needless code, and clean imports.</p></div>
+    <div class="box"><p class="k">The default</p><code>standard</code><p class="ctx">most models</p><p>The standard core, every skill (the router loads one at a time), the workflows and the checks.</p></div>
+    <div class="box"><p class="k">Large models</p><code>full</code><p class="ctx">large context</p><p>Every skill, the workflows and notes on when to hand work to a subagent.</p></div>
+  </div>
+  <div class="cmd" style="margin-top:16px"><pre><code>npx --yes github:crazy-creator0/uca-kit init . --platform claude --tier standard</code></pre><button type="button" hidden data-copy>Copy</button></div>
 </section>
 
 <section id="flow">
-  <h2><span class="n">03</span>A task, step by step</h2>
+  <h2><span class="n">05</span>A task, step by step</h2>
   <p>For a new app, the assistant is told to follow the new-project workflow in <code>.agents/workflows/new-project.md</code>. This is the order it follows.</p>
   <div class="fig anim" id="fig-flow">
     <div class="row">
@@ -174,22 +276,17 @@ footer p { margin: 0 0 12px; max-width: 42rem; }
   </div>
 </section>
 
-<section id="tiers">
-  <h2><span class="n">04</span>Tiers</h2>
-  <p>The tier decides how much guidance is installed, so it fits your model's context size.</p>
-  <div class="scroll"><table>
-    <thead><tr><th>Tier</th><th>Use it for</th><th>What is installed</th></tr></thead>
-    <tbody>
-      <tr><td><code>lite</code></td><td>Small models, about 8k tokens of context</td><td>A short core and four condensed skills</td></tr>
-      <tr><td><code>standard</code></td><td>The default</td><td>The standard core, every skill (loaded one at a time), the router and the workflows</td></tr>
-      <tr><td><code>full</code></td><td>Large-context models</td><td>Every skill, the workflows and subagent dispatch notes</td></tr>
-    </tbody>
-  </table></div>
-  <div class="cmd"><pre><code>npx --yes github:crazy-creator0/uca-kit init . --platform claude --tier standard</code></pre><button type="button" hidden data-copy>Copy</button></div>
+<section id="team">
+  <h2><span class="n">06</span>What gets installed</h2>
+  <div class="grid">
+    <div class="box"><p class="k">Rulebook</p><p><code>AGENTS.md</code> and a short core in <code>.agents/</code>. Your tool's own file (for example <code>CLAUDE.md</code> or a Cursor rule) points to it.</p></div>
+    <div class="box"><p class="k">Skills and workflows</p><p>Debugging, security review, design taste, databases, APIs and more, in <code>.agents/skills/</code>. Workflows for a new project, a feature, a bug, a deployment and a stack change.</p></div>
+    <div class="box"><p class="k">Read-only scripts</p><p>The Senior Bar check, a design check, a project scanner and the handoff guard, in <code>scripts/</code>. They read files; the guard runs only the check you give it.</p></div>
+  </div>
 </section>
 
 <section id="guard">
-  <h2><span class="n">05</span>Handoff guard</h2>
+  <h2><span class="n">07</span>Handoff guard</h2>
   <p>When you list several models in <code>.uca/config.json</code>, the assistant runs its checks through <code>scripts/uca-guard.cjs</code>. If it fails the same way twice, gets worse, or changes too much at once, the script prepares a handoff instead of letting the assistant keep guessing.</p>
   <div class="fig anim" id="fig-guard">
     <div class="row">
@@ -218,7 +315,7 @@ footer p { margin: 0 0 12px; max-width: 42rem; }
 </section>
 
 <section id="bar">
-  <h2><span class="n">06</span>Senior Bar check</h2>
+  <h2><span class="n">08</span>Senior Bar check</h2>
   <p><code>node scripts/uca-senior-check.cjs .</code> looks at a project and reports the basics that are present or missing. It reads files only. It never runs your code, never writes, never opens <code>.env</code> or key files, and never prints a secret.</p>
   <div class="fig anim" id="fig-bar">
     <div class="row">
@@ -253,28 +350,39 @@ footer p { margin: 0 0 12px; max-width: 42rem; }
   </details>
 </section>
 
-<section id="demo">
-  <h2><span class="n">07</span>Samples</h2>
-  <p>Each sample is one small request given twice to the same AI model with an identical prompt. One folder was empty. The other had the kit installed. Each sample page shows the prompt and both results side by side, with what was checked.</p>
-  <p><a href="samples/">Open the samples</a>. Every sample folder has its exact prompt, so you can repeat it yourself.</p>
-  <p class="note">Each sample is one run per side, and results vary from run to run. The samples show how to test the kit. They are not proof that the kit works.</p>
+<section id="trust">
+  <h2><span class="n">09</span>What it does not do</h2>
+  <div class="grid">
+    <div class="box"><p class="k">No network</p><p>The installer and scripts send nothing anywhere. A test runs them with network calls blocked and fails if one is tried.</p></div>
+    <div class="box"><p class="k">No hidden programs</p><p>No install-time scripts and no dependencies. The scripts call only read-only <code>git</code>; the guard and the scanner's <code>--verify</code> run only the command you name.</p></div>
+    <div class="box"><p class="k">No surprise deletes</p><p><code>uninstall</code> removes only files the kit installed, and never one you edited. An edited manifest cannot make it delete files outside the kit's own paths.</p></div>
+  </div>
+  <p style="margin-top:16px">Details and how to report a problem: <a href="https://github.com/crazy-creator0/uca-kit/blob/main/SECURITY.md">SECURITY.md</a>.</p>
 </section>
 
 <section id="limits">
-  <h2><span class="n">08</span>Limits</h2>
-  <ul>
+  <h2><span class="n">10</span>Limits</h2>
+  <ul class="narrow">
     <li><strong>Not benchmarked.</strong> No scored runs against real models have been published yet. The benchmark kit is in the repository for anyone to run.</li>
     <li><strong>Host support is untested.</strong> The compatibility table in <code>docs/TOOL-COMPATIBILITY.md</code> marks every tool as untested until someone records a versioned test.</li>
     <li><strong>Instructions are not enforcement.</strong> A model can ignore them. The scripts are checks you can run yourself.</li>
     <li><strong>The static checks are shallow.</strong> They read text. They cannot tell whether code is correct or secure.</li>
     <li><strong>Mostly tested on Linux.</strong> Windows is covered lightly in CI.</li>
   </ul>
+</section>
+
+<section id="faq" class="faq">
+  <h2><span class="n">11</span>Questions</h2>
+  <details><summary>Does it work with my tool?</summary><p>The installer writes the files each of the 11 listed tools reads, and a generic setup for any other tool. Whether a tool follows them has not been tested end to end yet, so treat support as untested.</p></details>
+  <details><summary>Will it make my results better?</summary><p>Unknown until real runs are published. In the samples, the with-kit runs left more of the basics, such as READMEs and design notes, and in one sample tests. Both sides were honest about what they had not checked. That is a few runs, not a measurement.</p></details>
+  <details><summary>Does it send my code anywhere?</summary><p>No. Everything is local files. The optional usage meter only stores counts that you, or a supported tool such as OpenCode, give it, on your own computer.</p></details>
+  <details><summary>Which tier should I pick?</summary><p><code>lite</code> for small local models with about 8k tokens of context, <code>standard</code> for most models, <code>full</code> for large-context models. You choose it; the assistant never changes it. <code>--context &lt;tokens&gt;</code> prints a suggestion.</p></details>
+  <details><summary>How do I remove it?</summary><p>Run <code>npx --yes github:crazy-creator0/uca-kit uninstall . --yes</code>. Files you edited are kept.</p></details>
   <p>Found a problem or a wrong claim on this page? <a href="https://github.com/crazy-creator0/uca-kit/issues">Open an issue</a>.</p>
 </section>
 </main>
-</div>
 
-<footer>
+<footer class="end">
   <p><strong>Created with UCA Kit.</strong> Written by Crazy Creators. It was made with the kit's own rules: a short plan and design brief first, then the kit's design check (<code>scripts/uca-design-check.cjs</code>) and the repository's test suite. That is how the kit is meant to be used. It is not proof that the kit improves results.</p>
   <p>MIT licensed. © 2026 Crazy Creators.</p>
 </footer>
