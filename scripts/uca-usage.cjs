@@ -132,6 +132,22 @@ function processAlive(pid) {
   try { process.kill(pid, 0); return true; }
   catch (error) { return error.code === "EPERM"; }
 }
+// Removes a lock judged stale, but only if it is still that same lock. Deleting by path alone would remove a new
+// lock another writer took after the stale one was released, letting two writers in at once. Renaming is atomic, so
+// the lock is moved aside first and its contents compared; a lock that turns out to be someone else's is put back.
+function clearStaleLock(lock, seen) {
+  const delay = Number(process.env.UCA_USAGE_TEST_STALE_DELAY_MS);
+  if (delay > 0) sleep(delay); // test hook: widens the window between judging a lock stale and clearing it
+  const aside = lock + ".stale-" + process.pid + "-" + crypto.randomBytes(4).toString("hex");
+  try { fs.renameSync(lock, aside); }
+  catch (error) { if (error.code === "ENOENT") return true; throw error; }
+  let now = null;
+  try { now = fs.readFileSync(aside, "utf8"); } catch { /* unreadable: treat as not the same lock */ }
+  if (now === seen) { fs.rmSync(aside, { force: true }); return true; }
+  try { fs.linkSync(aside, lock); } catch { /* the path was taken again meanwhile; that writer holds it */ }
+  fs.rmSync(aside, { force: true });
+  return false;
+}
 function withLock(fn) {
   const file = ledgerPath();
   assertPlainFolder(file);
@@ -152,10 +168,11 @@ function withLock(fn) {
     try {
       const info = fs.lstatSync(lock);
       if (!info.isFile()) throw new Error("Refusing a usage lock that is not a regular file: " + lock);
-      try { holder = JSON.parse(fs.readFileSync(lock, "utf8")); } catch { holder = null; }
+      let text = "";
+      try { text = fs.readFileSync(lock, "utf8"); holder = JSON.parse(text); } catch { holder = null; }
       const age = Date.now() - info.mtimeMs;
-      const stale = age > LOCK_STALE_MS || (holder && !processAlive(holder.pid)) || (!holder && age > 5_000);
-      if (stale) { fs.rmSync(lock, { force: true }); continue; }
+      const stale = age > LOCK_STALE_MS || (holder && age > 1_000 && !processAlive(holder.pid)) || (!holder && age > 5_000);
+      if (stale && clearStaleLock(lock, text)) continue;
     } catch (error) {
       if (error.code === "ENOENT") continue;
       throw error;
