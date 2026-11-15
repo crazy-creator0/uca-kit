@@ -37,7 +37,7 @@ test("shipped files do not depend on third-party UI or codebase tools", () => {
   // The kit's own guides and checks (UI-EFFECTS-GUIDE.md, uca-design-check, uca-project-discover) replace them.
   // Test sources are not shipped, so the banned-brand list in tests/directions.test.cjs may still name them.
   const banned = /aceternity|canvas ?ui|spline|vgpu|impeccable|understand[- ]anything/i;
-  const shipped = pkg.files.flatMap((entry) => {
+  const shipped = pkg.files.filter((entry) => !entry.startsWith("!")).flatMap((entry) => {
     const full = path.join(root, entry);
     return fs.statSync(full).isDirectory() ? walk(full) : [full];
   }).map(rel).filter((file) => /\.(?:md|mdc|json|cjs|mjs|py)$/.test(file));
@@ -52,7 +52,8 @@ test("python tests are run by CI", () => {
 });
 
 test("every path in package.json (files, bin) exists", () => {
-  for (const entry of pkg.files) assert.ok(fs.existsSync(path.join(root, entry)), `files entry does not exist: ${entry}`);
+  // Entries starting with "!" are exclusion patterns (secret-looking files), not paths.
+  for (const entry of pkg.files.filter((item) => !item.startsWith("!"))) assert.ok(fs.existsSync(path.join(root, entry)), `files entry does not exist: ${entry}`);
   for (const target of Object.values(pkg.bin)) assert.ok(fs.existsSync(path.join(root, target)), `bin target does not exist: ${target}`);
 });
 

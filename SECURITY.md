@@ -22,7 +22,9 @@ Please allow time for triage before public disclosure. No response-time guarante
 
 - It has no runtime dependencies and no install-time scripts, so installing it runs no code of ours beyond the installer you start yourself.
 - The installer makes no network requests and starts no other programs. It copies files into the folder you choose and records them in `.uca/manifest.json`.
-- Two helper scripts call `git` to list files. The handoff guard runs only the check command you configure.
+- Two helper scripts call read-only `git` commands (`ls-files`, `rev-parse`, `cat-file`, `diff`). The handoff guard runs only the check command you configure, and the project scanner runs a command only when you name it with `--verify`.
+- The published package contains only the paths listed in `package.json`, and secret-looking files (`.env`, keys, certificates, logs, `.uca` state) are excluded even if one is left in a shipped folder.
+- `tests/package-boundary.test.cjs` checks these statements on the packed file list and while the installer and scripts run. It hooks Node's own network and process functions, so it would not see native code or a program started some other way.
 - Redaction of secrets in `HANDOFF.md` is best effort, and the guard is a safeguard against honest mistakes, not a security boundary.
 
 A report that any of these statements is wrong is a valid security report.
