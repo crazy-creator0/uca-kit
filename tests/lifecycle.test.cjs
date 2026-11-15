@@ -235,19 +235,21 @@ test("update adds files the kit now ships, but never over a file of the user's",
 
 test("update deletes files the kit no longer ships only with --prune, and only if unedited", async (t) => {
   const root = project(t);
-  fs.writeFileSync(path.join(root, "retired.md"), "old kit file\n");
-  fs.writeFileSync(path.join(root, "retired-edited.md"), "edited\n");
+  // Changed for playbook P0.2: prune deletes only paths the kit can install or the kit-only .agents/ folder, so the
+  // retired files sit there, where retired kit files really live. tests/lifecycle-adversarial covers other paths.
+  fs.writeFileSync(path.join(root, ".agents/retired.md"), "old kit file\n");
+  fs.writeFileSync(path.join(root, ".agents/retired-edited.md"), "edited\n");
   setManifest(root, (manifest) => {
-    manifest.files["retired.md"] = sha("old kit file\n");
-    manifest.files["retired-edited.md"] = sha("what the kit wrote\n");
+    manifest.files[".agents/retired.md"] = sha("old kit file\n");
+    manifest.files[".agents/retired-edited.md"] = sha("what the kit wrote\n");
   });
   let result = await exec(root, ["update"]);
-  assert.ok(exists(root, "retired.md"));
+  assert.ok(exists(root, ".agents/retired.md"));
   assert.match(result.out, /use --prune/);
   result = await exec(root, ["update", "--prune"]);
-  assert.equal(exists(root, "retired.md"), false);
-  assert.equal(read(root, "retired-edited.md"), "edited\n", "an edited file is never pruned");
-  assert.equal(manifestOf(root).files["retired-edited.md"], undefined, "and is no longer tracked");
+  assert.equal(exists(root, ".agents/retired.md"), false);
+  assert.equal(read(root, ".agents/retired-edited.md"), "edited\n", "an edited file is never pruned");
+  assert.equal(manifestOf(root).files[".agents/retired-edited.md"], undefined, "and is no longer tracked");
 });
 
 test("update does not restore a file you deleted", async (t) => {

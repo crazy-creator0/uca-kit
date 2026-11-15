@@ -56,6 +56,8 @@ function readManifest(projectRoot) {
   const file = path.join(projectRoot, ...MANIFEST_PATH.split("/"));
   let text;
   try {
+    // A linked .uca folder would make every later read, write and delete land somewhere else.
+    cli.assertNoSymlinkParents(path.resolve(projectRoot), path.resolve(file));
     const stat = fs.lstatSync(file);
     if (stat.isSymbolicLink() || !stat.isFile()) return { status: "invalid", error: "the manifest is not a regular file" };
     text = fs.readFileSync(file, "utf8");
@@ -91,6 +93,40 @@ function recordInstall({ packageRoot, projectRoot, platform, profile, tier, writ
   Object.assign(files, written);
   writeManifest(projectRoot, { schema: 1, kitVersion: packageVersion(packageRoot), platform, tier: tier || null, profile: profile || null, files });
 }
+
+// ---------- which paths the kit may delete ----------
+
+// Every path any platform, tier or profile of this kit version can install, plus the kit-only .agents/ folder. The
+// manifest is a file anyone can edit, so uninstall and prune delete only paths in this set; anything else is kept and reported.
+const kitPathCache = new Map();
+function kitPaths(packageRoot) {
+  const key = path.resolve(packageRoot);
+  if (kitPathCache.has(key)) return kitPathCache.get(key);
+  const paths = new Set([cli.CONFIG_PATH]);
+  let profiles = [];
+  try {
+    profiles = Object.keys(JSON.parse(fs.readFileSync(path.join(key, ".agents", "profiles", "profiles.json"), "utf8")));
+  } catch {
+    /* no profiles: the platform and tier combinations still cover the default install */
+  }
+  for (const platform of Object.keys(cli.PLATFORM_ENTRIES)) {
+    for (const tier of [null, ...cli.TIER_NAMES]) {
+      for (const profile of [null, ...profiles]) {
+        let entries;
+        try {
+          entries = cli.buildEntries({ platform, profile, tier });
+        } catch {
+          continue;
+        }
+        for (const item of cli.collectFiles(key, entries)) paths.add(toPosix(item.destination));
+      }
+    }
+  }
+  kitPathCache.set(key, paths);
+  return paths;
+}
+const isKitPath = (packageRoot, relative) => relative.startsWith(".agents/") || kitPaths(packageRoot).has(relative);
+const notKitPath = (relative) => `${relative}: not a path this kit installs, so it is kept. If it really is a kit file, delete it by hand.`;
 
 // ---------- inspecting an install ----------
 
@@ -148,6 +184,9 @@ function analyze(projectRoot, packageRoot, manifest) {
       row.state = !local.present ? "new" : local.hash === want.hash ? "identical" : "unmanaged";
     } else if (!local.present) {
       row.state = want ? "missing" : "gone";
+    } else if (want && local.hash === want.hash && local.hash !== owned) {
+      // Byte-for-byte what the kit ships, e.g. written by an update that stopped before recording it: adopt it.
+      row.state = "identical";
     } else if (local.hash === owned) {
       row.state = !want ? "removed-upstream" : want.hash !== owned ? "outdated" : "ok";
     } else {
@@ -305,7 +344,8 @@ function update(projectRoot, packageRoot, { dryRun = false, force = false, prune
       else if (row.state === "missing") result.missing.push(row.path);
       else if (row.state === "unmanaged") result.unmanaged.push(row.path);
       else if (row.state === "removed-upstream") {
-        if (prune) {
+        if (prune && !isKitPath(packageRoot, row.path)) result.unsafe.push(notKitPath(row.path));
+        else if (prune) {
           if (!dryRun) fs.unlinkSync(row.destination);
           delete files[row.path];
           result.pruned.push(row.path);
@@ -318,18 +358,24 @@ function update(projectRoot, packageRoot, { dryRun = false, force = false, prune
       result.errors.push(`${row.path}: ${error.message}`);
     }
   }
-  if (!dryRun && result.errors.length === 0) writeManifest(projectRoot, { ...manifest, kitVersion: packageVersion(packageRoot), files });
+  // Record what did succeed even when something failed, so a re-run converges; the errors still make the command fail.
+  // The kit version is only advanced when every file made it.
+  if (!dryRun) writeManifest(projectRoot, { ...manifest, kitVersion: result.errors.length === 0 ? packageVersion(packageRoot) : manifest.kitVersion, files });
   return result;
 }
 
 // ---------- uninstall ----------
 
-function uninstall(projectRoot, { dryRun = false } = {}) {
+function uninstall(projectRoot, { dryRun = false, packageRoot = path.join(__dirname, "..") } = {}) {
   const manifest = loadForCommand(projectRoot, "uninstall");
   const result = { removed: [], keptEdited: [], alreadyGone: [], unsafe: [], errors: [], removedDirs: [] };
   const touchedDirs = new Set();
   for (const [relative, hash] of Object.entries(manifest.files)) {
     try {
+      if (!isKitPath(packageRoot, relative)) {
+        result.unsafe.push(notKitPath(relative));
+        continue;
+      }
       const local = localState(projectRoot, relative);
       if (!local.present) result.alreadyGone.push(relative);
       else if (local.hash !== hash) result.keptEdited.push(relative);
@@ -359,7 +405,10 @@ function uninstall(projectRoot, { dryRun = false } = {}) {
   }
   if (result.unsafe.length === 0) {
     try {
-      fs.unlinkSync(cli.safeResolve(projectRoot, MANIFEST_PATH));
+      const manifestFile = cli.safeResolve(projectRoot, MANIFEST_PATH);
+      cli.assertNoSymlinkParents(root, manifestFile);
+      if (!fs.lstatSync(manifestFile).isFile()) throw new Error("the manifest is not a regular file");
+      fs.unlinkSync(manifestFile);
       for (const dir of [path.join(root, ".uca")]) {
         try {
           fs.rmdirSync(dir);
@@ -503,7 +552,7 @@ async function run(argv, { packageRoot = path.resolve(__dirname, ".."), out = co
       return result.errors.length || result.unsafe.length ? 1 : 0;
     }
     // uninstall
-    const preview = uninstall(projectRoot, { dryRun: true });
+    const preview = uninstall(projectRoot, { dryRun: true, packageRoot });
     if (options.dryRun || !options.yes) {
       printList("Would remove", preview.removed, out);
       printList("Would keep: edited by you", preview.keptEdited, out);
@@ -523,7 +572,7 @@ async function run(argv, { packageRoot = path.resolve(__dirname, ".."), out = co
         return 0;
       }
     }
-    const result = uninstall(projectRoot, {});
+    const result = uninstall(projectRoot, { packageRoot });
     out(`Removed ${result.removed.length} file(s) and ${result.removedDirs.length} empty folder(s).`);
     printList("Kept: edited by you", result.keptEdited, out);
     printList("Unsafe, skipped", result.unsafe, out);
