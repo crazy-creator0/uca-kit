@@ -15,8 +15,8 @@ const { spawnSync } = require("node:child_process");
 const ROOT = path.resolve(__dirname, "..");
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 
-function packedFiles() {
-  const packed = spawnSync(npm, ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: ROOT, encoding: "utf8", timeout: 120_000, shell: process.platform === "win32" });
+function packedFiles(cwd = ROOT) {
+  const packed = spawnSync(npm, ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd, encoding: "utf8", timeout: 120_000, shell: process.platform === "win32" });
   assert.equal(packed.status, 0, packed.stderr || packed.stdout);
   return JSON.parse(packed.stdout)[0].files.map((file) => file.path);
 }
@@ -31,23 +31,25 @@ test("every packed file is on the allow-list in package.json, and none looks lik
   assert.deepEqual(files.filter((file) => SECRET_NAME.test(file) && !/\.env\.example$/.test(file)), [], "secret-looking files");
 });
 
-test("a secret file dropped into a shipped folder is not packed", () => {
-  const canaries = ["scripts/.env", "scripts/.env.local", ".agents/server.key", ".agents/skills/id_rsa", "bin/.npmrc", ".agents/debug.log", "scripts/cert.pem", ".agents/.uca-workspace/notes.md", ".agents/.uca/state.json"];
-  const created = [];
-  try {
-    for (const relative of canaries) {
-      const full = path.join(ROOT, ...relative.split("/"));
-      if (fs.existsSync(full)) continue;
-      fs.mkdirSync(path.dirname(full), { recursive: true });
-      fs.writeFileSync(full, "TEST_SECRET_DO_NOT_LEAK_7c1e\n");
-      created.push(full);
-    }
-    const files = packedFiles();
-    assert.deepEqual(canaries.filter((relative) => files.includes(relative)), [], "secret files would be published");
-  } finally {
-    for (const full of created) fs.rmSync(full, { force: true });
-    for (const dir of [".agents/.uca-workspace", ".agents/.uca"]) fs.rmSync(path.join(ROOT, dir), { recursive: true, force: true });
+test("a secret file dropped into a shipped folder is not packed", (t) => {
+  // Planted in a temporary copy of the package, never in the repository: other test files run at the same time
+  // and install from the repository folder.
+  const copy = fs.mkdtempSync(path.join(os.tmpdir(), "uca-pack-copy-"));
+  t.after(() => fs.rmSync(copy, { recursive: true, force: true }));
+  for (const relative of packedFiles()) {
+    const target = path.join(copy, ...relative.split("/"));
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.copyFileSync(path.join(ROOT, ...relative.split("/")), target);
   }
+  const canaries = ["scripts/.env", "scripts/.env.local", ".agents/server.key", ".agents/skills/id_rsa", "bin/.npmrc", ".agents/debug.log", "scripts/cert.pem", ".agents/.uca-workspace/notes.md", ".agents/.uca/state.json"];
+  for (const relative of canaries) {
+    const full = path.join(copy, ...relative.split("/"));
+    fs.mkdirSync(path.dirname(full), { recursive: true });
+    fs.writeFileSync(full, "TEST_SECRET_DO_NOT_LEAK_7c1e\n");
+  }
+  const files = packedFiles(copy);
+  assert.ok(files.includes("scripts/uca-guard.cjs"), "the copy did not pack like the real package");
+  assert.deepEqual(canaries.filter((relative) => files.includes(relative)), [], "secret files would be published");
 });
 
 test("packed text files contain no credential patterns", () => {
