@@ -8,7 +8,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.join(__dirname, "..");
-const page = fs.readFileSync(path.join(root, "demo", "docs", "index.html"), "utf8");
+const page = fs.readFileSync(path.join(root, "demo", "index.html"), "utf8");
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const tiers = JSON.parse(fs.readFileSync(path.join(root, ".agents", "tiers.json"), "utf8"));
 const text = page.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<style[\s\S]*?<\/style>/g, "");

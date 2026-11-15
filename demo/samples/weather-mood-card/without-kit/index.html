@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Today's weather mood</title>
+<style>
+  :root {
+    --bg1: #FFF4D6;
+    --bg2: #FFD98A;
+    --ink: #4A3410;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: clamp(4px, 3vw, 12px);
+    font-family: var(--sans);
+    background: transparent;
+    color: #222;
+  }
+
+  /* ---------- the card ---------- */
+  .wcard {
+    container-type: inline-size;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+    padding: 16px 18px 18px;
+    border-radius: 18px;
+    color: var(--ink);
+    background: linear-gradient(160deg, var(--bg1), var(--bg2));
+    box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 6px 18px rgba(0,0,0,.08);
+    overflow: hidden;
+  }
+  .wcard__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    opacity: .8;
+  }
+  .wcard__art {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 4px 0 2px;
+    overflow: visible;
+  }
+  .wcard__float { animation: float 6s ease-in-out infinite; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+  }
+  .wcard__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 10px;
+  }
+  .wcard__mood {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(24px, 13cqi, 34px);
+    line-height: 1.05;
+    font-weight: 600;
+  }
+  .wcard__line {
+    margin: 4px 0 0;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.3;
+    opacity: .85;
+  }
+  .wcard__temp {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(26px, 15cqi, 40px);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  /* very narrow sidebars: put the temperature under the mood */
+  @container (max-width: 210px) {
+    .wcard__row { flex-direction: column; align-items: flex-start; gap: 6px; }
+  }
+
+  /* ---------- owner panel (only shown with #edit in the address) ---------- */
+  .editor {
+    width: 100%;
+    max-width: 340px;
+    margin: 16px auto 0;
+    padding: 14px 16px 16px;
+    border: 1px dashed #b9b2a3;
+    border-radius: 14px;
+    background: #fffdf8;
+    font-size: 14px;
+  }
+  .editor h2 { margin: 0 0 10px; font-size: 15px; }
+  .editor__moods {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .editor button {
+    font: inherit;
+    min-height: 44px;
+    border-radius: 10px;
+    border: 1px solid #c9c2b2;
+    background: #fff;
+    color: #222;
+    cursor: pointer;
+  }
+  .editor__moods button[aria-pressed="true"] {
+    background: #2d2a26;
+    border-color: #2d2a26;
+    color: #fff;
+  }
+  .editor button:focus-visible,
+  .editor input:focus-visible,
+  .editor select:focus-visible,
+  .editor textarea:focus-visible { outline: 3px solid #e39b2d; outline-offset: 2px; }
+  .editor__temp { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+  .editor__temp > div:first-child { min-width: 7em; }
+  .editor label { display: block; font-weight: 600; margin-bottom: 4px; }
+  .editor input, .editor select {
+    font: inherit;
+    font-size: 16px; /* stops iPhone from zooming in */
+    min-height: 44px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid #c9c2b2;
+    background: #fff;
+  }
+  .editor input { width: 100%; }
+  .editor__temp > div:first-child { flex: 1; }
+  .editor__error { color: #a3261b; min-height: 1.3em; margin: 6px 0 0; }
+  .editor__hint { color: #555; margin: 4px 0 0; font-size: 13px; }
+  .editor details { margin-top: 10px; }
+  .editor summary { cursor: pointer; font-weight: 600; }
+  .editor textarea {
+    width: 100%;
+    margin: 8px 0;
+    font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #c9c2b2;
+    resize: vertical;
+  }
+  .editor__copy { padding: 0 14px; }
+  .editor__status { margin: 8px 0 0; font-size: 13px; color: #555; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wcard__float { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<article class="wcard" id="wcard" aria-label="Today's weather">
+  <div class="wcard__top">
+    <span>Today's weather</span>
+    <span id="wc-date"></span>
+  </div>
+
+  <svg class="wcard__art" viewBox="0 0 200 165" aria-hidden="true" focusable="false">
+    <g class="wcard__float" id="wc-shapes">
+      <path></path><path></path><path></path><path></path><path></path>
+    </g>
+  </svg>
+
+  <div class="wcard__row">
+    <div>
+      <p class="wcard__mood" id="wc-mood">Sunny</p>
+      <p class="wcard__line" id="wc-line"></p>
+    </div>
+    <p class="wcard__temp" id="wc-temp" hidden></p>
+  </div>
+</article>
+
+<section class="editor" id="editor" hidden aria-labelledby="ed-title">
+  <h2 id="ed-title">Set today's weather</h2>
+  <div class="editor__moods" role="group" aria-label="Weather">
+    <button type="button" data-mood="sunny">Sunny</button>
+    <button type="button" data-mood="cloudy">Cloudy</button>
+    <button type="button" data-mood="rainy">Rainy</button>
+    <button type="button" data-mood="stormy">Stormy</button>
+  </div>
+
+  <div class="editor__temp">
+    <div>
+      <label for="ed-temp">Temperature</label>
+      <input id="ed-temp" type="text" inputmode="text" autocomplete="off" placeholder="e.g. 18 or -3">
+    </div>
+    <div>
+      <label for="ed-unit">Unit</label>
+      <select id="ed-unit">
+        <option value="C">°C</option>
+        <option value="F">°F</option>
+      </select>
+    </div>
+  </div>
+  <p class="editor__hint">Leave the temperature empty to hide it.</p>
+  <p class="editor__error" id="ed-error" role="alert"></p>
+
+  <details>
+    <summary>Show this to your visitors</summary>
+    <p class="editor__hint">Your choice is saved in <strong>this browser only</strong>. To show it to everyone, open <code>today.js</code>, replace its last line with the line below, save, and upload <code>today.js</code> to your blog again.</p>
+    <textarea id="ed-publish" rows="3" readonly></textarea>
+    <button type="button" class="editor__copy" id="ed-copy">Copy line</button>
+    <p class="editor__status" id="ed-status" role="status"></p>
+  </details>
+</section>
+
+<script src="today.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------
+  // Moods: words and colours
+  // ---------------------------------------------------------------
+  var MOODS = {
+    sunny:  { label: "Sunny",  line: "Bright and cheerful",       bg1: "#FFF4D6", bg2: "#FFD98A", ink: "#4A3410" },
+    cloudy: { label: "Cloudy", line: "Soft and thoughtful",       bg1: "#EEF1F4", bg2: "#C9D2DC", ink: "#2E3742" },
+    rainy:  { label: "Rainy",  line: "Cosy tea weather", bg1: "#DCE7F2", bg2: "#9FB6CF", ink: "#1F2E40" },
+    stormy: { label: "Stormy", line: "Stay in and write", bg1: "#454B63", bg2: "#1E2233", ink: "#F3F2F8" }
+  };
+  var MOOD_NAMES = ["sunny", "cloudy", "rainy", "stormy"];
+  var STORAGE_KEY = "weatherMoodCard.v1";
+  var N = 96;              // every shape is drawn with the same number of points, so any shape can turn into any other
+  var MORPH_MS = 900;
+
+  // ---------------------------------------------------------------
+  // Shape builders (all return N points, starting at the top, going clockwise)
+  // ---------------------------------------------------------------
+
+  // Cast rays out from (cx,cy); the outline is the farthest hit among simple pieces.
+  function polarOutline(cx, cy, hitFns) {
+    var pts = [];
+    for (var i = 0; i < N; i++) {
+      var a = -Math.PI / 2 + (i / N) * Math.PI * 2;
+      var dx = Math.cos(a), dy = Math.sin(a), best = 0;
+      for (var k = 0; k < hitFns.length; k++) {
+        var t = hitFns[k](cx, cy, dx, dy);
+        if (t > best) best = t;
+      }
+      pts.push([cx + dx * best, cy + dy * best]);
+    }
+    return pts;
+  }
+  function circleHit(x, y, r) {
+    return function (ox, oy, dx, dy) {
+      var px = x - ox, py = y - oy;
+      var b = px * dx + py * dy;
+      var disc = b * b - (px * px + py * py - r * r);
+      return disc < 0 ? 0 : b + Math.sqrt(disc);
+    };
+  }
+  function polygonHit(poly) { // farthest crossing of the ray with any edge (fine for convex pieces)
+    return function (ox, oy, dx, dy) {
+      var best = 0;
+      for (var i = 0; i < poly.length; i++) {
+        var p = poly[i], q = poly[(i + 1) % poly.length];
+        var ex = q[0] - p[0], ey = q[1] - p[1];
+        var den = dx * ey - dy * ex;
+        if (Math.abs(den) < 1e-9) continue;
+        var wx = p[0] - ox, wy = p[1] - oy;
+        var t = (wx * ey - wy * ex) / den;
+        var u = (wx * dy - wy * dx) / den;
+        if (t > best && u >= 0 && u <= 1) best = t;
+      }
+      return best;
+    };
+  }
+
+  function circle(cx, cy, r) {
+    return polarOutline(cx, cy, [circleHit(cx, cy, r)]);
+  }
+
+  function sunRays(cx, cy, r, rayLen, rays) {
+    var pts = [];
+    for (var i = 0; i < N; i++) {
+      var a = -Math.PI / 2 + (i / N) * Math.PI * 2;
+      var phase = ((i / N) * rays) % 1;              // 0 at each ray tip
+      var tri = 1 - Math.min(phase, 1 - phase) * 2;  // 1 at tip, 0 between rays
+      var rr = r + rayLen * Math.pow(tri, 2.2);
+      pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]);
+    }
+    return pts;
+  }
+
+  // A puffy cloud: a few circles on a rounded flat base. s = scale.
+  function cloud(cx, cy, s) {
+    var hits = [
+      circleHit(cx - 30 * s, cy + 6 * s, 20 * s),
+      circleHit(cx - 6 * s, cy - 10 * s, 28 * s),
+      circleHit(cx + 22 * s, cy - 1 * s, 22 * s),
+      circleHit(cx + 40 * s, cy + 12 * s, 14 * s),
+      circleHit(cx - 44 * s, cy + 14 * s, 12 * s),
+      polygonHit([[cx - 44 * s, cy + 2 * s], [cx + 40 * s, cy + 2 * s], [cx + 40 * s, cy + 26 * s], [cx - 44 * s, cy + 26 * s]])
+    ];
+    return polarOutline(cx, cy + 4 * s, hits);
+  }
+
+  // Raindrop with the point at the top.
+  function drop(cx, cy, r) {
+    var tipY = cy - r * 2.3;
+    var d = cy - tipY;
+    var ang = Math.asin(r / d);                       // tangent from tip to circle
+    var tx = Math.cos(ang) * r, ty = Math.sin(ang) * r;
+    var hits = [
+      circleHit(cx, cy, r),
+      polygonHit([[cx, tipY], [cx + tx, cy - ty], [cx - tx, cy - ty]])
+    ];
+    return polarOutline(cx, cy, hits);
+  }
+
+  // Lightning bolt (not a simple "blob", so it is traced along its edges instead).
+  function bolt(cx, cy, s) {
+    var poly = [[-3, -28], [13, -28], [5, -6], [14, -6], [-6, 30], [-1, 5], [-10, 5]]
+      .map(function (p) { return [cx + p[0] * s, cy + p[1] * s]; });
+    return alongEdges(poly);
+  }
+  function alongEdges(poly) {
+    var lens = [], total = 0, i;
+    for (i = 0; i < poly.length; i++) {
+      var p = poly[i], q = poly[(i + 1) % poly.length];
+      var l = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      lens.push(l); total += l;
+    }
+    var pts = [], seg = 0, acc = 0;
+    for (i = 0; i < N; i++) {
+      var want = (i / N) * total;
+      while (acc + lens[seg] < want) { acc += lens[seg]; seg++; }
+      var f = (want - acc) / lens[seg];
+      var a = poly[seg], b = poly[(seg + 1) % poly.length];
+      pts.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]);
+    }
+    // make it clockwise and start at the top, like the other shapes
+    var area = 0;
+    for (i = 0; i < N; i++) { var u = pts[i], v = pts[(i + 1) % N]; area += u[0] * v[1] - v[0] * u[1]; }
+    if (area < 0) pts.reverse();
+    var mx = 0, my = 0;
+    pts.forEach(function (p) { mx += p[0]; my += p[1]; });
+    mx /= N; my /= N;
+    var start = 0, bestDiff = Infinity;
+    for (i = 0; i < N; i++) {
+      var diff = Math.abs(Math.atan2(pts[i][0] - mx, -(pts[i][1] - my))); // 0 = straight up
+      if (diff < bestDiff) { bestDiff = diff; start = i; }
+    }
+    return pts.slice(start).concat(pts.slice(0, start));
+  }
+
+  // ---------------------------------------------------------------
+  // Each mood = 5 layers (back to front). Hidden layers are tiny and transparent,
+  // so they can grow out of nothing during a change.
+  // ---------------------------------------------------------------
+  function layer(points, fill, opacity) { return { points: points, fill: fill, opacity: opacity }; }
+
+  var SCENES = {
+    sunny: [
+      layer(sunRays(100, 80, 44, 22, 10), "#F6A821", 1),
+      layer(circle(100, 80, 36), "#FFD54A", 1),
+      layer(circle(100, 80, 1), "#FFD54A", 0),
+      layer(circle(100, 80, 1), "#FFD54A", 0),
+      layer(circle(100, 80, 1), "#FFD54A", 0)
+    ],
+    cloudy: [
+      layer(circle(138, 52, 24), "#F9C74F", 1),
+      layer(cloud(94, 88, 1.15), "#FFFFFF", 1),
+      layer(circle(78, 116, 1), "#FFFFFF", 0),
+      layer(circle(100, 118, 1), "#FFFFFF", 0),
+      layer(circle(122, 116, 1), "#FFFFFF", 0)
+    ],
+    rainy: [
+      layer(cloud(126, 64, 0.8), "#A9B8C9", 1),
+      layer(cloud(92, 82, 1.1), "#E9EEF4", 1),
+      layer(drop(76, 140, 6), "#4F86C6", 1),
+      layer(drop(100, 150, 6), "#4F86C6", 1),
+      layer(drop(124, 140, 6), "#4F86C6", 1)
+    ],
+    stormy: [
+      layer(cloud(128, 62, 0.8), "#5C6378", 1),
+      layer(cloud(92, 80, 1.1), "#8D94A8", 1),
+      layer(bolt(100, 134, 0.95), "#FFD23F", 1),
+      layer(drop(66, 138, 5), "#8FB4E3", 1),
+      layer(drop(136, 138, 5), "#8FB4E3", 1)
+    ]
+  };
+
+  // ---------------------------------------------------------------
+  // Drawing and morphing
+  // ---------------------------------------------------------------
+  var root = document.documentElement;
+  var pathEls = document.querySelectorAll("#wc-shapes path");
+  var current = null;   // what is on screen right now (layers + colours)
+  var animId = 0;
+
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  function hexToRgb(h) { var n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+  function rgbStr(c) { return "rgb(" + Math.round(c[0]) + "," + Math.round(c[1]) + "," + Math.round(c[2]) + ")"; }
+  function mix(a, b, t) { return a + (b - a) * t; }
+  function mixRgb(a, b, t) { return [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)]; }
+  function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+  function sceneState(mood) {
+    var m = MOODS[mood];
+    return {
+      layers: SCENES[mood].map(function (l) {
+        return { points: l.points.map(function (p) { return p.slice(); }), fill: hexToRgb(l.fill), opacity: l.opacity };
+      }),
+      bg1: hexToRgb(m.bg1), bg2: hexToRgb(m.bg2), ink: hexToRgb(m.ink)
+    };
+  }
+  function blend(a, b, t) {
+    return {
+      layers: a.layers.map(function (la, i) {
+        var lb = b.layers[i];
+        return {
+          points: la.points.map(function (p, j) { return [mix(p[0], lb.points[j][0], t), mix(p[1], lb.points[j][1], t)]; }),
+          fill: mixRgb(la.fill, lb.fill, t),
+          opacity: mix(la.opacity, lb.opacity, t)
+        };
+      }),
+      bg1: mixRgb(a.bg1, b.bg1, t), bg2: mixRgb(a.bg2, b.bg2, t), ink: mixRgb(a.ink, b.ink, t)
+    };
+  }
+  function render(s) {
+    s.layers.forEach(function (l, i) {
+      var d = "M" + l.points.map(function (p) { return p[0].toFixed(2) + " " + p[1].toFixed(2); }).join("L") + "Z";
+      pathEls[i].setAttribute("d", d);
+      pathEls[i].setAttribute("fill", rgbStr(l.fill));
+      pathEls[i].setAttribute("fill-opacity", l.opacity.toFixed(3));
+    });
+    root.style.setProperty("--bg1", rgbStr(s.bg1));
+    root.style.setProperty("--bg2", rgbStr(s.bg2));
+    root.style.setProperty("--ink", rgbStr(s.ink));
+  }
+  function morphTo(mood) {
+    var target = sceneState(mood);
+    cancelAnimationFrame(animId);
+    if (!current || (reduceMotion && reduceMotion.matches)) {
+      current = target; render(current); return;
+    }
+    var from = current, start = null;
+    function step(now) {
+      if (start === null) start = now;
+      var t = Math.min(1, (now - start) / MORPH_MS);
+      current = blend(from, target, ease(t));
+      render(current);
+      if (t < 1) animId = requestAnimationFrame(step);
+    }
+    animId = requestAnimationFrame(step);
+  }
+
+  // ---------------------------------------------------------------
+  // Saving, loading, and the words on the card
+  // ---------------------------------------------------------------
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function clean(rec) {
+    if (!rec || typeof rec !== "object") return null;
+    var mood = MOOD_NAMES.indexOf(rec.mood) >= 0 ? rec.mood : null;
+    if (!mood) return null;
+    var temp = typeof rec.temp === "number" ? String(rec.temp) : (typeof rec.temp === "string" ? rec.temp.trim() : "");
+    if (temp !== "" && checkTemp(temp, rec.unit === "F" ? "F" : "C")) temp = "";
+    var date = /^\d{4}-\d{2}-\d{2}$/.test(rec.date || "") ? rec.date : "";
+    return { mood: mood, temp: temp, unit: rec.unit === "F" ? "F" : "C", date: date };
+  }
+  function loadLocal() {
+    try { return clean(JSON.parse(localStorage.getItem(STORAGE_KEY))); } catch (e) { return null; }
+  }
+  function saveLocal(rec) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(rec)); return true; } catch (e) { return false; }
+  }
+  // Returns an error message, or "" if the temperature is fine.
+  function checkTemp(text, unit) {
+    if (text === "") return "";
+    if (!/^[-−]?\d{1,3}([.,]\d)?$/.test(text)) return "Please type a number, like 18 or -3.";
+    var n = parseFloat(text.replace("−", "-").replace(",", "."));
+    var lo = unit === "F" ? -100 : -75, hi = unit === "F" ? 140 : 60;
+    if (n < lo || n > hi) return "That looks too " + (n < lo ? "cold" : "hot") + ". Please check the number.";
+    return "";
+  }
+  function formatTemp(text, unit) {
+    var n = Math.round(parseFloat(text.replace("−", "-").replace(",", ".")));
+    if (n === 0) n = 0; // avoid "-0"
+    return (n < 0 ? "−" + Math.abs(n) : String(n)) + "°" + unit;
+  }
+  function formatDate(rec) {
+    if (!rec.date) return "";
+    if (rec.date === todayStr()) return new Date().toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+    var p = rec.date.split("-");
+    var d = new Date(+p[0], +p[1] - 1, +p[2]);
+    return "Set " + d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  }
+
+  var el = {
+    card: document.getElementById("wcard"),
+    date: document.getElementById("wc-date"),
+    mood: document.getElementById("wc-mood"),
+    line: document.getElementById("wc-line"),
+    temp: document.getElementById("wc-temp"),
+    editor: document.getElementById("editor"),
+    moodBtns: document.querySelectorAll(".editor__moods button"),
+    tempIn: document.getElementById("ed-temp"),
+    unitIn: document.getElementById("ed-unit"),
+    error: document.getElementById("ed-error"),
+    publish: document.getElementById("ed-publish"),
+    copy: document.getElementById("ed-copy"),
+    status: document.getElementById("ed-status")
+  };
+
+  var state;
+  function show(rec) {
+    var m = MOODS[rec.mood];
+    el.mood.textContent = m.label;
+    el.line.textContent = m.line;
+    el.date.textContent = formatDate(rec);
+    if (rec.temp !== "") {
+      el.temp.textContent = formatTemp(rec.temp, rec.unit);
+      el.temp.hidden = false;
+    } else {
+      el.temp.hidden = true;
+    }
+    var spoken = "Today's weather: " + m.label + (rec.temp !== "" ? ", " + el.temp.textContent : "") + ". " + m.line + ".";
+    el.card.setAttribute("aria-label", spoken);
+    morphTo(rec.mood);
+    el.moodBtns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.mood === rec.mood)); });
+    el.publish.value = "window.WEATHER_TODAY = " + JSON.stringify(rec) + ";";
+  }
+
+  // Which record to show: whichever is newer of "saved in this browser" and "today.js".
+  // If they are from the same day, this browser's saved choice wins.
+  var published = clean(window.WEATHER_TODAY);
+  var local = loadLocal();
+  if (local && published) state = (published.date > local.date) ? published : local;
+  else state = local || published || { mood: "sunny", temp: "", unit: "C", date: "" };
+  show(state);
+
+  // ---------------------------------------------------------------
+  // Owner panel: only appears when the address ends in #edit
+  // ---------------------------------------------------------------
+  function isEditMode() { return /(^#|&)edit\b/.test(location.hash) || /[?&]edit\b/.test(location.search); }
+  function syncEditor() {
+    el.editor.hidden = !isEditMode();
+    el.tempIn.value = state.temp;
+    el.unitIn.value = state.unit;
+    el.error.textContent = "";
+  }
+  syncEditor();
+  window.addEventListener("hashchange", syncEditor);
+
+  function commit(changes) {
+    var next = { mood: state.mood, temp: state.temp, unit: state.unit, date: todayStr() };
+    for (var k in changes) next[k] = changes[k];
+    state = next;
+    show(state);
+    el.status.textContent = saveLocal(state) ? "" : "This browser would not let the card save your choice.";
+  }
+
+  el.moodBtns.forEach(function (b) {
+    b.addEventListener("click", function () { commit({ mood: b.dataset.mood }); });
+  });
+  function onTemp() {
+    var text = el.tempIn.value.trim(), unit = el.unitIn.value;
+    var err = checkTemp(text, unit);
+    el.error.textContent = err;
+    el.tempIn.setAttribute("aria-invalid", err ? "true" : "false");
+    if (!err) commit({ temp: text, unit: unit });
+  }
+  el.tempIn.addEventListener("input", onTemp);
+  el.unitIn.addEventListener("change", onTemp);
+
+  el.copy.addEventListener("click", function () {
+    function done() { el.status.textContent = "Copied. Now paste it into today.js."; }
+    function fallback() {
+      el.publish.focus(); el.publish.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) {}
+      el.status.textContent = ok ? "Copied. Now paste it into today.js." : "Select the text above and copy it by hand.";
+    }
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(el.publish.value).then(done, fallback);
+    else fallback();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Our Solar System in 3D</title>
+<style>
+  :root {
+    --space: #0A0E1F;
+    --text: #F5F1E6;
+    --muted: #A9B0C7;
+    --accent: #FFD23F;
+    --ink: #111111;
+    --card: #F5F1E6;
+    --radius: 12px;
+    --edge: 3px solid var(--ink);
+    --font: "Trebuchet MS", "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: var(--space); color: var(--text); font-family: var(--font);
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #sky {
+    position: fixed; inset: 0; width: 100%; height: 100%; display: block;
+    touch-action: none; cursor: grab; outline: none;
+  }
+  #sky.dragging { cursor: grabbing; }
+  #sky.on-planet { cursor: pointer; }
+  #sky:focus-visible { box-shadow: inset 0 0 0 3px var(--accent); }
+
+  header {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 16px 20px 0; display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 16px; pointer-events: none;
+  }
+  h1 { margin: 0; font-size: clamp(24px, 3.4vw, 40px); font-weight: 800; line-height: 1.05; }
+  .hint { margin: 6px 0 0; font-size: clamp(14px, 1.5vw, 17px); color: var(--muted); }
+  .scale-note { max-width: 300px; text-align: right; }
+  .sticker {
+    display: inline-block; background: var(--accent); color: var(--ink);
+    font-weight: 800; font-size: 15px; letter-spacing: .04em; text-transform: uppercase;
+    padding: 6px 12px; border: var(--edge); border-radius: var(--radius);
+    box-shadow: 4px 4px 0 #000; transform: rotate(-4deg);
+  }
+  .scale-note p { margin: 10px 0 0; font-size: 14px; line-height: 1.35; color: var(--muted); }
+
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    padding: 24px 12px calc(10px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: linear-gradient(rgba(10, 14, 31, 0), rgba(10, 14, 31, .92) 45%);
+  }
+  .row {
+    display: flex; gap: 8px; max-width: 100%;
+    overflow-x: auto; scrollbar-width: none; padding: 2px 4px 4px;
+  }
+  .row::-webkit-scrollbar { display: none; }
+  button {
+    font: 700 16px var(--font); color: var(--text); background: #182040;
+    border: 2px solid #2E3A66; border-radius: var(--radius);
+    min-height: 44px; padding: 0 14px; cursor: pointer; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 8px; flex: none;
+  }
+  button:hover { border-color: #56649A; }
+  button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  button[aria-pressed="true"] { background: var(--accent); color: var(--ink); border-color: var(--ink); }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--c); box-shadow: inset -3px -3px 0 rgba(0,0,0,.35); }
+  .tools button { font-size: 15px; min-width: 44px; justify-content: center; background: transparent; }
+  .tools button[aria-pressed="true"] { background: transparent; color: var(--text); border-color: #2E3A66; }
+
+  .card {
+    position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+    width: min(340px, calc(100% - 40px));
+    background: var(--card); color: var(--ink);
+    border: var(--edge); border-radius: var(--radius); box-shadow: 6px 6px 0 #000;
+    overflow: hidden;
+  }
+  .card[hidden] { display: none; }
+  .card.pop { animation: pop .35s cubic-bezier(.3, 1.6, .5, 1); }
+  @keyframes pop { from { transform: translateY(-50%) scale(.85); opacity: 0; } }
+  .card-top {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 52px 14px 18px; border-bottom: var(--edge);
+    background: var(--c, var(--accent));
+  }
+  .mini {
+    width: 56px; height: 56px; border-radius: 50%; flex: none; border: 3px solid var(--ink);
+    background: radial-gradient(circle at 35% 30%, var(--l), var(--c) 45%, var(--d) 95%);
+  }
+  .card h2 { margin: 0; font-size: 34px; font-weight: 800; line-height: 1; }
+  .order {
+    display: inline-block; margin-top: 6px; font-size: 14px; font-weight: 700;
+    background: var(--ink); color: var(--card); padding: 3px 8px; border-radius: 6px;
+  }
+  .fact { margin: 0; padding: 16px 18px 20px; font-size: 20px; line-height: 1.4; }
+  .close {
+    position: absolute; top: 8px; right: 8px; min-width: 44px; padding: 0;
+    justify-content: center; font-size: 22px; line-height: 1;
+    background: var(--card); color: var(--ink); border: 2px solid var(--ink);
+  }
+  .close:hover { border-color: var(--ink); background: #fff; }
+
+  .fallback { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; font-size: 20px; }
+
+  /* Portrait tablets and narrow windows: card sits above the bottom bar */
+  @media (max-aspect-ratio: 1/1), (max-width: 640px) {
+    .card { top: auto; right: 12px; left: 12px; width: auto; bottom: var(--bar-h, 130px); transform: none; }
+    @keyframes pop { from { transform: scale(.9); opacity: 0; } }
+    .fact { font-size: 18px; }
+    .scale-note p { display: none; }
+  }
+  @media (max-width: 1100px) {
+    #planetButtons button { padding: 0 10px; gap: 6px; font-size: 15px; }
+  }
+  @media (max-width: 640px) {
+    header { flex-direction: column; gap: 8px; }
+    .scale-note { text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card.pop { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="sky" tabindex="0" role="img"
+    aria-label="3D model of the Sun and the eight planets. Drag to turn it. Use the planet buttons below to read about each planet."></canvas>
+
+  <header>
+    <div>
+      <h1>Our Solar System</h1>
+      <p class="hint">Drag to turn it &middot; Tap a planet to learn about it</p>
+    </div>
+    <div class="scale-note">
+      <span class="sticker">Not to scale!</span>
+      <p>Sizes and distances are squashed so everything fits, and the planets move much faster than in real life.
+        Really, the Sun is about 109 times wider than Earth, and Neptune is about 30 times farther from the Sun than Earth is.</p>
+    </div>
+  </header>
+
+  <section class="card" id="card" hidden aria-live="polite">
+    <div class="card-top">
+      <div class="mini" id="cardMini"></div>
+      <div>
+        <h2 id="cardName"></h2>
+        <span class="order" id="cardOrder"></span>
+      </div>
+    </div>
+    <p class="fact" id="cardFact"></p>
+    <button class="close" id="cardClose" aria-label="Close">&times;</button>
+  </section>
+
+  <nav class="bar" id="bar" aria-label="Planets and view controls">
+    <div class="row" id="planetButtons"></div>
+    <div class="row tools">
+      <button id="playBtn" aria-pressed="false">Pause</button>
+      <button id="namesBtn" aria-pressed="true">Names: on</button>
+      <button id="zoomOut" aria-label="Zoom out">&minus;</button>
+      <button id="zoomIn" aria-label="Zoom in">+</button>
+      <button id="resetBtn">Reset view</button>
+      <button id="fullBtn">Full screen</button>
+    </div>
+  </nav>
+
+  <noscript><div class="fallback">This model needs JavaScript turned on in the browser.</div></noscript>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- The Sun and planets ----------
+  // r and orbit are model sizes, not real ones (the page says so).
+  // years = real time for one trip around the Sun, used to keep the speeds in the right order.
+  var BODIES = [
+    { id: 'sun', name: 'The Sun', button: 'Sun', r: 5.2, orbit: 0,
+      color: '#FFB300', light: '#FFF6C8', dark: '#F07800',
+      order: 'The star in the middle',
+      fact: 'The Sun is a star, and it is huge: about 1.3 million Earths could fit inside it!' },
+    { id: 'mercury', name: 'Mercury', r: 0.8, orbit: 9.5, years: 0.241, start: 0.3,
+      color: '#A39E98', light: '#DAD5CF', dark: '#55514C',
+      fact: 'Mercury is the smallest planet and the closest one to the Sun. It goes around the Sun in just 88 days, so a year there is very short.' },
+    { id: 'venus', name: 'Venus', r: 1.3, orbit: 13, years: 0.615, start: 2.1,
+      color: '#E8C27A', light: '#FBEBC4', dark: '#9C7634',
+      fact: 'Venus is the hottest planet, even hotter than Mercury. Its thick clouds trap the Sun’s heat like a blanket.' },
+    { id: 'earth', name: 'Earth', r: 1.4, orbit: 17, years: 1, start: 4.0,
+      color: '#2F6FD6', light: '#9CC4FF', dark: '#173C7A',
+      fact: 'Earth is our home and the only planet where we know there is life. Most of it, about 70%, is covered by water.' },
+    { id: 'mars', name: 'Mars', r: 1.0, orbit: 21, years: 1.881, start: 5.3,
+      color: '#C1440E', light: '#F08A5D', dark: '#6E2306',
+      fact: 'Mars is called the Red Planet because its ground is covered in rusty, reddish dust.' },
+    { id: 'jupiter', name: 'Jupiter', r: 3.2, orbit: 28.5, years: 11.86, start: 1.2,
+      color: '#D9A066', light: '#F3D9B5', dark: '#8A5A30',
+      fact: 'Jupiter is the biggest planet. More than 1,000 Earths could fit inside it!' },
+    { id: 'saturn', name: 'Saturn', r: 2.7, orbit: 37, years: 29.46, start: 3.3,
+      color: '#E3C784', light: '#F7EACB', dark: '#8F7840',
+      fact: 'Saturn’s rings are made of billions of chunks of ice and rock. Some are as small as a grain of sand, others as big as a house.' },
+    { id: 'uranus', name: 'Uranus', r: 2.0, orbit: 45, years: 84.0, start: 5.8,
+      color: '#8FD8E0', light: '#D8F6F8', dark: '#3D7F88',
+      fact: 'Uranus is tipped over on its side, so it rolls around the Sun like a ball.' },
+    { id: 'neptune', name: 'Neptune', r: 1.95, orbit: 52, years: 164.8, start: 2.7,
+      color: '#3E66F0', light: '#A9BCFF', dark: '#1A2E80',
+      fact: 'Neptune is the windiest planet. Its winds can blow at about 2,000 km (1,200 miles) per hour, faster than a jet plane!' }
+  ];
+  var ORDINALS = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
+  BODIES.forEach(function (b, i) {
+    if (i > 0) b.order = ORDINALS[i - 1] + ' planet from the Sun';
+    b.angle = b.start || 0;
+    b.pos = { x: 0, y: 0, z: 0 };
+    b.screen = null;
+  });
+  var SYSTEM_RADIUS = 56;          // Neptune's orbit plus a little room
+  var EARTH_LAP_SECONDS = 20;      // Earth goes around once every 20 seconds in the model
+
+  // ---------- Page elements ----------
+  var canvas = document.getElementById('sky');
+  var ctx = canvas.getContext && canvas.getContext('2d');
+  if (!ctx) {
+    document.body.innerHTML = '<div class="fallback">Sorry, this browser cannot draw the model. Please try a newer browser such as Chrome, Edge, Safari or Firefox.</div>';
+    return;
+  }
+  var bar = document.getElementById('bar');
+  var header = document.querySelector('header');
+  var card = document.getElementById('card');
+  var playBtn = document.getElementById('playBtn');
+  var namesBtn = document.getElementById('namesBtn');
+  var fullBtn = document.getElementById('fullBtn');
+
+  // ---------- State ----------
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var playing = !reduceMotion;
+  var showNames = true;
+  var selected = null;
+  var DEFAULT_YAW = -0.5;
+  // Tall screens (a tablet held upright) start looking more from above, so the model fills the height.
+  function defaultPitch() { return window.innerHeight > window.innerWidth ? 0.85 : 0.42; }
+  var cam = { yaw: DEFAULT_YAW, pitch: defaultPitch(), zoom: 1, fitDist: 120, dist: 120 };
+  var view = { w: 0, h: 0, cx: 0, cy: 0, focal: 1, dpr: 1 };
+
+  // ---------- Stars (same pattern every time) ----------
+  function seeded(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  var rand = seeded(7);
+  var stars = [];
+  for (var s = 0; s < 450; s++) {
+    var u = rand() * 2 - 1, th = rand() * Math.PI * 2, q = Math.sqrt(1 - u * u);
+    stars.push({ x: q * Math.cos(th), y: u, z: q * Math.sin(th), size: 0.5 + rand() * 1.3, a: 0.35 + rand() * 0.65 });
+  }
+
+  // ---------- 3D maths ----------
+  // Turn a direction by the camera angles (no distance). Returns camera-space x, y, z.
+  function rotate(x, y, z) {
+    var cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw);
+    var x1 = x * cy - z * sy, z1 = x * sy + z * cy;
+    var cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+    return { x: x1, y: y * cp + z1 * sp, z: -y * sp + z1 * cp };
+  }
+  // World point -> screen point. depth is distance from the camera; scale turns model size into pixels.
+  function project(x, y, z) {
+    var r = rotate(x, y, z);
+    var depth = r.z + cam.dist;
+    var scale = view.focal / Math.max(depth, 0.001);
+    return { x: view.cx + r.x * scale, y: view.cy - r.y * scale, depth: depth, scale: scale };
+  }
+
+  // ---------- Size and fit ----------
+  function resize() {
+    view.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    view.w = window.innerWidth; view.h = window.innerHeight;
+    canvas.width = Math.round(view.w * view.dpr);
+    canvas.height = Math.round(view.h * view.dpr);
+    ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+
+    var top = header.getBoundingClientRect().bottom + 8;
+    var bottom = bar.getBoundingClientRect().top + 16;
+    if (bottom - top < view.h * 0.4) { top = 0; bottom = view.h; }
+    document.documentElement.style.setProperty('--bar-h', (view.h - bar.getBoundingClientRect().top + 8) + 'px');
+    view.cx = view.w / 2;
+    view.cy = (top + bottom) / 2;
+    view.focal = Math.min(view.w, view.h) * 1.2;
+
+    // Find the camera distance where Neptune's orbit just fits, at the starting tilt.
+    var saved = { yaw: cam.yaw, pitch: cam.pitch, dist: cam.dist };
+    cam.yaw = DEFAULT_YAW; cam.pitch = defaultPitch();
+    var availW = view.w * 0.94, availH = (bottom - top) * 0.94;
+    var lo = SYSTEM_RADIUS + 5, hi = 5000;
+    for (var i = 0; i < 40; i++) {
+      cam.dist = (lo + hi) / 2;
+      var minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+      for (var a = 0; a < 64; a++) {
+        var ang = a / 64 * Math.PI * 2;
+        var p = project(Math.cos(ang) * SYSTEM_RADIUS, 0, Math.sin(ang) * SYSTEM_RADIUS);
+        minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+      }
+      var sun = project(0, BODIES[0].r * 1.6, 0);
+      minY = Math.min(minY, sun.y);
+      if (maxX - minX <= availW && maxY - minY <= availH) hi = cam.dist; else lo = cam.dist;
+    }
+    cam.fitDist = hi;
+    cam.yaw = saved.yaw; cam.pitch = saved.pitch;
+    applyZoom();
+  }
+  function applyZoom() {
+    var minZoom = (SYSTEM_RADIUS + 12) / cam.fitDist;   // never put the camera inside the system
+    cam.zoom = Math.min(Math.max(cam.zoom, minZoom), 2.5);
+    cam.dist = cam.fitDist * cam.zoom;
+  }
+
+  // ---------- Drawing ----------
+  function drawStars() {
+    for (var i = 0; i < stars.length; i++) {
+      var st = stars[i], r = rotate(st.x, st.y, st.z);
+      if (r.z <= 0.05) continue;
+      var x = view.cx + r.x / r.z * view.focal * 0.5, y = view.cy - r.y / r.z * view.focal * 0.5;
+      if (x < 0 || y < 0 || x > view.w || y > view.h) continue;
+      ctx.globalAlpha = st.a;
+      ctx.fillRect(x, y, st.size, st.size);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawOrbits() {
+    for (var i = 1; i < BODIES.length; i++) {
+      var b = BODIES[i], isSel = selected === b;
+      ctx.beginPath();
+      for (var a = 0; a <= 120; a++) {
+        var ang = a / 120 * Math.PI * 2;
+        var p = project(Math.cos(ang) * b.orbit, 0, Math.sin(ang) * b.orbit);
+        if (a === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      }
+      ctx.strokeStyle = isSel ? b.color : 'rgba(200, 210, 255, 0.22)';
+      ctx.lineWidth = isSel ? 2.5 : 1;
+      ctx.stroke();
+    }
+  }
+
+  // Where the sunlight hits a planet, as a point on its screen disc.
+  function lightSpot(b, sp) {
+    var len = Math.hypot(b.pos.x, b.pos.y, b.pos.z) || 1;
+    var l = rotate(-b.pos.x / len, -b.pos.y / len, -b.pos.z / len);
+    var flat = Math.hypot(l.x, l.y) || 1;
+    var amount = 0.55 + Math.max(l.z, 0) * 0.9;     // sun behind the planet: only a thin lit edge
+    return { x: sp.x + l.x / flat * sp.r * amount, y: sp.y - l.y / flat * sp.r * amount };
+  }
+
+  function drawSun(b) {
+    var sp = b.screen;
+    var glow = ctx.createRadialGradient(sp.x, sp.y, sp.r * 0.8, sp.x, sp.y, sp.r * 2.8);
+    glow.addColorStop(0, 'rgba(255, 200, 60, 0.45)');
+    glow.addColorStop(1, 'rgba(255, 200, 60, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.r * 2.8, 0, Math.PI * 2); ctx.fill();
+    var g = ctx.createRadialGradient(sp.x - sp.r * 0.25, sp.y - sp.r * 0.25, 0, sp.x, sp.y, sp.r);
+    g.addColorStop(0, b.light); g.addColorStop(0.55, b.color); g.addColorStop(1, b.dark);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2); ctx.fill();
+  }
+
+  function drawPlanetDetails(b, sp) {
+    var r = sp.r;
+    if (b.id === 'jupiter' || b.id === 'saturn') {
+      var bands = b.id === 'jupiter'
+        ? [[-0.55, 0.12, '#B0764A'], [-0.2, 0.1, '#F1D7AE'], [0.1, 0.14, '#A86A3E'], [0.45, 0.1, '#EFD3A8']]
+        : [[-0.4, 0.1, '#CDB06C'], [0.15, 0.12, '#F0DDAA']];
+      bands.forEach(function (band) {
+        ctx.fillStyle = band[2];
+        ctx.fillRect(sp.x - r, sp.y + band[0] * r, r * 2, band[1] * r * 2);
+      });
+      if (b.id === 'jupiter') {          // the Great Red Spot
+        ctx.fillStyle = '#B4462E';
+        ctx.beginPath(); ctx.ellipse(sp.x + r * 0.35, sp.y + r * 0.3, r * 0.2, r * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (b.id === 'earth') {
+      ctx.fillStyle = '#3C9A4F';
+      [[-0.35, -0.25, 0.35, 0.22, 0.6], [0.3, 0.2, 0.28, 0.4, -0.4], [-0.1, 0.55, 0.3, 0.12, 0.2]].forEach(function (c) {
+        ctx.beginPath(); ctx.ellipse(sp.x + c[0] * r, sp.y + c[1] * r, c[2] * r, c[3] * r, c[4], 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.fillStyle = '#F2F6FF';
+      ctx.fillRect(sp.x - r, sp.y - r, r * 2, r * 0.22);
+    }
+  }
+
+  function drawPlanet(b) {
+    var sp = b.screen;
+    ctx.save();
+    ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2); ctx.clip();
+    ctx.fillStyle = b.color;
+    ctx.fillRect(sp.x - sp.r, sp.y - sp.r, sp.r * 2, sp.r * 2);
+    drawPlanetDetails(b, sp);
+    var lit = lightSpot(b, sp);
+    var shade = ctx.createRadialGradient(lit.x, lit.y, 0, lit.x, lit.y, sp.r * 2);
+    shade.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+    shade.addColorStop(0.2, 'rgba(255, 255, 255, 0)');
+    shade.addColorStop(0.55, 'rgba(0, 0, 0, 0.25)');
+    shade.addColorStop(0.85, 'rgba(0, 0, 0, 0.8)');
+    shade.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
+    ctx.fillStyle = shade;
+    ctx.fillRect(sp.x - sp.r, sp.y - sp.r, sp.r * 2, sp.r * 2);
+    ctx.restore();
+  }
+
+  // Saturn's rings are cut into small pieces so the back half goes behind the planet and the front half in front.
+  var RING_TILT = 0.47;
+  function ringPieces(b) {
+    var pieces = [], bands = [[1.3, 1.85, '#CDB78F'], [1.95, 2.3, '#A8936C']];
+    var ct = Math.cos(RING_TILT), st = Math.sin(RING_TILT), N = 48;
+    function pt(rad, ang) {
+      var lx = Math.cos(ang) * rad, lz = Math.sin(ang) * rad;
+      return project(b.pos.x + lx, b.pos.y + lz * st, b.pos.z + lz * ct);
+    }
+    bands.forEach(function (band) {
+      var ri = band[0] * b.r, ro = band[1] * b.r;
+      for (var i = 0; i < N; i++) {
+        var a0 = i / N * Math.PI * 2, a1 = (i + 1) / N * Math.PI * 2;
+        var p = [pt(ri, a0), pt(ro, a0), pt(ro, a1), pt(ri, a1)];
+        pieces.push({ p: p, color: band[2], depth: (p[0].depth + p[1].depth + p[2].depth + p[3].depth) / 4 });
+      }
+    });
+    return pieces;
+  }
+  function drawRingPieces(pieces) {
+    pieces.forEach(function (pc) {
+      ctx.beginPath();
+      ctx.moveTo(pc.p[0].x, pc.p[0].y);
+      for (var k = 1; k < 4; k++) ctx.lineTo(pc.p[k].x, pc.p[k].y);
+      ctx.closePath();
+      ctx.fillStyle = pc.color; ctx.strokeStyle = pc.color; ctx.lineWidth = 0.8;
+      ctx.fill(); ctx.stroke();
+    });
+  }
+
+  function drawSelection(b) {
+    var sp = b.screen, rr = (b.id === 'saturn' ? sp.r * 2.4 : sp.r) + 8;
+    ctx.save();
+    ctx.setLineDash([6, 5]);
+    ctx.strokeStyle = '#FFD23F'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(sp.x, sp.y, rr, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawLabels() {
+    var size = Math.round(Math.max(13, Math.min(17, view.w / 75)));
+    ctx.font = '700 ' + size + 'px ' + getComputedStyle(document.body).fontFamily;
+    ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    // The selected planet gets its name placed first, then the nearest ones.
+    // A name that would sit on top of another is moved up or down a line.
+    var order = BODIES.filter(function (b) { return b.screen; }).sort(function (a, b) {
+      return (b === selected) - (a === selected) || a.screen.depth - b.screen.depth;
+    });
+    var placed = [], lineH = size + 4;
+    order.forEach(function (b) {
+      var sp = b.screen, text = b.button || b.name, w = ctx.measureText(text).width;
+      var x, y;
+      if (b.id === 'sun') { x = sp.x - w / 2; y = sp.y + sp.r + lineH * 0.8; }
+      else { x = sp.x + (b.id === 'saturn' ? sp.r * 2.3 : sp.r) + 6; y = sp.y; }
+      var shifts = [0, lineH, -lineH, 2 * lineH, -2 * lineH], chosen = y;
+      for (var i = 0; i < shifts.length; i++) {
+        var ty = y + shifts[i];
+        var clash = placed.some(function (p) { return x < p.x + p.w && x + w > p.x && Math.abs(ty - p.y) < lineH; });
+        if (!clash) { chosen = ty; break; }
+      }
+      placed.push({ x: x, y: chosen, w: w });
+      ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(10, 14, 31, 0.85)';
+      ctx.strokeText(text, x, chosen);
+      ctx.fillStyle = selected === b ? '#FFD23F' : '#F5F1E6';
+      ctx.fillText(text, x, chosen);
+    });
+  }
+
+  function render() {
+    ctx.fillStyle = '#0A0E1F';
+    ctx.fillRect(0, 0, view.w, view.h);
+    ctx.fillStyle = '#FFFFFF';
+    drawStars();
+    drawOrbits();
+
+    var items = [];
+    BODIES.forEach(function (b) {
+      var p = project(b.pos.x, b.pos.y, b.pos.z);
+      b.screen = { x: p.x, y: p.y, r: Math.max(b.r * p.scale, 2), depth: p.depth };
+      items.push({ depth: p.depth, draw: b.id === 'sun' ? drawSun.bind(null, b) : drawPlanet.bind(null, b), body: b });
+      if (b.id === 'saturn') {
+        ringPieces(b).forEach(function (pc) {
+          items.push({ depth: pc.depth, draw: drawRingPieces.bind(null, [pc]) });
+        });
+      }
+    });
+    items.sort(function (a, b) { return b.depth - a.depth; });     // far things first
+    items.forEach(function (it) {
+      it.draw();
+      if (it.body && it.body === selected) drawSelection(it.body);
+    });
+    if (showNames) drawLabels();
+  }
+
+  // ---------- Animation ----------
+  function updatePositions(dt) {
+    BODIES.forEach(function (b) {
+      if (!b.orbit) return;
+      if (dt) b.angle += dt * (Math.PI * 2 / EARTH_LAP_SECONDS) / Math.sqrt(b.years);
+      b.pos.x = Math.cos(b.angle) * b.orbit;
+      b.pos.z = Math.sin(b.angle) * b.orbit;
+    });
+  }
+  var last = null;
+  function frame(t) {
+    var dt = last === null ? 0 : Math.min((t - last) / 1000, 0.1);
+    last = t;
+    updatePositions(playing ? dt : 0);
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- Picking a planet ----------
+  function bodyAt(x, y, fingerSized) {
+    var minHit = fingerSized ? 24 : 14, best = null, bestScore = Infinity;
+    BODIES.forEach(function (b) {
+      var sp = b.screen; if (!sp) return;
+      var d = Math.hypot(x - sp.x, y - sp.y);
+      var realR = b.id === 'saturn' ? sp.r * 1.8 : sp.r;
+      var hitR = Math.max(realR, minHit);
+      if (d > hitR) return;
+      // A direct hit on the nearest body wins; otherwise the closest centre wins.
+      var score = d <= realR ? sp.depth - 1e6 : d;
+      if (score < bestScore) { bestScore = score; best = b; }
+    });
+    return best;
+  }
+
+  function select(b) {
+    selected = b;
+    document.querySelectorAll('#planetButtons button').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(!!b && btn.dataset.id === b.id));
+    });
+    if (!b) { card.hidden = true; return; }
+    card.style.setProperty('--c', b.color);
+    card.style.setProperty('--l', b.light);
+    card.style.setProperty('--d', b.dark);
+    document.getElementById('cardName').textContent = b.name;
+    document.getElementById('cardOrder').textContent = b.order;
+    document.getElementById('cardFact').textContent = b.fact;
+    card.hidden = false;
+    card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop');
+  }
+
+  // ---------- Touch and mouse ----------
+  var pointers = new Map(), gesture = null;
+  function local(e) {
+    var rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+  canvas.addEventListener('pointerdown', function (e) {
+    if (e.button !== undefined && e.button > 0) return;
+    canvas.setPointerCapture(e.pointerId);
+    var p = local(e);
+    pointers.set(e.pointerId, p);
+    if (pointers.size === 1) {
+      gesture = { startX: p.x, startY: p.y, moved: false, startTime: e.timeStamp };
+    } else if (pointers.size === 2) {
+      var pts = Array.from(pointers.values());
+      gesture = { moved: true, pinchDist: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), zoom: cam.zoom };
+    }
+  });
+  canvas.addEventListener('pointermove', function (e) {
+    var p = local(e);
+    if (!pointers.has(e.pointerId)) {
+      if (e.pointerType === 'mouse') canvas.classList.toggle('on-planet', !!bodyAt(p.x, p.y, false));
+      return;
+    }
+    var prev = pointers.get(e.pointerId);
+    pointers.set(e.pointerId, p);
+    if (pointers.size === 1 && gesture) {
+      if (!gesture.moved && Math.hypot(p.x - gesture.startX, p.y - gesture.startY) > 8) {
+        gesture.moved = true;
+        canvas.classList.add('dragging');
+      }
+      if (gesture.moved) {
+        cam.yaw += (p.x - prev.x) * 0.008;
+        cam.pitch = Math.min(1.5, Math.max(-1.5, cam.pitch + (p.y - prev.y) * 0.006));
+      }
+    } else if (pointers.size === 2 && gesture && gesture.pinchDist) {
+      var pts = Array.from(pointers.values());
+      var dNow = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      cam.zoom = gesture.zoom * gesture.pinchDist / Math.max(dNow, 1);
+      applyZoom();
+    }
+  });
+  function endPointer(e, cancelled) {
+    if (!pointers.has(e.pointerId)) return;
+    var p = local(e);
+    if (!cancelled && pointers.size === 1 && gesture && !gesture.moved) {
+      select(bodyAt(p.x, p.y, e.pointerType !== 'mouse'));
+    }
+    pointers.delete(e.pointerId);
+    if (pointers.size === 0) { gesture = null; canvas.classList.remove('dragging'); }
+  }
+  canvas.addEventListener('pointerup', function (e) { endPointer(e, false); });
+  canvas.addEventListener('pointercancel', function (e) { endPointer(e, true); });
+  canvas.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    cam.zoom *= Math.exp(e.deltaY * 0.0012);
+    applyZoom();
+  }, { passive: false });
+
+  // Keyboard: arrows turn the model, + and - zoom, Escape closes the card.
+  canvas.addEventListener('keydown', function (e) {
+    var step = 0.08, used = true;
+    if (e.key === 'ArrowLeft') cam.yaw -= step;
+    else if (e.key === 'ArrowRight') cam.yaw += step;
+    else if (e.key === 'ArrowUp') cam.pitch = Math.min(1.5, cam.pitch + step);
+    else if (e.key === 'ArrowDown') cam.pitch = Math.max(-1.5, cam.pitch - step);
+    else if (e.key === '+' || e.key === '=') { cam.zoom /= 1.15; applyZoom(); }
+    else if (e.key === '-') { cam.zoom *= 1.15; applyZoom(); }
+    else used = false;
+    if (used) e.preventDefault();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') select(null); });
+
+  // ---------- Buttons ----------
+  var row = document.getElementById('planetButtons');
+  BODIES.forEach(function (b) {
+    var btn = document.createElement('button');
+    btn.dataset.id = b.id;
+    btn.setAttribute('aria-pressed', 'false');
+    btn.innerHTML = '<span class="dot" aria-hidden="true"></span>';
+    btn.firstChild.style.setProperty('--c', b.color);
+    btn.appendChild(document.createTextNode(b.button || b.name));
+    btn.addEventListener('click', function () { select(selected === b ? null : b); });
+    row.appendChild(btn);
+  });
+  document.getElementById('cardClose').addEventListener('click', function () { select(null); });
+
+  function setPlaying(on) {
+    playing = on;
+    playBtn.textContent = on ? 'Pause' : 'Play';
+    playBtn.setAttribute('aria-pressed', String(!on));
+  }
+  playBtn.addEventListener('click', function () { setPlaying(!playing); });
+  namesBtn.addEventListener('click', function () {
+    showNames = !showNames;
+    namesBtn.textContent = 'Names: ' + (showNames ? 'on' : 'off');
+    namesBtn.setAttribute('aria-pressed', String(showNames));
+  });
+  document.getElementById('zoomIn').addEventListener('click', function () { cam.zoom /= 1.25; applyZoom(); });
+  document.getElementById('zoomOut').addEventListener('click', function () { cam.zoom *= 1.25; applyZoom(); });
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    cam.yaw = DEFAULT_YAW; cam.pitch = defaultPitch(); cam.zoom = 1; applyZoom();
+  });
+
+  var root = document.documentElement;
+  var requestFull = root.requestFullscreen || root.webkitRequestFullscreen;
+  var exitFull = document.exitFullscreen || document.webkitExitFullscreen;
+  if (!requestFull) {
+    fullBtn.hidden = true;
+  } else {
+    fullBtn.addEventListener('click', function () {
+      if (document.fullscreenElement || document.webkitFullscreenElement) exitFull.call(document);
+      else requestFull.call(root);
+    });
+  }
+
+  // ---------- Start ----------
+  setPlaying(playing);
+  window.addEventListener('resize', resize);
+  resize();
+  updatePositions(0);
+  requestAnimationFrame(frame);
+
+  // Read-only helper used by the automatic checks: where a body is on screen right now.
+  window.solarSystem = {
+    screenPosition: function (id) {
+      var b = BODIES.filter(function (x) { return x.id === id; })[0];
+      return b && b.screen ? { x: b.screen.x, y: b.screen.y, r: b.screen.r } : null;
+    },
+    selected: function () { return selected ? selected.id : null; },
+    camera: function () { return { yaw: cam.yaw, pitch: cam.pitch, zoom: cam.zoom }; }
+  };
+})();
+</script>
+</body>
+</html>
