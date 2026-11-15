@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Today's sky</title>
+  <link rel="stylesheet" href="card.css">
+</head>
+<body>
+  <!--
+    WHAT READERS SEE comes from the data-... values on the next line.
+    Each morning: open this file with #edit at the end of the address, pick the sky,
+    press "Copy", paste the copied text over the data-... values below, save, and upload this file again.
+  -->
+  <article id="weather-card" class="card" data-weather="sunny" data-temp="18" data-unit="C" data-date="2026-11-15">
+    <p class="day"><span class="day-label">Today's sky</span> <span class="day-date"></span></p>
+
+    <svg class="sky" viewBox="0 0 200 160" aria-hidden="true" focusable="false">
+      <g class="sky-sats">
+        <path class="sky-sat"/><path class="sky-sat"/><path class="sky-sat"/><path class="sky-sat"/>
+        <path class="sky-sat"/><path class="sky-sat"/><path class="sky-sat"/><path class="sky-sat"/>
+      </g>
+      <path class="sky-bolt"/>
+      <path class="sky-body"/>
+    </svg>
+
+    <div class="reading" aria-live="polite">
+      <h2 class="weather-word">Sunny</h2>
+      <p class="weather-temp">18°C</p>
+    </div>
+    <p class="mood">Windows open, words come easy.</p>
+    <p class="unpublished" role="status" hidden></p>
+
+    <form class="owner" hidden onsubmit="return false">
+      <fieldset class="choices">
+        <legend>This morning's sky</legend>
+        <label><input type="radio" name="weather" value="sunny"><span>Sunny</span></label>
+        <label><input type="radio" name="weather" value="cloudy"><span>Cloudy</span></label>
+        <label><input type="radio" name="weather" value="rainy"><span>Rainy</span></label>
+        <label><input type="radio" name="weather" value="stormy"><span>Stormy</span></label>
+      </fieldset>
+
+      <div class="temp-row">
+        <label for="temp-input">Temperature</label>
+        <div class="temp-fields">
+          <input id="temp-input" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 12" aria-describedby="temp-error">
+          <select id="unit-select" aria-label="Unit">
+            <option value="C">°C</option>
+            <option value="F">°F</option>
+          </select>
+        </div>
+        <p id="temp-error" class="error" aria-live="polite"></p>
+      </div>
+
+      <div class="publish">
+        <label for="publish-line">For readers: paste this over the data-… values in index.html</label>
+        <input id="publish-line" type="text" readonly>
+        <button id="copy-line" type="button">Copy</button>
+        <p id="copy-status" class="hint" aria-live="polite"></p>
+      </div>
+    </form>
+  </article>
+  <script src="card.js"></script>
+</body>
+</html>

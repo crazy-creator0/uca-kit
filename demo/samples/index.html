@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UCA Kit samples</title>
+<meta name="description" content="Small ideas built twice by the same AI model, without and with the UCA Kit.">
+<style>
+:root { --paper: #f4f1ea; --panel: #ebe6da; --ink: #1b1a17; --muted: #5d584d; --rule: #cfc8b8; --accent: #b4491f;
+  --serif: Georgia, "Times New Roman", serif; --mono: Consolas, "SFMono-Regular", "Liberation Mono", monospace; }
+@media (prefers-color-scheme: dark) { :root { --paper: #181713; --panel: #221f19; --ink: #ece8dd; --muted: #a39d8e; --rule: #3a362c; --accent: #e8855a; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/1.6 var(--serif); }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 64rem; margin: 0 auto; padding: 0 16px; }
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 0; border-bottom: 2px solid var(--ink); font: 14px var(--mono); }
+.bar .mark { font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-size: 13px; }
+.bar nav { display: flex; gap: 16px; flex-wrap: wrap; }
+.bar nav a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
+.bar nav a[aria-current] { border-color: var(--accent); }
+h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.1; margin: 32px 0 8px; }
+.lede { color: var(--muted); max-width: 42rem; margin: 0 0 24px; }
+.note { border-left: 3px solid var(--ink); padding: 0 16px; color: var(--muted); max-width: 46rem; }
+code, pre { font: 15px/1.55 var(--mono); }
+code { background: var(--panel); padding: 1px 5px; border-radius: 2px; }
+footer { border-top: 2px solid var(--ink); margin-top: 48px; padding: 24px 0 48px; font-size: 15px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.chips li { font: 12px/1 var(--mono); border: 1px solid var(--rule); border-radius: 2px; padding: 5px 7px; color: var(--ink); }
+.chips li b { color: var(--muted); font-weight: 400; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 16px; margin: 0 0 24px; padding: 0; list-style: none; }
+.tile { display: flex; flex-direction: column; height: 100%; background: var(--panel); border: 1px solid var(--rule); border-radius: 2px; color: var(--ink); text-decoration: none; }
+.tile:hover { border-color: var(--accent); }
+.tile .thumb { aspect-ratio: 16 / 9; border-bottom: 1px solid var(--rule); display: grid; place-items: center; background: var(--paper); }
+.tile .thumb svg { width: 70%; height: auto; }
+.tile .body { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.tile .no { font: 700 12px var(--mono); color: var(--accent); letter-spacing: .08em; }
+.tile h2 { font-size: 1.25rem; line-height: 1.2; margin: 0; }
+.tile p { margin: 0; font-size: 16px; color: var(--muted); }
+.tile .score { margin-top: auto; font: 13px var(--mono); color: var(--muted); border-top: 1px solid var(--rule); padding-top: 10px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; font: 13px var(--mono); }
+.filters button { font: inherit; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 2px; padding: 5px 9px; cursor: pointer; }
+.filters button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="bar"><div class="mark">UCA Kit</div><nav aria-label="Site"><a href="../">Docs</a><a href="../samples/" aria-current="page">Samples</a><a href="https://github.com/crazy-creator0/uca-kit">GitHub</a></nav></div>
+<h1>Samples: the same request, without and with the kit</h1>
+<p class="lede">Each sample is one small idea. The same AI model got the same prompt twice: once in an empty folder, once in a folder with the kit installed. Open a sample to see the prompt and both results side by side.</p>
+<div class="filters" role="group" aria-label="Filter samples"><button type="button" data-filter="all" aria-pressed="true">All</button><button type="button" data-filter="learning" aria-pressed="false">Learning</button><button type="button" data-filter="tool" aria-pressed="false">Tool</button><button type="button" data-filter="widget" aria-pressed="false">Widget</button><button type="button" data-filter="2d" aria-pressed="false">2D</button><button type="button" data-filter="3d" aria-pressed="false">3D</button></div>
+<ul class="grid"><li data-tags="tool 2d"><a class="tile" href="tuition-tracker/">
+<div class="thumb"><svg viewBox="0 0 160 90" aria-hidden="true"><g stroke="currentColor" stroke-width="2" fill="none"><rect x="30" y="10" width="100" height="70" rx="2"/><path d="M30 28h100M30 44h100M30 60h100M70 10v70"/></g><g stroke="var(--accent)" stroke-width="3" fill="none" stroke-linecap="round"><path d="M100 36l5 4 10-9"/><path d="M100 52l5 4 10-9"/></g><path d="M100 68h14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div>
+<div class="body"><div class="no">SAMPLE 01</div><h2>Tuition fee tracker</h2><p>A home tutor with 25 students marks monthly fees as paid and sees the total still pending, on a phone.</p><ul class="chips"><li><b>Category:</b> Tool</li><li><b>Made with:</b> before v0.1.0</li><li><b>View:</b> 2D</li><li><b>Motion:</b> None</li></ul>
+<div class="score">Senior Bar check: without kit 6 of 9 · with kit 7 of 10</div></div></a></li><li data-tags="widget 2d"><a class="tile" href="weather-mood-card/">
+<div class="thumb"><svg viewBox="0 0 160 90" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="58" cy="45" r="16" stroke="var(--accent)"/><path d="M58 18v-6M58 78v-6M31 45h-6M91 45h-6M39 26l-4-4M81 68l-4-4M39 64l-4 4M81 22l-4 4" stroke="var(--accent)"/><path d="M96 58h40a12 12 0 0 0-6-23 16 16 0 0 0-30 5 9 9 0 0 0-4 18z"/><path d="M106 66l-3 8M118 66l-3 8M130 66l-3 8" stroke-width="2.5"/></g></svg></div>
+<div class="body"><div class="no">SAMPLE 02</div><h2>Weather mood card</h2><p>A blog sidebar card where the owner picks today&#x27;s weather and the drawing changes shape into the new one.</p><ul class="chips"><li><b>Category:</b> Widget</li><li><b>Made with:</b> v0.1.1</li><li><b>View:</b> 2D</li><li><b>Motion:</b> Shape morph</li></ul>
+<div class="score">Senior Bar check: without kit 7 of 10 · with kit 12 of 14</div></div></a></li><li data-tags="learning 3d"><a class="tile" href="solar-system/">
+<div class="thumb"><svg viewBox="0 0 160 90" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="80" cy="45" rx="30" ry="10"/><ellipse cx="80" cy="45" rx="52" ry="18"/><ellipse cx="80" cy="45" rx="74" ry="27"/></g><circle cx="80" cy="45" r="9" fill="var(--accent)"/><circle cx="109" cy="47" r="4" fill="currentColor"/><circle cx="34" cy="37" r="5" fill="currentColor"/><circle cx="140" cy="60" r="3.5" fill="currentColor"/><ellipse cx="34" cy="37" rx="9" ry="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></div>
+<div class="body"><div class="no">SAMPLE 03</div><h2>Solar system in 3D</h2><p>The Sun and eight planets orbit in 3D; a 10-year-old turns the model by dragging and taps a planet for a fact.</p><ul class="chips"><li><b>Category:</b> Learning</li><li><b>Made with:</b> v0.1.1</li><li><b>View:</b> 3D</li><li><b>Motion:</b> Orbit, drag to rotate</li></ul>
+<div class="score">Senior Bar check: without kit 5 of 9 · with kit 6 of 9</div></div></a></li></ul>
+<p class="note">One run per side. The Senior Bar check is the kit's own static checklist; it does not say which result is nicer to use. Open both and judge for yourself.</p>
+<footer><p><strong>Created with UCA Kit.</strong> Written by Crazy Creators. Each sample is one run per side with the same model and the same prompt; results vary from run to run. The samples show how to test the kit. They are not proof that it works.</p><p>MIT licensed. © 2026 Crazy Creators.</p></footer>
+</div>
+<script>
+(function () {
+  var buttons = document.querySelectorAll("[data-filter]");
+  buttons.forEach(function (b) {
+    b.addEventListener("click", function () {
+      var f = b.getAttribute("data-filter");
+      buttons.forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      document.querySelectorAll(".grid > li").forEach(function (li) {
+        li.hidden = f !== "all" && li.getAttribute("data-tags").split(" ").indexOf(f) < 0;
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

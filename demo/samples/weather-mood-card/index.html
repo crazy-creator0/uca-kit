@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weather mood card: with and without UCA Kit</title>
+<meta name="description" content="A blog sidebar card where the owner picks today&#x27;s weather and the drawing changes shape into the new one.">
+<style>
+:root { --paper: #f4f1ea; --panel: #ebe6da; --ink: #1b1a17; --muted: #5d584d; --rule: #cfc8b8; --accent: #b4491f;
+  --serif: Georgia, "Times New Roman", serif; --mono: Consolas, "SFMono-Regular", "Liberation Mono", monospace; }
+@media (prefers-color-scheme: dark) { :root { --paper: #181713; --panel: #221f19; --ink: #ece8dd; --muted: #a39d8e; --rule: #3a362c; --accent: #e8855a; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/1.6 var(--serif); }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 64rem; margin: 0 auto; padding: 0 16px; }
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 0; border-bottom: 2px solid var(--ink); font: 14px var(--mono); }
+.bar .mark { font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-size: 13px; }
+.bar nav { display: flex; gap: 16px; flex-wrap: wrap; }
+.bar nav a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
+.bar nav a[aria-current] { border-color: var(--accent); }
+h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.1; margin: 32px 0 8px; }
+.lede { color: var(--muted); max-width: 42rem; margin: 0 0 24px; }
+.note { border-left: 3px solid var(--ink); padding: 0 16px; color: var(--muted); max-width: 46rem; }
+code, pre { font: 15px/1.55 var(--mono); }
+code { background: var(--panel); padding: 1px 5px; border-radius: 2px; }
+footer { border-top: 2px solid var(--ink); margin-top: 48px; padding: 24px 0 48px; font-size: 15px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.chips li { font: 12px/1 var(--mono); border: 1px solid var(--rule); border-radius: 2px; padding: 5px 7px; color: var(--ink); }
+.chips li b { color: var(--muted); font-weight: 400; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+[role="tablist"] { display: flex; gap: 0; border-bottom: 2px solid var(--ink); margin: 24px 0 0; overflow-x: auto; }
+[role="tab"] { font: 15px var(--mono); background: none; color: var(--muted); border: 0; border-bottom: 3px solid transparent; padding: 10px 14px; cursor: pointer; white-space: nowrap; margin-bottom: -2px; }
+[role="tab"][aria-selected="true"] { color: var(--ink); border-color: var(--accent); }
+[role="tabpanel"] { padding: 24px 0; }
+[role="tabpanel"][hidden] { display: none; }
+.frame { border: 1px solid var(--rule); border-radius: 2px; background: #fff; }
+.frame iframe { display: block; width: 100%; height: 72vh; min-height: 30rem; border: 0; }
+.frame .open { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border-top: 1px solid var(--rule); background: var(--panel); font: 13px var(--mono); }
+pre.prompt { white-space: pre-wrap; background: var(--panel); border-left: 3px solid var(--accent); padding: 16px; margin: 0 0 16px; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 16px; margin: 0 0 16px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); }
+th { font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.scroll { overflow-x: auto; }
+details { margin: 16px 0; }
+summary { cursor: pointer; font: 15px var(--mono); }
+details pre { white-space: pre-wrap; background: var(--panel); padding: 16px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="bar"><div class="mark">UCA Kit</div><nav aria-label="Site"><a href="../../">Docs</a><a href="../../samples/" aria-current="page">Samples</a><a href="https://github.com/crazy-creator0/uca-kit">GitHub</a></nav></div>
+<p style="margin:24px 0 0;font:13px var(--mono)"><a href="../">← All samples</a></p>
+<h1>Sample 02: Weather mood card</h1>
+<p class="lede">A blog sidebar card where the owner picks today&#x27;s weather and the drawing changes shape into the new one.</p>
+<ul class="chips"><li><b>Category:</b> Widget</li><li><b>Made with:</b> v0.1.1</li><li><b>View:</b> 2D</li><li><b>Motion:</b> Shape morph</li></ul>
+<div role="tablist" aria-label="Views">
+<button role="tab" id="tab-prompt" aria-controls="prompt" aria-selected="true">Prompt</button>
+<button role="tab" id="tab-without" aria-controls="without" aria-selected="false" tabindex="-1">Without kit</button>
+<button role="tab" id="tab-with" aria-controls="with" aria-selected="false" tabindex="-1">With kit</button>
+</div>
+<section role="tabpanel" id="prompt" aria-labelledby="tab-prompt">
+<p>Both runs got this prompt word for word. Only the folder line differed: an empty folder for one, a folder with the kit installed for the other. Neither run was told to use or avoid the kit.</p>
+<pre class="prompt">You are an AI coding assistant helping a non-programmer. Your working folder is: {{FOLDER}}
+Work only inside that folder and do not read or change anything outside it. If the folder contains project instructions (CLAUDE.md, AGENTS.md or similar), follow them. No internet and no package installs; use only what is already installed (Node is available, and plain HTML, CSS and JavaScript are fine).
+
+The user says:
+
+&quot;I write a small daily blog and I want a little weather card for my sidebar that shows today&#x27;s weather with a mood: sunny, cloudy, rainy or stormy. When I change the weather, the picture should smoothly change shape into the new one instead of just swapping. I set the weather myself each morning with buttons; there is no live weather feed. It must work as plain files I can open in a browser (no server).&quot;
+
+If you would normally ask questions, use these answers instead: only the blog owner changes it; also show a temperature that the owner types in; it should remember the last choice on the same browser; it must look good on a phone and in a narrow sidebar; design is up to you.
+
+Build it with index.html as the entry file. Then end with a final message to the user answering: &quot;Is this ready for me to put on my blog? Tell me exactly what you checked and what you did not check.&quot; Be truthful about what you actually ran.</pre>
+<h2 style="font-size:1.2rem">What was measured</h2>
+<div class="scroll"><table><thead><tr><th>Check</th><th>Without kit</th><th>With kit</th></tr></thead><tbody><tr><td>Files the assistant left in the project (scratch folder not counted)</td><td>2 (index.html, today.js)</td><td>9 (index.html, card.css, card.js, README, design notes, project card, package.json, a test file, .gitignore)</td></tr><tr><td>README with daily steps</td><td>No</td><td>Yes</td></tr><tr><td>Automatic tests kept in the project</td><td>None (a browser check script in _checks/)</td><td>7 tests, npm test, pass (re-run by the maintainer)</td></tr><tr><td>Where its own screenshots and check scripts went</td><td>_checks/ in the project folder</td><td>Git-ignored .uca-workspace/ scratch folder</td></tr><tr><td>Loads at 390 px and 1366 px with no console errors (headless Chrome, run by the maintainer)</td><td>Yes</td><td>Yes</td></tr><tr><td>Senior Bar check (static checklist, v0.1.1)</td><td>7 of 10</td><td>12 of 14</td></tr><tr><td>Closing answer says it is not ready yet and lists what was not checked</td><td>Yes</td><td>Yes</td></tr></tbody></table></div>
+<p class="note">Both runs found the same real limit on their own: with no server, the buttons only change the card in the owner&#x27;s browser, so readers need the values pasted into a file. Both checked the morph in a browser and fixed bugs from screenshots. The with-kit run left tests, a README and design notes; the without-kit run left fewer files. One run per side.</p>
+<p><a href="PROMPT.md">PROMPT.md</a> has the exact prompt and how to repeat this yourself.</p>
+</section>
+<section role="tabpanel" id="without" aria-labelledby="tab-without" hidden><div class="frame"><iframe src="without-kit/index.html" title="Weather mood card, without kit" loading="lazy"></iframe>
+<div class="open"><span>Without kit: 2 file(s): <code>index.html</code>, <code>today.js</code></span><a href="without-kit/index.html" target="_blank" rel="noopener">Open full page</a></div></div>
+<details><summary>What the assistant told the user at the end</summary><pre>It isn&#x27;t ready to go live yet, but it&#x27;s close. The card works when you open it in a browser. The part I couldn&#x27;t check is getting it onto your blog, because I don&#x27;t know which blog service you use. There&#x27;s also a limit you need to know about first.
+
+**What it is**
+- `index.html` is the card. It shows the date, a picture, the mood word with a short line, and your temperature. When you pick a new weather, the picture changes shape into the new one: the sun turns into a cloud, raindrops grow out of it, and a drop turns into a lightning bolt.
+- Open it as `index.html#edit` to get your buttons and the temperature box. Without `#edit` at the end of the address, people just see the card.
+- `today.js` is a tiny file that holds what your visitors see.
+
+**The limit: your button clicks are only saved in your own browser.** Without a server, a plain file can&#x27;t send them to other people&#x27;s browsers. To update the card for everyone each morning:
+1. Open `index.html#edit` and pick the weather.
+2. Open &quot;Show this to your visitors&quot; and press &quot;Copy line&quot;.
+3. Paste that line into `today.js` and upload `today.js` again.
+
+If you&#x27;d rather type the line into `today.js` yourself each morning, that works too. Hiding the buttons is not a password. Anyone who adds `#edit` to the address can change the card, but only in their own browser, so your visitors never see it.
+
+**What I checked** (an automatic script opening the page in Chrome, with no screen showing; all 25 checks passed):
+- With no server, the card shows what&#x27;s in `today.js`, and the buttons only appear with `#edit`.
+- The change really is a smooth change of shape: halfway through, the picture is between the old and new shapes. Clicking several buttons quickly ends on the last one.
+- Temperature: &quot;-3&quot; shows as −3°C, °F works, a blank box hides the temperature, and &quot;abc&quot; or &quot;500&quot; give a polite message and leave the card as it was.
+- After a reload, the same browser remembers your last choice. A separate browser profile, standing in for a visitor, still sees `today.js`.
+- If your device is set to reduce motion, the picture changes straight away without the animation.
+- No errors appeared at widths of 180, 220, 300 and 390 pixels (narrow sidebar up to phone size). I also looked at screenshots of every mood. That&#x27;s how I found and fixed two problems: the card stuck out past the edge at 180px, and the °C/°F dropdown poked out of its panel.
+
+**What I did not check**
+- Safari, Firefox, Edge, or a real phone or tablet. I only tested Chrome, with the window set to phone and sidebar widths.
+- Putting it on your blog. I don&#x27;t know your blog service. Usually you upload both files and show the card in your sidebar with an embed/iframe widget, and some services don&#x27;t allow that.
+- That the &quot;Copy line&quot; button really copies, and how the &quot;Show this to your visitors&quot; section looks when it&#x27;s opened.
+- That the date switches correctly when the day changes overnight, or how it works with a screen reader.
+
+**Next step:** open `index.html#edit` on your own computer and phone and try the buttons. Then tell me which blog service you use, and I&#x27;ll give you the exact steps for adding it to your sidebar.
+
+The `_checks` folder holds my test script and screenshots. You don&#x27;t need to upload it.</pre></details></section>
+<section role="tabpanel" id="with" aria-labelledby="tab-with" hidden><div class="frame"><iframe src="with-kit/index.html" title="Weather mood card, with kit" loading="lazy"></iframe>
+<div class="open"><span>With kit: 9 file(s): <code>index.html</code>, <code>card.css</code>, <code>card.js</code>, <code>README.md</code>, <code>DESIGN.md</code>, <code>PROJECT.md</code>, <code>package.json</code>, <code>tests/card.test.cjs</code>, <code>.gitignore</code></span><a href="with-kit/index.html" target="_blank" rel="noopener">Open full page</a></div></div>
+<details><summary>What the assistant told the user at the end</summary><pre>**Is it ready for your blog? Not quite.** The card works and looks right in my tests. But there&#x27;s one thing you need to know first, and some things I couldn&#x27;t test.
+
+**What you need to know first:** because it has no server, the buttons only change the card in the browser you click them in. Your readers won&#x27;t see what you pick. They see the values written inside `index.html`. So each morning you&#x27;d do this:
+1. Open `index.html#edit` (the normal address with `#edit` added at the end).
+2. Pick the sky and type the temperature.
+3. Press **Copy** and paste the copied line into `index.html`.
+4. Upload `index.html` again.
+
+The card reminds you with a dashed note until you&#x27;ve done it. The buttons are also hidden, not locked: anyone who adds `#edit` can click them, but it only changes their own screen.
+
+**What I built** (everything is in `&lt;project folder&gt;`):
+- **The card:** `index.html` is the file to open, with `card.css` and `card.js` beside it. It shows the sky drawing, the weather word, the temperature, a one-line mood, and the date.
+- **The morph:** when you change the weather, the drawing changes shape. The sun swells into a cloud, and rays turn into raindrops.
+- **Remembering:** your last choice is remembered in the same browser.
+- **Also included:** a `README.md` with the daily steps and a sample way to add it to your sidebar, plus the design notes (`DESIGN.md`) and some automatic tests.
+
+**What I actually ran and checked:**
+- **Automatic tests:** 7 checks of the drawing and the temperature box pass (`npm test`).
+- **Browser test:** I opened it in a hidden Chrome window straight from the files, with no server, and checked:
+  - Readers see the published values.
+  - The buttons and the morph work, including clicking quickly twice.
+  - Your choice is still there after reopening the page.
+  - Typing &quot;abc&quot; as the temperature shows a plain message.
+  - It works with the keyboard.
+  - It changes instantly for people whose device is set to reduce motion.
+  - Broken saved data doesn&#x27;t break the card.
+  - There were no errors, and nothing spills sideways at 170px, 220px, 300px and 390px wide.
+- **Screenshots:** I looked at screenshots of all four skies at those widths, plus frames taken during the morph. They showed two bugs, which I fixed:
+  - Colours faded in wrong on every page load.
+  - A raindrop overlapped the lightning bolt.
+- **The kit&#x27;s own checks:** they flagged the font choice. I&#x27;m leaving it, because there&#x27;s no internet, so the card uses fonts already on readers&#x27; devices. They also flagged a missing start command. A card you open by double-clicking doesn&#x27;t need one.
+
+**What I did not check:**
+- Safari, Firefox, or a real phone (only Chrome on a computer, with a narrow window standing in for a phone).
+- Your blog platform. I don&#x27;t know which one you use, the sample sidebar code in the README is untested, and some platforms block that kind of code or uploading `.js` files. You may also need to adjust its height.
+- The **Copy** button actually copying. If it fails, it selects the text so you can copy it yourself.
+- The fonts on Windows or Apple devices.
+
+**Next step:** try `index.html#edit` on your own phone and computer. Then put the card on one test page of your blog before adding it to the sidebar.
+
+This folder isn&#x27;t saved with Git (a tool that keeps a history of versions so you can undo changes). I didn&#x27;t set it up without asking; say so if you&#x27;d like it. My test scripts and screenshots are in `.uca-workspace/`, which you can delete.</pre></details></section>
+<footer><p><strong>Created with UCA Kit.</strong> Written by Crazy Creators. Each sample is one run per side with the same model and the same prompt; results vary from run to run. The samples show how to test the kit. They are not proof that it works.</p><p>MIT licensed. © 2026 Crazy Creators.</p></footer>
+</div>
+<script>
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function show(tab, focus) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute("aria-selected", String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+    if (focus) tab.focus();
+    try { history.replaceState(null, "", "#" + tab.getAttribute("aria-controls")); } catch (e) {}
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener("click", function () { show(t, false); });
+    t.addEventListener("keydown", function (ev) {
+      if (ev.key === "ArrowRight") show(tabs[(i + 1) % tabs.length], true);
+      if (ev.key === "ArrowLeft") show(tabs[(i - 1 + tabs.length) % tabs.length], true);
+    });
+  });
+  var start = tabs.filter(function (t) { return "#" + t.getAttribute("aria-controls") === location.hash; })[0];
+  if (start) show(start, false);
+})();
+</script>
+</body>
+</html>

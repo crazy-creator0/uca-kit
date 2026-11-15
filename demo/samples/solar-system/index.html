@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solar system in 3D: with and without UCA Kit</title>
+<meta name="description" content="The Sun and eight planets orbit in 3D; a 10-year-old turns the model by dragging and taps a planet for a fact.">
+<style>
+:root { --paper: #f4f1ea; --panel: #ebe6da; --ink: #1b1a17; --muted: #5d584d; --rule: #cfc8b8; --accent: #b4491f;
+  --serif: Georgia, "Times New Roman", serif; --mono: Consolas, "SFMono-Regular", "Liberation Mono", monospace; }
+@media (prefers-color-scheme: dark) { :root { --paper: #181713; --panel: #221f19; --ink: #ece8dd; --muted: #a39d8e; --rule: #3a362c; --accent: #e8855a; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/1.6 var(--serif); }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 64rem; margin: 0 auto; padding: 0 16px; }
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 0; border-bottom: 2px solid var(--ink); font: 14px var(--mono); }
+.bar .mark { font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-size: 13px; }
+.bar nav { display: flex; gap: 16px; flex-wrap: wrap; }
+.bar nav a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
+.bar nav a[aria-current] { border-color: var(--accent); }
+h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.1; margin: 32px 0 8px; }
+.lede { color: var(--muted); max-width: 42rem; margin: 0 0 24px; }
+.note { border-left: 3px solid var(--ink); padding: 0 16px; color: var(--muted); max-width: 46rem; }
+code, pre { font: 15px/1.55 var(--mono); }
+code { background: var(--panel); padding: 1px 5px; border-radius: 2px; }
+footer { border-top: 2px solid var(--ink); margin-top: 48px; padding: 24px 0 48px; font-size: 15px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.chips li { font: 12px/1 var(--mono); border: 1px solid var(--rule); border-radius: 2px; padding: 5px 7px; color: var(--ink); }
+.chips li b { color: var(--muted); font-weight: 400; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+[role="tablist"] { display: flex; gap: 0; border-bottom: 2px solid var(--ink); margin: 24px 0 0; overflow-x: auto; }
+[role="tab"] { font: 15px var(--mono); background: none; color: var(--muted); border: 0; border-bottom: 3px solid transparent; padding: 10px 14px; cursor: pointer; white-space: nowrap; margin-bottom: -2px; }
+[role="tab"][aria-selected="true"] { color: var(--ink); border-color: var(--accent); }
+[role="tabpanel"] { padding: 24px 0; }
+[role="tabpanel"][hidden] { display: none; }
+.frame { border: 1px solid var(--rule); border-radius: 2px; background: #fff; }
+.frame iframe { display: block; width: 100%; height: 72vh; min-height: 30rem; border: 0; }
+.frame .open { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border-top: 1px solid var(--rule); background: var(--panel); font: 13px var(--mono); }
+pre.prompt { white-space: pre-wrap; background: var(--panel); border-left: 3px solid var(--accent); padding: 16px; margin: 0 0 16px; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 16px; margin: 0 0 16px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); }
+th { font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.scroll { overflow-x: auto; }
+details { margin: 16px 0; }
+summary { cursor: pointer; font: 15px var(--mono); }
+details pre { white-space: pre-wrap; background: var(--panel); padding: 16px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="bar"><div class="mark">UCA Kit</div><nav aria-label="Site"><a href="../../">Docs</a><a href="../../samples/" aria-current="page">Samples</a><a href="https://github.com/crazy-creator0/uca-kit">GitHub</a></nav></div>
+<p style="margin:24px 0 0;font:13px var(--mono)"><a href="../">← All samples</a></p>
+<h1>Sample 03: Solar system in 3D</h1>
+<p class="lede">The Sun and eight planets orbit in 3D; a 10-year-old turns the model by dragging and taps a planet for a fact.</p>
+<ul class="chips"><li><b>Category:</b> Learning</li><li><b>Made with:</b> v0.1.1</li><li><b>View:</b> 3D</li><li><b>Motion:</b> Orbit, drag to rotate</li></ul>
+<div role="tablist" aria-label="Views">
+<button role="tab" id="tab-prompt" aria-controls="prompt" aria-selected="true">Prompt</button>
+<button role="tab" id="tab-without" aria-controls="without" aria-selected="false" tabindex="-1">Without kit</button>
+<button role="tab" id="tab-with" aria-controls="with" aria-selected="false" tabindex="-1">With kit</button>
+</div>
+<section role="tabpanel" id="prompt" aria-labelledby="tab-prompt">
+<p>Both runs got this prompt word for word. Only the folder line differed: an empty folder for one, a folder with the kit installed for the other. Neither run was told to use or avoid the kit.</p>
+<pre class="prompt">You are an AI coding assistant helping a non-programmer. Your working folder is: {{FOLDER}}
+Work only inside that folder and do not read or change anything outside it. If the folder contains project instructions (CLAUDE.md, AGENTS.md or similar), follow them. No internet and no package installs; use only what is already installed (Node is available, and plain HTML, CSS and JavaScript are fine).
+
+The user says:
+
+&quot;My 10-year-old daughter has a school project on the solar system. Make a 3D model of the Sun and the eight planets going around it that she can turn with her finger or the mouse, and tap a planet to see its name and one fact about it. It must work as plain files we can open in a browser (no server), on a tablet and on a laptop.&quot;
+
+If you would normally ask questions, use these answers instead: no internet, so no libraries can be downloaded; the facts should be simple enough for a 10-year-old; sizes and distances do not need to be to scale, but say so on the page; she will show it in class from a laptop; design is up to you.
+
+Build it with index.html as the entry file. Then end with a final message to the user answering: &quot;Is this ready for her to show in class? Tell me exactly what you checked and what you did not check.&quot; Be truthful about what you actually ran.</pre>
+<h2 style="font-size:1.2rem">What was measured</h2>
+<div class="scroll"><table><thead><tr><th>Check</th><th>Without kit</th><th>With kit</th></tr></thead><tbody><tr><td>Files the assistant left in the project (scratch folder not counted)</td><td>1 (index.html)</td><td>5 (index.html, README, design notes, project card, .gitignore)</td></tr><tr><td>README</td><td>No</td><td>Yes</td></tr><tr><td>Automatic tests kept in the project</td><td>None</td><td>None (browser check scripts stayed in the .uca-workspace/ scratch folder)</td></tr><tr><td>3D drawn without any library</td><td>Yes</td><td>Yes</td></tr><tr><td>Loads at 390 px and 1366 px with no console errors (headless Chrome, run by the maintainer)</td><td>Yes</td><td>Yes</td></tr><tr><td>Senior Bar check (static checklist, v0.1.1)</td><td>5 of 9</td><td>6 of 9</td></tr><tr><td>Closing answer is a conditional yes, asks for a run-through on the class laptop, and says the facts were not checked against a source</td><td>Yes</td><td>Yes</td></tr></tbody></table></div>
+<p class="note">The two results are close. Both drew the 3D by hand, tested taps and drags in a browser, and fixed problems they saw in screenshots. The checklist marks both down for being one file with no tests, which both chose on purpose so the page is easy to carry on a USB stick. One run per side.</p>
+<p><a href="PROMPT.md">PROMPT.md</a> has the exact prompt and how to repeat this yourself.</p>
+</section>
+<section role="tabpanel" id="without" aria-labelledby="tab-without" hidden><div class="frame"><iframe src="without-kit/index.html" title="Solar system in 3D, without kit" loading="lazy"></iframe>
+<div class="open"><span>Without kit: 1 file(s): <code>index.html</code></span><a href="without-kit/index.html" target="_blank" rel="noopener">Open full page</a></div></div>
+<details><summary>What the assistant told the user at the end</summary><pre>**Mostly yes, but she should do a 2-minute try-out on the laptop she&#x27;ll use in class first.** It worked in every test I ran, but I only tested in Chrome on my own machine, not on your laptop or tablet.
+
+**What I built:** one file, `&lt;project folder&gt;/index.html`. Double-click it and it opens in the browser. It needs no internet, no server and no other files, so it can go on a USB stick.
+
+- **The model:** the Sun and the eight planets go around it on their orbits. The inner planets move faster. Saturn has rings and Jupiter has its red spot.
+- **Turning and zooming:** drag with a finger or the mouse to turn it. Pinch or use the mouse wheel to zoom.
+- **Facts:** tap any planet or the Sun to see a card with its name, its position from the Sun, and one simple fact. There&#x27;s also a row of planet buttons at the bottom, which is handy if a small planet is hard to hit.
+- **Buttons:** Pause/Play, Names on/off, and Reset view.
+- **Not to scale:** a box at the top of the page says the sizes and distances are not to scale.
+
+**What I checked** (in Chrome running hidden on my side, loading the file directly with no server):
+- **Screen sizes:** a laptop (1366×768), a large monitor (1920×1080), a tablet held sideways and upright, and a phone. All nine bodies started on screen every time.
+- **Mouse:** dragging turns the model, and the mouse wheel zooms.
+- **Tapping:** clicking or tapping each of the nine bodies opened the right card, 9 out of 9 at every screen size. Tapping slightly next to tiny Mercury still picks it.
+- **Touch:** I used Chrome&#x27;s touch simulation. A one-finger drag turns the model, a two-finger pinch zooms, and neither one opens a card by accident. The page itself didn&#x27;t scroll or zoom.
+- **Buttons:** all the buttons and the close (×) on the card work.
+- **No errors:** there were no error messages, and the page made no requests to the internet.
+- **Screenshots:** I looked at them myself. I fixed three problems they showed: the card covered planets on a laptop (it now sits in the empty top-right corner), names overlapped the Sun, and there were stray black marks next to some names.
+
+**What I did not check:**
+- **Other browsers:** I didn&#x27;t try Safari, Firefox or Edge, or an iPad or Android tablet. Touch was only simulated, never tried with a real finger.
+- **Your class setup:** I didn&#x27;t try your laptop, the classroom projector, or very slow computers.
+- **The facts:** I wrote them from my own knowledge and couldn&#x27;t look them up against a source (no internet). I believe they&#x27;re right, but it&#x27;s worth a quick look at them together.
+- **Card on an upright tablet:** when the fact card is open, it can partly cover Neptune. Closing the card with × fixes it.</pre></details></section>
+<section role="tabpanel" id="with" aria-labelledby="tab-with" hidden><div class="frame"><iframe src="with-kit/index.html" title="Solar system in 3D, with kit" loading="lazy"></iframe>
+<div class="open"><span>With kit: 5 file(s): <code>index.html</code>, <code>README.md</code>, <code>DESIGN.md</code>, <code>PROJECT.md</code>, <code>.gitignore</code></span><a href="with-kit/index.html" target="_blank" rel="noopener">Open full page</a></div></div>
+<details><summary>What the assistant told the user at the end</summary><pre>I&#x27;ve built it, and it&#x27;s ready for her to try. I&#x27;d call it ready for class once you&#x27;ve done a 5-minute run-through on the actual laptop. I tested it carefully in an automated browser on this computer, but I couldn&#x27;t test it on your devices.
+
+**What she gets:** a single file, `index.html`. Double-click it and it opens in the browser. No internet or install needed, and it&#x27;s easy to copy to a USB stick. The Sun and eight planets go around in 3D. She can turn the model by dragging with a finger or the mouse. Tapping a planet, or its button at the bottom, opens a card with its name, its place from the Sun, and one simple fact. There are also Pause, zoom, Names on/off, Reset view and Full screen buttons. A yellow &quot;Not to scale!&quot; sticker sits at the top, and on laptops and wide screens a sentence under it gives the real numbers (portrait screens show only the sticker). I drew the 3D myself without any add-ons, so nothing needs downloading.
+
+**What I checked (all actually run, in headless Chrome, which is Chrome with no visible window):**
+- **Opening from disk:** the page opened straight from the file, with no errors and no internet requests.
+- **Laptop (1366×768, mouse):** all 9 bodies are on screen and moving. Clicking Saturn opens the right card. Dragging turns the model, and a drag doesn&#x27;t count as a click. Mouse wheel zoom, Reset view, Pause, the × button, the Esc key and clicking empty space all work. All 9 buttons open the correct card.
+- **Tablet size, both ways round, simulated touch:** tapping Mars works, and so does tapping tiny Mercury right next to the Sun. One-finger drag turns the model and two-finger pinch zooms. The page doesn&#x27;t scroll by accident, and all 9 planet buttons fit across the landscape screen.
+- **Other cases:** with the &quot;reduce motion&quot; setting on, it starts paused. On a phone-width screen it still works. If JavaScript is off or the browser can&#x27;t draw, a plain message shows. My JavaScript-off check reported a fail at first, but the screenshot showed the message, so the fault was in my check.
+- **Screenshots I looked at:** they showed two problems, which I fixed. Planet names piled on top of each other when the model was turned edge-on, and on an upright tablet the model was small with lots of empty sky above it.
+- **The kit&#x27;s checks:**
+  - **Design check:** it flagged only &quot;no downloaded font&quot;. That&#x27;s on purpose, because there&#x27;s no internet.
+  - **Senior checklist (6 of 9):** it marks down &quot;everything in one file&quot;, which is on purpose so it&#x27;s easy to carry. It also marks down &quot;no test command&quot;: my browser check exists but depends on tools on this computer.
+
+**What I did not check:**
+- **Real devices:** not on a real iPad or Android tablet, not with a real finger, and not in Safari or Firefox. Only Chrome, which is the same engine Edge uses.
+- **Your setup:** not on your school laptop, its speed, or a projector.
+- **Full screen:** I didn&#x27;t press the button, because the test browser can&#x27;t go full screen.
+- **The facts:** I wrote them from my own knowledge, with no internet to double-check. I believe they&#x27;re right (for example Mercury 88 days, Jupiter more than 1,000 Earths, Neptune winds about 2,000 km/h), but please read the 9 short facts once before class.
+
+**Good to know:**
+- On a wide screen the fact card sits on the right and can hide a planet behind it. Close it with × or tap empty space.
+- When the model is turned fully side-on, some names sit over the Sun&#x27;s glow.
+
+**Run-through on the class laptop:** open the file, drag, click 2–3 planets, try Full screen. Do the same on the tablet if she&#x27;ll use it.
+
+I didn&#x27;t set up Git (a tool that saves versions so changes can be undone). Tell me if you&#x27;d like it.</pre></details></section>
+<footer><p><strong>Created with UCA Kit.</strong> Written by Crazy Creators. Each sample is one run per side with the same model and the same prompt; results vary from run to run. The samples show how to test the kit. They are not proof that it works.</p><p>MIT licensed. © 2026 Crazy Creators.</p></footer>
+</div>
+<script>
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function show(tab, focus) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute("aria-selected", String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+    if (focus) tab.focus();
+    try { history.replaceState(null, "", "#" + tab.getAttribute("aria-controls")); } catch (e) {}
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener("click", function () { show(t, false); });
+    t.addEventListener("keydown", function (ev) {
+      if (ev.key === "ArrowRight") show(tabs[(i + 1) % tabs.length], true);
+      if (ev.key === "ArrowLeft") show(tabs[(i - 1 + tabs.length) % tabs.length], true);
+    });
+  });
+  var start = tabs.filter(function (t) { return "#" + t.getAttribute("aria-controls") === location.hash; })[0];
+  if (start) show(start, false);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "weather-mood-card",
+  "private": true,
+  "description": "Sidebar weather mood card. Plain files; no dependencies.",
+  "scripts": {
+    "test": "node --test tests/card.test.cjs"
+  }
+}
