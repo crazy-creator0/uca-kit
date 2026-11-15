@@ -232,9 +232,44 @@ function diffMaps(before, after) {
 const totalChanged = (change) => change.added.length + change.modified.length + change.deleted.length;
 const EMPTY_CHANGE = () => ({ added: [], modified: [], deleted: [] });
 
-function copyInto(source, destination) {
-  fs.mkdirSync(path.dirname(destination), { recursive: true });
-  fs.copyFileSync(source, destination);
+// Copies a file to a place inside the project. The folder is checked before and after it is created, the destination
+// must not be a link (a dangling one included), and the copy lands through a rename, which replaces a link instead of following it.
+function copyInto(root, source, destination) {
+  const folder = path.dirname(destination);
+  if (!withinRoot(root, folder)) throw new Error("destination folder resolves outside the project");
+  fs.mkdirSync(folder, { recursive: true });
+  if (!withinRoot(root, folder)) throw new Error("destination folder resolves outside the project");
+  let existing = null;
+  try {
+    existing = fs.lstatSync(destination);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  if (existing && !existing.isFile()) throw new Error("destination is not a regular file");
+  const temporary = `${destination}.uca-${process.pid}-${crypto.randomBytes(4).toString("hex")}.tmp`;
+  fs.copyFileSync(source, temporary, fs.constants.COPYFILE_EXCL);
+  try {
+    fs.renameSync(temporary, destination);
+  } catch (error) {
+    fs.rmSync(temporary, { force: true });
+    throw error;
+  }
+}
+
+// The guard's own folders must be real folders inside the project. A link there would let every write, copy and
+// delete the guard makes land somewhere else, so the guard refuses to start instead.
+function assertGuardDirs(root) {
+  for (const relative of [".uca", MIRROR_DIR, BACKUP_DIR]) {
+    let info;
+    try {
+      info = fs.lstatSync(path.join(root, relative));
+    } catch (error) {
+      if (error.code === "ENOENT") continue;
+      throw usageError(`Cannot read ${toPosix(relative)}: ${error.message}`);
+    }
+    if (!info.isDirectory()) throw usageError(`${toPosix(relative)} is not a plain folder (it may be a link). The guard refuses to use it. Remove it and run again.`);
+  }
+  if (!withinRoot(root, path.join(root, ".uca"))) throw usageError(".uca resolves outside the project. The guard refuses to use it.");
 }
 
 // Keeps a copy of the project as it was at the last passing check, so it can be restored without Git.
@@ -247,13 +282,17 @@ function syncMirror(root, previousFiles, currentFiles) {
   } else {
     const change = diffMaps(previousFiles, currentFiles);
     copy = [...change.added, ...change.modified];
-    for (const key of change.deleted) fs.rmSync(path.join(mirror, ...key.split("/")), { force: true });
+    for (const key of change.deleted) {
+      const target = safeJoin(mirror, key);
+      if (!target || !withinRoot(root, target)) throw new Error(`${key} resolves outside the copy of the passing state`);
+      fs.rmSync(target, { force: true });
+    }
   }
   for (const key of copy) {
     const source = path.join(root, ...key.split("/"));
     if (!withinRoot(root, source)) throw new Error(`${key} resolves outside the project`);
     const target = path.join(mirror, ...key.split("/"));
-    copyInto(source, target);
+    copyInto(root, source, target);
     // A file that changed while it was being copied would make a later restore wrong, so refuse such a copy.
     if (hashFile(target) !== currentFiles[key]) throw new Error(`${key} changed while it was being copied`);
   }
@@ -268,7 +307,7 @@ function snapshot(root, change, stamp) {
     if (!source || !withinRoot(root, source)) continue;
     try {
       if (!fs.lstatSync(source).isFile()) continue;
-      copyInto(source, path.join(target, ...key.split("/")));
+      copyInto(root, source, path.join(target, ...key.split("/")));
       saved.push(key);
     } catch {
       /* the file vanished between the walk and the copy: nothing to save */
@@ -289,8 +328,7 @@ function restoreLastPass(root, lastPass, current) {
       continue;
     }
     try {
-      if (fs.existsSync(destination) && !fs.lstatSync(destination).isFile()) throw new Error("not a regular file");
-      copyInto(source, destination);
+      copyInto(root, source, destination);
       report.restored.push(key);
     } catch {
       report.skipped.push(key);
@@ -366,6 +404,21 @@ function loadConfig(root) {
   return config;
 }
 
+const HASH = /^[0-9a-f]{40}$/;
+// File maps come from a file a model can edit, so every key must be a safe project path and every value a content hash.
+const validFiles = (files) => Boolean(files) && typeof files === "object" && !Array.isArray(files)
+  && Object.entries(files).every(([key, hash]) => safeJoin("/project", key) !== null && typeof hash === "string" && HASH.test(hash));
+const validSnapshot = (value) => value === null || value === undefined || (typeof value === "object" && !Array.isArray(value) && validFiles(value.files));
+function validState(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+  if (data.version !== STATE_VERSION || !Array.isArray(data.runs) || !Array.isArray(data.handoffs)) return false;
+  if (!Number.isInteger(data.modelIndex) || data.modelIndex < 0) return false;
+  if (data.stopped !== undefined && typeof data.stopped !== "boolean") return false;
+  if (!validSnapshot(data.baseline) || !validSnapshot(data.lastPass)) return false;
+  if (data.lastPass && data.lastPass.mirror !== undefined && typeof data.lastPass.mirror !== "boolean") return false;
+  return true;
+}
+
 const blankState = () => ({ version: STATE_VERSION, goal: null, modelIndex: 0, stopped: false, baseline: null, lastPass: null, runs: [], handoffs: [] });
 
 function loadState(root) {
@@ -382,7 +435,7 @@ function loadState(root) {
   } catch {
     throw usageError(`${toPosix(STATE_PATH)} is not valid JSON. It was not overwritten. Fix or delete it, or run "reset".`);
   }
-  if (!data || data.version !== STATE_VERSION || !Array.isArray(data.runs) || !Array.isArray(data.handoffs) || !Number.isInteger(data.modelIndex)) {
+  if (!validState(data)) {
     throw usageError(`${toPosix(STATE_PATH)} has an unexpected shape. It was not overwritten. Fix or delete it, or run "reset".`);
   }
   return { ...blankState(), ...data };
@@ -697,6 +750,7 @@ function main(argv, out = (line) => process.stdout.write(`${line}\n`)) {
       return EXIT.pass;
     }
     const root = path.resolve(options["project-root"] || process.cwd());
+    assertGuardDirs(root);
     if (command === "run") return cmdRun(root, options, tokens, out);
     if (command === "status") return cmdStatus(root, options, out);
     if (command === "reset") return cmdReset(root, out);
@@ -711,6 +765,6 @@ function main(argv, out = (line) => process.stdout.write(`${line}\n`)) {
   }
 }
 
-module.exports = { main, redact, detectTriggers, isWorse, classify, failCountOf, errorSignature, looksGarbled, safeJoin, withinRoot, toPosix, diffMaps, EXIT };
+module.exports = { main, copyInto, redact, detectTriggers, isWorse, classify, failCountOf, errorSignature, looksGarbled, safeJoin, withinRoot, toPosix, diffMaps, EXIT };
 
 if (require.main === module) process.exitCode = main(process.argv);

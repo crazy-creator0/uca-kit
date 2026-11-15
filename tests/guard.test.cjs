@@ -326,11 +326,13 @@ test("a tampered state file cannot make the guard write or delete outside the pr
     saved.lastPass.files["..\\outside2.txt"] = "deadbeef";
     fs.writeFileSync(path.join(root, ".uca", "state.json"), JSON.stringify(saved));
     fs.writeFileSync(path.join(root, "a.txt"), "x\n");
+    // Strengthened for playbook P0.1: a state file with a path that leaves the project is refused as a whole
+    // (exit 2, nothing run or written) instead of being used with the bad entries skipped.
     const result = check(root, OTHER);
-    assert.equal(result.status, 3, result.stdout + result.stderr);
+    assert.equal(result.status, 2, result.stdout + result.stderr);
+    assert.match(result.stderr, /unexpected shape/);
     assert.equal(fs.existsSync(path.join(root, "..", "outside.txt")), false);
     assert.equal(fs.existsSync(path.join(root, "..", "outside2.txt")), false);
-    assert.match(result.stdout, /skipped/);
   });
 });
 
