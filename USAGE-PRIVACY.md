@@ -7,7 +7,9 @@
 - Store usage locally at `~/.uca-kit/usage.json` by default. Set `UCA_USAGE_FILE` to choose another local path. Prefer a location outside the project/repository; if you choose a project-local path, add that exact path to the project's `.gitignore` before recording usage.
 - The ledger stores aggregate token/cost counters, configured limits, timestamps, and counts for agent calls, skill reads and tool calls. It must never store prompts, source code, file contents, credentials, private logs, or raw conversation transcripts.
 - The ledger utility uses local filesystem operations only; it has no telemetry endpoint, network client, account, login, or cloud sync.
-- The file is created with restrictive permissions where the operating system supports them. The utility refuses a symbolic link at its data-file path rather than following it.
+- The file is created with restrictive permissions where the operating system supports them. The utility refuses a symbolic link at its data-file path, or a linked folder holding it, rather than following it.
+- Writes take a lock file next to the ledger, so two `record` calls at the same time do not lose counts. A lock left by a process that has exited is cleared; a live one makes the writer wait up to 10 seconds, then fail without recording.
+- A ledger that is not valid (unknown fields, fractional or negative counts, a count too large to store exactly, a bad date, or a file over 1 MB) is reported as an error and never treated as zero usage or overwritten.
 - Users control the local file and can remove it themselves. Do not silently upload or export it.
 - This utility's privacy behavior does not control the IDE or AI provider. A hosted model normally receives the request sent to it; UCA Kit cannot claim that the provider never sees user prompts/code. For that stronger requirement, evaluate a genuinely local/self-hosted inference path.
 

@@ -24,10 +24,20 @@ function blank() {
     totals: { exact: ZERO(), estimated: ZERO() }
   };
 }
+const MAX_LEDGER_BYTES = 1024 * 1024;
+const isObject = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value);
+function onlyKeys(value, keys, label) {
+  const extra = Object.keys(value).filter((key) => !keys.includes(key));
+  if (extra.length) throw new Error("Invalid usage ledger: unknown field(s) in " + label + ": " + extra.join(", "));
+}
+// Counts are whole numbers that JavaScript can still store exactly; cost is any finite non-negative number.
 function validateMetrics(metrics, label) {
-  if (!metrics || typeof metrics !== "object" || Array.isArray(metrics)) throw new Error("Invalid usage ledger: " + label + " must be an object.");
+  if (!isObject(metrics)) throw new Error("Invalid usage ledger: " + label + " must be an object.");
+  onlyKeys(metrics, Object.keys(ZERO()), label);
   for (const key of Object.keys(ZERO())) {
-    if (!Number.isFinite(metrics[key]) || metrics[key] < 0) throw new Error("Invalid usage ledger metric: " + label + "." + key);
+    const n = metrics[key];
+    const ok = key === "costUsd" ? Number.isFinite(n) && n >= 0 : Number.isSafeInteger(n) && n >= 0;
+    if (!ok) throw new Error("Invalid usage ledger metric: " + label + "." + key + (key === "costUsd" ? "" : " (must be a whole number no larger than " + Number.MAX_SAFE_INTEGER + ")"));
   }
 }
 function migrate(data) {
@@ -43,24 +53,42 @@ function migrate(data) {
   }
 }
 function validate(data) {
-  if (!data || data.version !== VERSION || !data.budget || !data.totals) throw new Error("Unsupported or invalid usage ledger. It was not overwritten.");
+  if (!isObject(data) || data.version !== VERSION || !isObject(data.budget) || !isObject(data.totals)) throw new Error("Unsupported or invalid usage ledger. It was not overwritten.");
+  onlyKeys(data, ["version", "updatedAt", "budget", "totals"], "the ledger");
+  if (data.updatedAt !== null && (typeof data.updatedAt !== "string" || !/^\d{4}-\d{2}-\d{2}T/.test(data.updatedAt) || Number.isNaN(Date.parse(data.updatedAt)))) {
+    throw new Error("Invalid usage ledger: updatedAt must be null or an ISO date.");
+  }
+  onlyKeys(data.totals, ["exact", "estimated"], "totals");
   validateMetrics(data.totals.exact, "totals.exact");
   validateMetrics(data.totals.estimated, "totals.estimated");
-  for (const key of ["maxTotalTokens", "maxAgentCalls", "maxCostUsd", "plannedTokensPerAgentCall", "plannedCostUsdPerAgentCall"]) {
+  const integers = ["maxTotalTokens", "maxAgentCalls", "plannedTokensPerAgentCall"];
+  const budgetKeys = ["maxTotalTokens", "maxAgentCalls", "maxCostUsd", "plannedTokensPerAgentCall", "plannedCostUsdPerAgentCall"];
+  onlyKeys(data.budget, [...budgetKeys, "warningThresholds"], "budget");
+  for (const key of budgetKeys) {
     const n = data.budget[key];
-    if (n !== null && (!Number.isFinite(n) || n < 0)) throw new Error("Invalid usage ledger budget: " + key);
+    const ok = n === null || (integers.includes(key) ? Number.isSafeInteger(n) && n >= 0 : Number.isFinite(n) && n >= 0);
+    if (!ok) throw new Error("Invalid usage ledger budget: " + key);
   }
   if (!Array.isArray(data.budget.warningThresholds) || data.budget.warningThresholds.some((n) => !Number.isFinite(n) || n <= 0 || n > 1)) {
     throw new Error("Invalid usage ledger warning thresholds.");
   }
 }
+// The ledger's own folder must be a plain folder: a link there would send every write somewhere else.
+function assertPlainFolder(file) {
+  let stat;
+  try { stat = fs.lstatSync(path.dirname(file)); }
+  catch (error) { if (error.code === "ENOENT") return; throw error; }
+  if (stat.isSymbolicLink() || !stat.isDirectory()) throw new Error("Refusing the usage folder " + path.dirname(file) + ": it is a link or not a folder.");
+}
 function readLedger() {
   const file = ledgerPath();
+  assertPlainFolder(file);
   let stat;
   try { stat = fs.lstatSync(file); }
   catch (error) { if (error.code === "ENOENT") return blank(); throw error; }
   if (stat.isSymbolicLink()) throw new Error("Refusing a symbolic link at the local usage-file path.");
   if (!stat.isFile()) throw new Error("The usage path exists but is not a regular file.");
+  if (stat.size > MAX_LEDGER_BYTES) throw new Error("Could not read local usage ledger (it is larger than " + MAX_LEDGER_BYTES + " bytes). The file was not overwritten.");
   try {
     const data = JSON.parse(fs.readFileSync(file, "utf8"));
     migrate(data);
@@ -73,7 +101,9 @@ function readLedger() {
 function writeLedger(data) {
   validate(data);
   const file = ledgerPath();
+  assertPlainFolder(file);
   fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+  assertPlainFolder(file);
   try { if (fs.lstatSync(file).isSymbolicLink()) throw new Error("Refusing a symbolic link at the local usage-file path."); }
   catch (error) { if (error.code !== "ENOENT") throw error; }
   const temp = file + ".tmp-" + process.pid + "-" + crypto.randomBytes(5).toString("hex");
@@ -93,6 +123,55 @@ function writeLedger(data) {
     try { fs.rmSync(temp, { force: true }); } catch { /* best effort cleanup */ }
   }
 }
+// One writer at a time: read, change and write happen while holding <ledger>.lock, created exclusively. A lock whose
+// process is gone, or that is older than LOCK_STALE_MS, is cleared. A live lock makes the writer wait, then give up.
+const LOCK_STALE_MS = 10 * 60 * 1000;
+const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+function processAlive(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
+  try { process.kill(pid, 0); return true; }
+  catch (error) { return error.code === "EPERM"; }
+}
+function withLock(fn) {
+  const file = ledgerPath();
+  assertPlainFolder(file);
+  fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+  assertPlainFolder(file);
+  const lock = file + ".lock";
+  const token = crypto.randomBytes(8).toString("hex");
+  const waitMs = Number(process.env.UCA_USAGE_LOCK_WAIT_MS) > 0 ? Number(process.env.UCA_USAGE_LOCK_WAIT_MS) : 10_000;
+  const deadline = Date.now() + waitMs;
+  let holder = null;
+  for (;;) {
+    try {
+      fs.writeFileSync(lock, JSON.stringify({ pid: process.pid, at: new Date().toISOString(), token }), { flag: "wx", mode: 0o600 });
+      break;
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+    }
+    try {
+      const info = fs.lstatSync(lock);
+      if (!info.isFile()) throw new Error("Refusing a usage lock that is not a regular file: " + lock);
+      try { holder = JSON.parse(fs.readFileSync(lock, "utf8")); } catch { holder = null; }
+      const age = Date.now() - info.mtimeMs;
+      const stale = age > LOCK_STALE_MS || (holder && !processAlive(holder.pid)) || (!holder && age > 5_000);
+      if (stale) { fs.rmSync(lock, { force: true }); continue; }
+    } catch (error) {
+      if (error.code === "ENOENT") continue;
+      throw error;
+    }
+    if (Date.now() > deadline) throw new Error("The usage ledger is busy: its lock is held by process " + (holder ? holder.pid : "unknown") + ". Nothing was recorded. Try again.");
+    sleep(15 + Math.floor(Math.random() * 20));
+  }
+  try { return fn(); }
+  finally {
+    try {
+      const mine = JSON.parse(fs.readFileSync(lock, "utf8"));
+      if (mine.token === token) fs.rmSync(lock, { force: true });
+    } catch { /* already gone */ }
+  }
+}
+
 function parseOptions(args) {
   const options = {};
   for (let i = 0; i < args.length; i += 1) {
@@ -216,7 +295,10 @@ function main(argv) {
   if (["--help", "-h", "help"].includes(command)) { help(); return 0; }
   if (!["budget", "record", "show", "guard", "reset"].includes(command)) throw new Error("Unknown command: " + command + ". Run with --help.");
   const opts = parseOptions(argv.slice(1));
-  const ledger = readLedger();
+  if (["budget", "record", "reset"].includes(command)) return withLock(() => run(command, opts, readLedger()));
+  return run(command, opts, readLedger());
+}
+function run(command, opts, ledger) {
 
   if (command === "show") {
     allowed(opts, []);
