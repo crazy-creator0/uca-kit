@@ -1,6 +1,6 @@
 ---
 name: backend-api
-description: Design and implement Python APIs, business logic, authentication boundaries, and reliable HTTP behavior.
+description: Use when designing or changing an API, server routes, middleware or business logic in any backend stack (Node.js, Python, Go, Java, Ruby, PHP, .NET and others), including request validation, authentication boundaries and reliable HTTP behavior.
 metadata:
   domain: backend
   triggers: API routes, server logic, request validation
@@ -12,7 +12,8 @@ metadata:
 # Backend API Engineering
 
 ## Framework choice
-Choose FastAPI for suitable API-centric services; choose Django when integrated ORM, authentication, admin, and application conventions fit. Use Flask only where its minimalism is beneficial. Follow the existing project unless a migration is justified.
+Find the stack first from its manifest (`package.json`, `pyproject.toml` or `requirements.txt`, `go.mod`, `pom.xml` or `build.gradle`, `Gemfile`, `composer.json`, `*.csproj`) and follow the framework the project already uses. Do not switch frameworks unless a migration is justified (`stack-migration` workflow).
+For a new service, pick by fit, not habit: a small, widely used option for a small API, a batteries-included one when an ORM, auth and admin are needed. Examples: Node.js (Express, Fastify, NestJS), Python (FastAPI, Django, Flask), Go (net/http, chi), Java (Spring Boot), Ruby (Rails), PHP (Laravel), .NET (ASP.NET Core).
 
 ## Request lifecycle
 Trace actual layers:
@@ -36,4 +37,4 @@ Do not invent layers that the project does not use.
 Use structured logs with request/correlation IDs when available. Set explicit timeouts for external calls. Avoid broad exception catches that hide failures. Return stable, documented error shapes without leaking internals.
 
 ## Verification
-Inspect project dependencies and route conventions first. Run the targeted API tests and relevant lint/type checks; report exactly what ran.
+Inspect the manifest, dependencies and route conventions first; name the stack you found. Run the targeted API tests and relevant lint/type checks; report exactly what ran.

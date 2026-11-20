@@ -8,7 +8,7 @@
 | 1 | **anti-ai-slop** | Use when the agent is about to add a factory, registry, manager, wrapper, or any design pattern without a demonstrated use case. | If the change clearly satisfies a real requirement with the simplest possible option, this skill can be skipped. | 22 |
 | 2 | **anti-hallucination** | Use when the agent is proposing a change based on faulty assumptions, incorrect recall of APIs, or unsupported claims. | If the agent has just verified the change against the actual project files and tests pass, this skill is unnecessary. | 22 |
 | 3 | **application-security** | Use when the task touches secrets, auth boundaries, input validation, or anything that could be a vulnerability. | If the task is purely cosmetic (UI text, layout) and never reaches data-access or network code, skip it. | 22 |
-| 4 | **backend-api** | Use when designing or implementing a Python API, adding business logic, or defining authentication boundaries. | If the project is not Python-based or does not have an API layer, this skill adds nothing. | 22 |
+| 4 | **backend-api** | Use when designing or changing an API, server routes, middleware, or business logic in any backend stack. | If the project has no server or API layer (a static site, a library, a script), this skill adds nothing. | 22 |
 | 5 | **cloudflare-operations** | Use when the project uses Cloudflare DNS, TLS, Workers, or caching and the task involves those features. | If the project has no Cloudflare involvement, this skill is dead weight. | 22 |
 | 6 | **database-engineering** | Use when designing schemas, migrations, transactions, constraints, or reliable data access patterns. | If the project has no database or uses a SaaS back-end with no migration needs, skip it. | 22 |
 | 7 | **debugging** | Use when investigating a bug, forming hypotheses, and looking for root-cause evidence. | If the task is a new feature with no reported failure, start from the "plan" skill instead. | 22 |
@@ -31,7 +31,7 @@
 | Category | Skills (always potentially relevant) | Skills (stack-dependent) | Skills (optional/one-off) |
 |---|---|---|---|
 | **Evergreen** | anti-ai-slop, anti-hallucination, debugging, skill-gap-router, testing-and-code-review | — | — |
-| **Stack-specific** | backend-api (Python), database-engineering (most stacks), application-security (web-relevant), performance-engineering (measurable goals), data-engineering-analytics (data work) | frontend-engineering, frontend-visuals-and-3d, design-taste-discovery, cloudflare-operations, language-engineering (multi-lang) | — |
+| **Stack-specific** | backend-api (any backend stack), database-engineering (most stacks), application-security (web-relevant), performance-engineering (measurable goals), data-engineering-analytics (data work) | frontend-engineering, frontend-visuals-and-3d, design-taste-discovery, cloudflare-operations, language-engineering (multi-lang) | — |
 | **Optional** | — | — | Any skill can be omitted on –profile minimal |
 
 ---
