@@ -1,6 +1,6 @@
 ---
 name: import-hygiene
-description: Prevent and fix circular imports and import errors by checking the dependency graph and moving shared code, not adding imports.
+description: Use when an import fails, a circular import appears, or code moves between modules; fixes the dependency graph instead of adding more imports.
 metadata:
   domain: code-structure
   triggers: import error, circular import, moving code between modules

@@ -1,6 +1,6 @@
 ---
 name: skill-gap-router
-description: Route ambiguous, cross-functional, or capability-gap coding tasks to the smallest useful set of trusted skills without loading the full catalogue or inventing capabilities.
+description: Use when a task is unclear, crosses domains, or may need a missing capability; picks the smallest set of trusted skills without loading the catalogue or inventing capabilities.
 metadata:
   domain: routing
   triggers: unclear task, spans many areas, missing capability

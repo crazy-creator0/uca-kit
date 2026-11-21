@@ -1,6 +1,6 @@
 ---
 name: anti-ai-slop
-description: Keep changes small and replies plain; no padding, filler wording, or needless abstractions.
+description: Use when editing or replying: small plain changes, no padding or needless abstractions.
 ---
 
 # Anti-AI-slop (Lite)

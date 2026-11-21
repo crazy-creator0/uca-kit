@@ -111,3 +111,17 @@ test("the Read first check can fail: a missing field or a long block is caught",
   const long = readFirstBlock(good.replace("Stop here if:", "x\nx\nx\nx\nStop here if:"));
   assert.ok(long.length > 8);
 });
+
+test("every skill description, full and lite, says when to use it", () => {
+  const roots = [path.join(__dirname, "..", ".agents", "skills"), path.join(__dirname, "..", ".agents", "lite")];
+  const bad = [];
+  for (const dir of roots) {
+    for (const name of fs.readdirSync(dir)) {
+      const file = path.join(dir, name, "SKILL.md");
+      if (!fs.existsSync(file)) continue;
+      const description = (fs.readFileSync(file, "utf8").match(/^description: (.*)$/m) || [])[1] || "";
+      if (!/^Use (when|for) /.test(description)) bad.push(path.relative(path.join(__dirname, ".."), file));
+    }
+  }
+  assert.deepEqual(bad, [], "descriptions must start with 'Use when' or 'Use for' (the trigger the model reads first)");
+});

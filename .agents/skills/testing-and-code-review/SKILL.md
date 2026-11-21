@@ -1,6 +1,6 @@
 ---
 name: testing-and-code-review
-description: Design meaningful tests and review code for correctness, security, performance, readability, and maintainability.
+description: Use when writing or fixing tests, or reviewing a change or pull request; checks correctness, security, edge cases and maintainability with evidence.
 metadata:
   domain: quality
   triggers: write tests, review a diff, check quality, prepare a release

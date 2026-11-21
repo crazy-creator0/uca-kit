@@ -1,6 +1,6 @@
 ---
 name: debugging
-description: Investigate bugs using a reproduction, ranked hypotheses, evidence, root-cause analysis, and a regression test.
+description: Use when something is broken (a bug, a failing test, unexpected behavior), before proposing a fix; works from a reproduction to a proven root cause and a regression test.
 metadata:
   domain: diagnosis
   triggers: bug, error, crash, stack trace, it stopped working

@@ -1,6 +1,6 @@
 ---
 name: database-engineering
-description: Design safe schemas, migrations, transactions, constraints, indexes, and reliable data access.
+description: Use when tables, schemas, migrations, queries, indexes or transactions change; keeps data safe with reversible migrations and parameterized queries.
 metadata:
   domain: data
   triggers: schema, migration, query, index, transaction

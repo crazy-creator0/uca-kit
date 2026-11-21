@@ -1,6 +1,6 @@
 ---
 name: frontend-visuals-and-3d
-description: Choose and build advanced visuals (canvas effects, shaders, 3D, WebGPU) with the cheapest technique that meets the brief, using the project's own stack.
+description: Use when a canvas effect, shader, 3D scene or WebGPU work is needed; picks the cheapest technique that meets the brief, in the project's own stack.
 metadata:
   domain: visuals
   triggers: 3D, canvas, WebGL, WebGPU, heavy visual effects

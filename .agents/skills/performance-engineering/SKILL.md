@@ -1,6 +1,6 @@
 ---
 name: performance-engineering
-description: Make code faster or lighter by measuring first, changing one thing at a time, and proving the gain with the same measurement.
+description: Use when the goal is faster, lighter or smaller (latency, memory, bundle size, run time); measures first and proves the gain with the same measurement.
 metadata:
   domain: performance
   triggers: optimize, reduce latency, profile, benchmark, bundle size, memory usage

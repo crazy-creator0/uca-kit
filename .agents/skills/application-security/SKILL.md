@@ -1,6 +1,6 @@
 ---
 name: application-security
-description: Review and improve web application security, secrets handling, authentication, authorization, and trust boundaries.
+description: Use when a task touches secrets, login, permissions, user input, uploads or personal data; finds trust boundaries and fixes weaknesses with evidence.
 metadata:
   domain: security
   triggers: secrets, login, permissions, user input, privacy
