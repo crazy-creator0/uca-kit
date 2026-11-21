@@ -27,9 +27,11 @@ const MAX_MAP_FILES = 25;
 const MAX_MAP_CHARS = 3000;
 const MAX_MAP_IMPORTS = 6;
 const MAX_MAP_LEAVES = 15;
+const MAX_ROUTES_PER_LINE = 12;
+const MAX_ROUTE_CHARS = 3000;
 const MAX_MAP_VISITS = 2000;
 // Folders and file names that hold examples, tests, fixtures or benchmarks rather than the app itself.
-const SAMPLE_PATH = /(^|\/)(examples?|samples?|demos?|tests?|__tests__|__mocks__|specs?|e2e|cypress|benchmarks?|bench|fixtures?)\//;
+const SAMPLE_PATH = /(^|\/)(examples?|samples?|demos?|tests?|__tests__|__mocks__|specs?|e2e|cypress|benchmarks?|bench|fixtures?|testdata|benches|fuzz|test[_-][\w-]+)\//;
 const SAMPLE_FILE = /\.(test|spec)\.[^/]+$|(^|\/)test_[^/]+\.py$|_test\.(go|py)$/;
 const isSample = (file) => SAMPLE_PATH.test(file) || SAMPLE_FILE.test(file);
 // The folder that makes a path a sample, e.g. "examples/" or "src/__tests__/"; for a file name match, its folder.
@@ -282,6 +284,203 @@ function makeResolver(fileSet, aliases = []) {
   };
 }
 
+// FastAPI: the full prefix of a router variable in a file, joined from APIRouter(prefix=...) and every
+// include_router(child, prefix=...) above it. A prefix that is not a string literal, or a constant set to one
+// in an imported file, is shown as "{unread prefix}" rather than guessed.
+function fastapiPrefixes(files, read, resolver) {
+  const python = files.filter((file) => /\.py$/.test(file) && !isSample(file));
+  const quote = (text) => /^(['"])(.*)\1$/.exec(text.trim());
+  const constant = (file, expr) => {
+    const name = expr.split(".").pop();
+    if (!/^[A-Za-z_]\w*$/.test(name) || /\[/.test(expr)) return null;
+    for (const candidate of [file, ...importsOf(file, read(file) || "", resolver)]) {
+      const hit = new RegExp(`^\\s*${name}\\s*(?::[^=\\n]+)?=\\s*(['"])([^'"\\n]*)\\1`, "m").exec(read(candidate) || "");
+      if (hit) return hit[2];
+    }
+    return null;
+  };
+  const prefixArg = (file, args) => {
+    const match = /\bprefix\s*=\s*([^,)]+)/.exec(args || "");
+    if (!match) return "";
+    const literal = quote(match[1]);
+    if (literal) return literal[2];
+    const value = constant(file, match[1].trim());
+    return value === null ? "{unread prefix}" : value;
+  };
+  // Which file defines a name used in "parent": from X import name / from X import module.
+  const origin = (parent, expr) => {
+    const [head, ...rest] = expr.split(".");
+    const text = read(parent) || "";
+    for (const found of text.matchAll(/^[ \t]*from[ \t]+(\.*)([\w.]*)[ \t]+import[ \t]+(?:\(([^)]*)\)|([^\n]+))/gm)) {
+      const names = (found[3] || found[4]).split(",").map((part) => part.trim().split(/\s+as\s+/)).map((pair) => ({ name: pair[0], alias: pair[1] || pair[0] }));
+      const entry = names.find((item) => item.alias === head);
+      if (!entry) continue;
+      const dots = found[1].length;
+      if (rest.length > 0) {
+        const module = found[2] ? `${found[2]}.${entry.name}` : entry.name;
+        const hit = resolver.py(parent, dots, module, [])[0];
+        if (hit) return { file: hit, variable: rest[rest.length - 1] };
+      } else {
+        const hit = found[2] ? resolver.py(parent, dots, found[2], [])[0] : null;
+        if (hit) return { file: hit, variable: entry.name };
+      }
+    }
+    return rest.length === 0 ? { file: parent, variable: head } : null;
+  };
+  const mounts = new Map();
+  for (const file of python) {
+    const text = read(file) || "";
+    if (!/include_router/.test(text)) continue;
+    for (const found of text.matchAll(/(\w+)\.include_router\(\s*([\w.]+)\s*(?:,([^)]*))?\)/g)) {
+      const child = origin(file, found[2]);
+      if (!child) continue;
+      const key = `${child.file}|${child.variable}`;
+      if (!mounts.has(key)) mounts.set(key, { file, variable: found[1], prefix: prefixArg(file, found[3]) });
+    }
+  }
+  const memo = new Map();
+  const full = (file, variable, seen = new Set()) => {
+    const key = `${file}|${variable}`;
+    if (memo.has(key)) return memo.get(key);
+    if (seen.has(key)) return "";
+    seen.add(key);
+    const own = new RegExp(`\\b${variable}\\s*=\\s*APIRouter\\(([^)]*)\\)`).exec(read(file) || "");
+    const mount = mounts.get(key);
+    const value = `${mount ? full(mount.file, mount.variable, seen) + mount.prefix : ""}${own ? prefixArg(file, own[1]) : ""}`.replace(/\/\/+/g, "/");
+    memo.set(key, value);
+    return value;
+  };
+  return (file, variable) => full(file, variable);
+}
+
+// Cargo.toml files: package name, [lib] and [[bin]] targets (with Cargo's default paths).
+function cargoCrates(files, read, fileSet) {
+  const crates = [];
+  for (const file of files.filter((name) => /(^|\/)Cargo\.toml$/.test(name) && name.split("/").length <= 4 && !isSample(name))) {
+    const dir = path.posix.dirname(file) === "." ? "" : `${path.posix.dirname(file)}/`;
+    const pkg = {};
+    const lib = {};
+    const bins = [];
+    let section = null;
+    let current = null;
+    for (const raw of (read(file) || "").split(/\r?\n/)) {
+      const line = raw.trim();
+      if (/^\[\[\s*bin\s*\]\]$/.test(line)) {
+        current = {};
+        bins.push(current);
+        section = "bin";
+        continue;
+      }
+      if (line.startsWith("[")) {
+        section = line === "[package]" ? "package" : line === "[lib]" ? "lib" : "other";
+        continue;
+      }
+      const pair = /^([\w-]+)\s*=\s*"([^"]*)"/.exec(line);
+      if (!pair) continue;
+      if (section === "package") pkg[pair[1]] = pair[2];
+      else if (section === "lib") lib[pair[1]] = pair[2];
+      else if (section === "bin") current[pair[1]] = pair[2];
+    }
+    if (!pkg.name) continue;
+    const libPath = lib.path ? dir + lib.path : fileSet.has(`${dir}src/lib.rs`) ? `${dir}src/lib.rs` : null;
+    const binPaths = bins.map((bin) => ({ name: bin.name || pkg.name, path: bin.path ? dir + bin.path : `${dir}src/bin/${bin.name}.rs` }));
+    if (bins.length === 0 && fileSet.has(`${dir}src/main.rs`)) binPaths.push({ name: pkg.name, path: `${dir}src/main.rs` });
+    crates.push({ file, name: pkg.name, lib: libPath, bins: binPaths });
+  }
+  return crates;
+}
+
+// Go: the module path from each go.mod, and every folder of non-test .go files as one package ("dir/", root "./").
+function goLayout(files, read) {
+  const modules = [];
+  for (const file of files.filter((name) => /(^|\/)go\.mod$/.test(name) && name.split("/").length <= 3 && !isSample(name))) {
+    const module = /^module\s+(\S+)/m.exec(read(file) || "");
+    if (module) modules.push({ dir: path.posix.dirname(file) === "." ? "" : path.posix.dirname(file), module: module[1], file });
+  }
+  const packages = new Map();
+  if (modules.length === 0) return { modules, packages };
+  for (const file of files) {
+    if (!/\.go$/.test(file) || isSample(file)) continue;
+    const dir = path.posix.dirname(file);
+    const node = dir === "." ? "./" : `${dir}/`;
+    if (!packages.has(node)) packages.set(node, []);
+    packages.get(node).push(file);
+  }
+  return { modules, packages };
+}
+
+// Packages of this module that a Go package imports, by module path.
+function goImports(node, layout, read) {
+  const found = [];
+  for (const file of layout.packages.get(node) || []) {
+    const text = (read(file) || "").replace(/\/\/[^\n]*/g, "");
+    const specs = [...text.matchAll(/^[ \t]*import[ \t]+(?:[\w.]+[ \t]+)?"([^"]+)"/gm)].map((match) => match[1]);
+    for (const block of text.matchAll(/^[ \t]*import[ \t]*\(([\s\S]*?)\)/gm)) specs.push(...[...block[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]));
+    for (const spec of specs) {
+      const module = layout.modules.find((item) => spec === item.module || spec.startsWith(`${item.module}/`));
+      if (!module) continue;
+      const dir = [module.dir, spec.slice(module.module.length + 1)].filter(Boolean).join("/");
+      const target = dir ? `${dir}/` : "./";
+      if (layout.packages.has(target) && target !== node && !found.includes(target)) found.push(target);
+    }
+  }
+  return found;
+}
+
+// Rust: "mod x;" (with #[path]), "use crate::a::b", and other workspace crates used by name.
+// Each file remembers its crate root and module path, so later "use crate::..." lines find files declared earlier.
+function makeRust(fileSet, crates) {
+  const libs = new Map(crates.filter((crate) => crate.lib && fileSet.has(crate.lib)).map((crate) => [crate.name.replace(/-/g, "_"), crate.lib]));
+  const context = new Map();
+  const modules = new Map();
+  const pick = (candidates) => candidates.map((candidate) => path.posix.normalize(candidate)).find((candidate) => fileSet.has(candidate)) || null;
+  return (file, text) => {
+    if (!context.has(file)) context.set(file, { root: file, mod: "" });
+    const ctx = context.get(file);
+    if (!modules.has(ctx.root)) modules.set(ctx.root, new Map());
+    const known = modules.get(ctx.root);
+    const dir = path.posix.dirname(file) === "." ? "" : `${path.posix.dirname(file)}/`;
+    const rootDir = path.posix.dirname(ctx.root) === "." ? "" : `${path.posix.dirname(ctx.root)}/`;
+    const moduleDir = file === ctx.root || /(^|\/)mod\.rs$/.test(file) ? dir : `${file.replace(/\.rs$/, "")}/`;
+    const found = [];
+    const add = (target, next) => {
+      if (!target || target === file || found.includes(target)) return;
+      found.push(target);
+      if (!context.has(target)) context.set(target, next);
+    };
+    const code = text.replace(/\/\/[^\n]*/g, "");
+    for (const match of code.matchAll(/(?:#\[path\s*=\s*"([^"]+)"\]\s*)?^[ \t]*(?:pub(?:\([^)]*\))?[ \t]+)?mod[ \t]+(\w+)[ \t]*;/gm)) {
+      const target = match[1] ? pick([dir + match[1]]) : pick([`${moduleDir}${match[2]}.rs`, `${moduleDir}${match[2]}/mod.rs`]);
+      const modPath = ctx.mod ? `${ctx.mod}::${match[2]}` : match[2];
+      if (target) known.set(modPath, target);
+      add(target, { root: ctx.root, mod: modPath });
+    }
+    const uses = [];
+    for (const match of code.matchAll(/\buse[ \t]+crate::((?:\w+::)*\w*)(?:::)?(\{[^}]*\})?/g)) {
+      const base = match[1].split("::").filter(Boolean);
+      if (match[2]) for (const item of match[2].slice(1, -1).split(",")) uses.push([...base, ...item.trim().split("::").filter((part) => /^\w+$/.test(part))]);
+      else uses.push(base);
+    }
+    for (const segments of uses) {
+      for (let length = segments.length; length > 0; length -= 1) {
+        const modPath = segments.slice(0, length).join("::");
+        const rel = segments.slice(0, length).join("/");
+        const target = known.get(modPath) || pick([`${rootDir}${rel}.rs`, `${rootDir}${rel}/mod.rs`]);
+        if (target) {
+          add(target, { root: ctx.root, mod: modPath });
+          break;
+        }
+      }
+    }
+    const own = [...libs].find(([, lib]) => lib === ctx.root);
+    for (const match of code.matchAll(/\b(?:use[ \t]+|extern[ \t]+crate[ \t]+)(\w+)/g)) {
+      const lib = libs.get(match[1]);
+      if (lib && (!own || own[0] !== match[1])) add(lib, { root: lib, mod: "" });
+    }
+    return found;
+  };
+}
+
 // Local files a source file imports, in the order they appear. Packages are skipped.
 function importsOf(file, text, resolver) {
   const found = [];
@@ -442,10 +641,36 @@ function discover(root) {
       out["entry-points"][out["entry-points"].length - 1] = fact(`package default entry${where}: ${prefix}index.js (no main field, so Node loads index.js)`, manifest.file);
     }
   }
+  const crates = cargoCrates(files, read, fileSet);
+  for (const crate of crates) {
+    for (const bin of crate.bins) addEntry(bin.path, `Cargo bin ${bin.name}`, crate.file);
+    if (crate.lib) addEntry(crate.lib, `Cargo lib ${crate.name}`, crate.file);
+  }
+  const go = goLayout(files, read);
+  const goEntries = [];
+  const entryKind = new Map();
+  const isGoMain = (file) => /^package\s+main\b/m.test(read(file) || "");
+  for (const [node, members] of go.packages) {
+    if (members.some(isGoMain)) {
+      goEntries.push(node);
+      entryKind.set(node, "Go package main");
+    }
+  }
+  for (const module of go.modules) {
+    const root = module.dir ? `${module.dir}/` : "./";
+    const hasMain = goEntries.some((node) => module.dir === "" || node.startsWith(`${module.dir}/`));
+    if (!hasMain && go.packages.has(root)) {
+      goEntries.push(root);
+      entryKind.set(root, "Go root package");
+      out["entry-points"].push(fact(`Go library ${module.module}: root package ${root} (no main package)`, module.file));
+    }
+  }
+  for (const node of goEntries.filter((item) => entryKind.get(item) === "Go package main")) out["entry-points"].push(fact(`Go package main: ${node}`, go.packages.get(node).find(isGoMain)));
+  const goNodeOf = (file) => (path.posix.dirname(file) === "." ? "./" : `${path.posix.dirname(file)}/`);
   const ENTRY_FILES = /(^|\/)(index\.html|src\/(main|index|app|server)\.(c|m)?(js|ts)x?|(server|app|index|main)\.(c|m)?(js|ts)|manage\.py|main\.py|app\.py|wsgi\.py|asgi\.py|cmd\/[^/]+\/main\.go|main\.go|src\/main\.rs|app\/layout\.(js|jsx|ts|tsx)|pages\/_app\.(js|jsx|ts|tsx))$/;
   const entryLike = files.filter((name) => ENTRY_FILES.test(name) && name.split("/").length <= 4);
   const sampleEntries = entryLike.filter(isSample);
-  const namedFiles = entryLike.filter((name) => !isSample(name) && !listedEntry.has(name)).slice(0, MAX_LISTED);
+  const namedFiles = entryLike.filter((name) => !isSample(name) && !listedEntry.has(name) && !(/\.go$/.test(name) && entryKind.has(goNodeOf(name)))).slice(0, MAX_LISTED);
   for (const file of namedFiles) if (SOURCE_EXT.test(file)) nameEntries.push(file);
   const sampleEntryLine = () => {
     if (sampleEntries.length === 0) return;
@@ -457,6 +682,9 @@ function discover(root) {
   // Declared entries are walked first; a file found by name becomes a start point only if nothing reached it.
   const aliases = pathAliases(files, read);
   const resolveImport = makeResolver(fileSet, aliases);
+  const rust = makeRust(fileSet, crates);
+  const nodeImports = (node) => (node.endsWith("/") ? goImports(node, go, read) : /\.rs$/.test(node) ? rust(node, read(node) || "") : importsOf(node, read(node) || "", resolveImport));
+  const nodeSource = (node) => (node.endsWith("/") ? (go.packages.get(node) || []).find((file) => entryKind.get(node) !== "Go package main" || isGoMain(file)) || node : node);
   const depth = new Map();
   const edges = new Map();
   const seeds = [];
@@ -468,7 +696,7 @@ function discover(root) {
     while (queue.length > 0 && depth.size <= MAX_MAP_VISITS) {
       const file = queue.shift();
       const targets = [];
-      for (const target of importsOf(file, read(file) || "", resolveImport)) {
+      for (const target of nodeImports(file)) {
         if (target === file || targets.includes(target) || isSample(target)) continue;
         targets.push(target);
         if (!depth.has(target)) {
@@ -482,7 +710,7 @@ function discover(root) {
   // A named file that another named file imports (app.tsx imported by main.tsx) is walked after it.
   const importedByNamed = new Set(nameEntries.flatMap((file) => importsOf(file, read(file) || "", resolveImport)));
   const shallowFirst = [...nameEntries].sort((x, y) => x.split("/").length - y.split("/").length || importedByNamed.has(x) - importedByNamed.has(y) || x.localeCompare(y));
-  for (const file of [...declaredEntries, ...shallowFirst]) if (/\.((c|m)?(js|ts)x?|py)$/.test(file)) walk(file);
+  for (const file of [...declaredEntries, ...goEntries, ...shallowFirst]) if (/\.((c|m)?(js|ts)x?|py|rs)$/.test(file) || go.packages.has(file)) walk(file);
   const walked = [...edges.keys()];
   // Shallow files first, so every entry gets its first levels before the budget runs out.
   const branches = walked.filter((file) => edges.get(file).length > 0 || depth.get(file) === 0).sort((x, y) => depth.get(x) - depth.get(y) || walked.indexOf(x) - walked.indexOf(y));
@@ -490,17 +718,18 @@ function discover(root) {
   // Imports under the importer's own folder are written relative to it ("./routes/items.py") to save space.
   const short = (from, target) => {
     const dir = path.posix.dirname(from);
+    if (from.endsWith("/")) return target;
     return dir !== "." && target.startsWith(`${dir}/`) ? `./${target.slice(dir.length + 1)}` : target;
   };
   let used = 0;
   let listed = 0;
   for (const file of branches) {
     if (listed >= MAX_MAP_FILES) break;
-    const level = depth.get(file) === 0 ? "entry" : `depth ${depth.get(file)}`;
+    const level = depth.get(file) === 0 ? (entryKind.has(file) ? `entry, ${entryKind.get(file)}` : "entry") : `depth ${depth.get(file)}`;
     const targets = edges.get(file);
     const shown = targets.slice(0, MAX_MAP_IMPORTS).map((target) => short(file, target)).join(", ");
     const more = targets.length > MAX_MAP_IMPORTS ? ` (+${targets.length - MAX_MAP_IMPORTS} more)` : "";
-    const line = fact(targets.length ? `${file} (${level}) imports: ${shown}${more}` : `${file} (${level}) imports nothing local`, file);
+    const line = fact(targets.length ? `${file} (${level}) imports: ${shown}${more}` : `${file} (${level}) imports nothing local`, nodeSource(file));
     if (listed > 0 && used + line.length > MAX_MAP_CHARS) break;
     out.map.push(line);
     used += line.length;
@@ -517,10 +746,9 @@ function discover(root) {
   sampleEntryLine();
   if (aliases.length > 0) out.map.unshift(fact(`Path aliases followed: ${aliases.slice(0, 4).map((alias) => `${alias.pattern} -> ${alias.targets[0]}`).join(", ")}`, aliases[0].source));
   if (seeds.length > 0) {
-    const unreached = files.filter((file) => SOURCE_EXT.test(file) && /\.((c|m)?(js|ts)x?|py)$/.test(file) && !isSample(file) && !reachable.has(file) && !/\.d\.ts$/.test(file) && !/(^|\/)(__init__\.py|setup\.py|conftest\.py|[^/]*\.config\.(c|m)?(js|ts))$/.test(file));
+    const unreached = files.filter((file) => SOURCE_EXT.test(file) && !isSample(file) && !/\.d\.ts$/.test(file) && !/(^|\/)(__init__\.py|setup\.py|conftest\.py|build\.rs|[^/]*\.config\.(c|m)?(js|ts))$/.test(file) && (/\.go$/.test(file) ? go.packages.has(goNodeOf(file)) && !reachable.has(goNodeOf(file)) : !reachable.has(file)));
     if (unreached.length > 0) out.map.push(`- ${unreached.length} source file(s) outside examples and tests are not reached from an entry, e.g. ${unreached.slice(0, 3).join(", ")} (scripts, config, or code loaded by name)`);
   }
-  if (files.some((file) => /\.(go|rs)$/.test(file))) unknown.push("Go and Rust imports are not followed; the import map covers JavaScript, TypeScript and Python only.");
 
   // ----- commands (declared only) -----
   const SCRIPT_NAMES = /^(dev|start|serve|build|test|test:.*|lint|lint:.*|format|typecheck|check|preview|e2e|migrate.*|db:.*)$/;
@@ -541,67 +769,97 @@ function discover(root) {
   if (has("go.mod")) unknown.push("Go test and build commands: `go test ./...` and `go build ./...` are the usual commands but were not read from a file or run.");
 
   // ----- routes -----
+  // Each route keeps its file, line and router variable, so routes can be grouped per file
+  // and FastAPI prefixes (APIRouter(prefix=...), include_router(..., prefix=...)) joined into full paths.
   const apiRoutes = [];
   const pageRoutes = [];
   const routeFile = /(^|\/)(app|pages)\/.*\.(c|m)?(js|ts)x?$/;
   const clean = (segments) => "/" + segments.filter((part) => part && !/^\(.*\)$/.test(part)).join("/");
+  const fileGroup = (prefix, root) => ({ group: `${prefix}${root}/`, style: "file routes" });
   for (const file of files) {
     let match = /^((?:.*\/)?)app\/(.*)\/?route\.(c|m)?(js|ts)x?$/.exec(file);
     if (match) {
       const text = read(file) || "";
       const methods = [...text.matchAll(/export\s+(?:async\s+)?(?:function|const)\s+(GET|POST|PUT|PATCH|DELETE)\b/g)].map((m) => m[1]);
-      apiRoutes.push({ text: `${methods.join("/") || "?"} ${clean(match[2].split("/"))}`.replace(/\/\/+/g, "/"), source: file });
+      apiRoutes.push({ text: `${methods.join("/") || "?"} ${clean(match[2].split("/"))}`.replace(/\/\/+/g, "/"), file, line: 0, ...fileGroup(match[1], "app") });
       continue;
     }
     match = /^((?:.*\/)?)pages\/api\/(.+)\.(c|m)?(js|ts)x?$/.exec(file);
     if (match) {
-      apiRoutes.push({ text: `any ${clean(["api", ...match[2].replace(/\/index$/, "").split("/")])}`, source: file });
+      apiRoutes.push({ text: `any ${clean(["api", ...match[2].replace(/\/index$/, "").split("/")])}`, file, line: 0, ...fileGroup(match[1], "pages") });
       continue;
     }
     match = /^((?:.*\/)?)app\/(.*\/)?page\.(c|m)?(js|ts)x?$/.exec(file);
     if (match && !file.includes("/api/")) {
-      pageRoutes.push({ text: clean((match[2] || "").split("/")), source: file });
+      pageRoutes.push({ text: clean((match[2] || "").split("/")), file, line: 0, ...fileGroup(match[1], "app") });
       continue;
     }
     match = /^((?:.*\/)?)pages\/(.+)\.(c|m)?(js|ts)x?$/.exec(file);
     if (match && !/^api\//.test(match[2]) && !/(^|\/)_/.test(match[2])) {
-      pageRoutes.push({ text: clean(match[2].replace(/(^|\/)index$/, "").split("/")), source: file });
+      pageRoutes.push({ text: clean(match[2].replace(/(^|\/)index$/, "").split("/")), file, line: 0, ...fileGroup(match[1], "pages") });
       continue;
     }
     if (!SOURCE_EXT.test(file) || routeFile.test(file) && /^(.*\/)?(app|pages)\//.test(file) && /\/(page|route)\./.test(file)) continue;
     const text = read(file);
     if (!text) continue;
+    const at = (index) => lineOf(text, index);
     for (const found of text.matchAll(/\b(?:app|router|server|api|routes)\.(get|post|put|patch|delete)\(\s*(['"`])(\/[^'"`]*)\2/g)) {
       if (inComment(text, found.index) || text[found.index - 1] === "@") continue;
-      apiRoutes.push({ text: `${found[1].toUpperCase()} ${found[3]}`, source: `${file}:${lineOf(text, found.index)}` });
+      apiRoutes.push({ text: `${found[1].toUpperCase()} ${found[3]}`, file, line: at(found.index), group: file, style: "" });
     }
-    for (const found of text.matchAll(/@\w+\.(get|post|put|patch|delete)\(\s*(['"])(\/[^'"]*)\2/g)) {
-      apiRoutes.push({ text: `${found[1].toUpperCase()} ${found[3]} (FastAPI-style decorator)`, source: `${file}:${lineOf(text, found.index)}` });
+    for (const found of text.matchAll(/@(\w+)\.(get|post|put|patch|delete)\(\s*(['"])(\/[^'"]*)\3/g)) {
+      apiRoutes.push({ text: `${found[2].toUpperCase()} ${found[4]}`, file, line: at(found.index), group: file, style: "FastAPI", router: found[1] });
     }
     for (const found of text.matchAll(/@\w+\.route\(\s*(['"])(\/[^'"]*)\1(?:\s*,\s*methods\s*=\s*\[([^\]]*)\])?/g)) {
       const methods = found[3] ? found[3].replace(/['"\s]/g, "").replace(/,/g, "/") : "GET";
-      apiRoutes.push({ text: `${methods} ${found[2]} (Flask-style decorator)`, source: `${file}:${lineOf(text, found.index)}` });
+      apiRoutes.push({ text: `${methods} ${found[2]}`, file, line: at(found.index), group: file, style: "Flask" });
     }
     if (/react-router/.test(text)) {
-      for (const found of text.matchAll(/<Route\b[^>]*\bpath=(['"{`]+)(\/?[^'"`}]*)/g)) pageRoutes.push({ text: found[2].startsWith("/") ? found[2] : `/${found[2]}`, source: `${file}:${lineOf(text, found.index)}` });
-      for (const found of text.matchAll(/\bpath:\s*(['"`])(\/?[^'"`]*)\1/g)) pageRoutes.push({ text: found[2].startsWith("/") ? found[2] : `/${found[2]}`, source: `${file}:${lineOf(text, found.index)}` });
+      for (const found of text.matchAll(/<Route\b[^>]*\bpath=(['"{`]+)(\/?[^'"`}]*)/g)) pageRoutes.push({ text: found[2].startsWith("/") ? found[2] : `/${found[2]}`, file, line: at(found.index), group: file, style: "" });
+      for (const found of text.matchAll(/\bpath:\s*(['"`])(\/?[^'"`]*)\1/g)) pageRoutes.push({ text: found[2].startsWith("/") ? found[2] : `/${found[2]}`, file, line: at(found.index), group: file, style: "" });
     }
   }
-  const sampleRoutes = [...apiRoutes, ...pageRoutes].filter((route) => isSample(route.source.replace(/:\d+$/, "")));
+  const prefixOf = fastapiPrefixes(files, read, makeResolver(fileSet));
+  for (const route of apiRoutes) if (route.style === "FastAPI") route.prefix = prefixOf(route.file, route.router);
+
+  const sampleRoutes = [...apiRoutes, ...pageRoutes].filter((route) => isSample(route.file));
   const appApi = apiRoutes.filter((route) => !sampleRoutes.includes(route));
   const appPages = pageRoutes.filter((route) => !sampleRoutes.includes(route));
+  // One line per file (or per file-routing folder), within a character budget.
+  let routeChars = 0;
+  let routeGroupsLeft = 0;
   const emit = (list, label) => {
-    const unique = [...new Map(list.map((route) => [`${route.text}|${route.source}`, route])).values()].sort((a, b) => a.text.localeCompare(b.text) || a.source.localeCompare(b.source));
-    unique.slice(0, MAX_LISTED).forEach((route) => out.routes.push(fact(`${label} ${route.text}`, route.source)));
-    if (unique.length > MAX_LISTED) out.routes.push(`- ... and ${unique.length - MAX_LISTED} more ${label} entries`);
+    const groups = new Map();
+    for (const route of list) {
+      const key = `${route.group}|${route.prefix || ""}`;
+      if (!groups.has(key)) groups.set(key, []);
+      if (!groups.get(key).some((other) => other.text === route.text)) groups.get(key).push(route);
+    }
+    for (const [, routes] of [...groups].sort((a, b) => a[0].localeCompare(b[0]))) {
+      if (routes[0].style === "file routes") routes.sort((a, b) => a.text.localeCompare(b.text) || a.file.localeCompare(b.file));
+      else routes.sort((a, b) => a.line - b.line);
+      const head = routes[0];
+      const style = head.style ? ` (${head.style})` : "";
+      const under = head.prefix ? `, under ${head.prefix}` : "";
+      const shown = routes.slice(0, MAX_ROUTES_PER_LINE).map((route) => route.text).join(", ");
+      const more = routes.length > MAX_ROUTES_PER_LINE ? ` (+${routes.length - MAX_ROUTES_PER_LINE} more)` : "";
+      const line = fact(`${label} in ${head.group}${style}${under}: ${shown}${more}`, head.line ? `${head.file}:${head.line}` : head.file);
+      if (routeChars > 0 && routeChars + line.length > MAX_ROUTE_CHARS) {
+        routeGroupsLeft += 1;
+        continue;
+      }
+      out.routes.push(line);
+      routeChars += line.length;
+    }
   };
   emit(appApi, "API");
   emit(appPages, "Page");
+  if (routeGroupsLeft > 0) out.routes.push(`- ... and ${routeGroupsLeft} more route file(s) not listed`);
   if (sampleRoutes.length > 0) {
     if (out.routes.length === 0) out.routes.push("- No app routes were detected.");
     const counts = new Map();
     for (const route of sampleRoutes) {
-      const group = sampleGroup(route.source.replace(/:\d+$/, ""));
+      const group = sampleGroup(route.file);
       counts.set(group, (counts.get(group) || 0) + 1);
     }
     const summary = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 6).map(([group, count]) => `${group}: ${count}`).join(", ");
@@ -740,7 +998,7 @@ function buildBlocks(root, found, verification, now = headRef(root)) {
   blocks.header = ["Verified at: " + now, "Checked by: " + checkedBy];
   blocks.stack = ["## Stack", ...(found.out.stack.length ? found.out.stack : ["- No runtime or framework was detected from manifests or version files."])];
   blocks["entry-points"] = ["## Entry points", ...(found.out["entry-points"].length ? found.out["entry-points"] : ["- None detected."])];
-  blocks.map = ["## Import map (from the entry files)", ...(found.out.map.length ? found.out.map : ["- No JavaScript, TypeScript or Python entry file to start from; no map was built."])];
+  blocks.map = ["## Import map (from the entry files)", ...(found.out.map.length ? found.out.map : ["- No entry file to start from (JavaScript, TypeScript, Python, Go or Rust); no map was built."])];
   const verified = verification.filter((item) => item.ok);
   const failed = verification.filter((item) => !item.ok);
   const commands = ["## Commands"];
