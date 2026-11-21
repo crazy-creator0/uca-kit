@@ -53,5 +53,6 @@ test("npm installer package excludes maintainer planning and test files", () => 
   }
 
   const packageJson = require(path.join(repoRoot, "package.json"));
-  assert.equal(packageJson.license, "MIT", "Package metadata should declare the MIT license.");
+  assert.equal(packageJson.license, "Apache-2.0", "Package metadata should declare the Apache-2.0 license.");
+  for (const file of ["NOTICE", "CITATION.cff"]) assert.ok(paths.includes(file), `${file} must be in the package`);
 });

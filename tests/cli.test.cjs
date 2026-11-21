@@ -73,7 +73,9 @@ function makeKit(root) {
     ".devin/rules/universal-coding-agent-kit.md",
     ".windsurf/rules/universal-coding-agent-kit.md",
     ".junie/rules/universal-coding-agent-kit.md",
-    ".aiassistant/rules/universal-coding-agent-kit.md"
+    ".aiassistant/rules/universal-coding-agent-kit.md",
+    "LICENSE",
+    "NOTICE"
   ];
   for (const relative of files) {
     const fullPath = path.join(root, relative);

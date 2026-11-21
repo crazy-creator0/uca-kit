@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use UCA Kit in your work, please cite it as below."
+type: software
+title: "UCA Kit (Universal Coding Agent Kit)"
+abstract: "Instructions and small read-only scripts installed into a project folder. An AI coding assistant reads them and is asked to plan first, check its work, and say what it did not check."
+authors:
+  - name: "Crazy Creators"
+repository-code: "https://github.com/crazy-creator0/uca-kit"
+license: Apache-2.0
+keywords:
+  - ai-coding-assistant
+  - agent-instructions
+  - skills
+  - developer-tools
