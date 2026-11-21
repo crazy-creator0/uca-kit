@@ -2,13 +2,22 @@
 
 All notable changes are listed here. The project is early-stage, and nothing below has been benchmarked against real models.
 
-## Unreleased
+## 0.2.0 (2026-11-21)
+
+A minor release: a new license, sharper skills, a project scanner that finds the real entry file and maps imports, and a fourth sample. Nothing here has been benchmarked against real models.
 
 License
 - UCA Kit is now licensed under the Apache License, Version 2.0, starting with v0.2.0. v0.1.0 and v0.1.1 were published under MIT, and copies obtained under those releases stay under MIT. Every commit so far is by Crazy Creators, and no third-party material is included, so the change needed no other permission.
 - New `NOTICE` (attribution, kept with copies under section 4(d)) and `CITATION.cff` (GitHub's "Cite this repository" button).
 - The installer copies `LICENSE` and `NOTICE` into `.agents/` in every tier, recorded in the manifest. The installed `AGENTS.md` ends with one credit line; the lite tier's worst case stays within its limit (1,599 of 1,600 estimated tokens).
 - Contributions are accepted under Apache-2.0 (CONTRIBUTING.md).
+
+Skills
+- Every one of the 13 task skills opens with a "Read first" block: Use when, Not when, Must do, Done when, Stop here if, Read on only for. The three always-on guardrails are left out, because they are read on every task.
+- Every skill description, full and lite, now opens with "Use when" (or "Use for") and names the situation first. A test fails if one stops doing so.
+- `backend-api` serves any backend stack, not only Python: it finds the stack from its manifest. Before, the router sent Node, Go and Java APIs to a skill that told them it did not apply.
+- `design-taste-discovery` moved its long lists into `techniques.md` and `review.md`, read only when a step points to them. SKILL.md went from 104 to 74 lines.
+- Estimated size after all of the above (characters / 4): lite worst case 1,599 of 1,600; standard worst case 8,209 of 9,000.
 
 Changed
 - Project scanner (`uca-project-discover.cjs`): the entry point the package declares now comes first (main, bin, exports, or Node's default `index.js`); a built path such as `dist/index.js` points to its source file when one exists. Entry-like files and routes inside example, test, fixture and benchmark folders are counted on one line instead of listed as the app's own. On Express this cut the entry list from 26 lines to 2 and the routes from 47 lines to 2.
