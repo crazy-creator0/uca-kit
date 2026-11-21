@@ -46,6 +46,20 @@ th { font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .06e
 details { margin: 16px 0; }
 summary { cursor: pointer; font: 15px var(--mono); }
 details pre { white-space: pre-wrap; background: var(--panel); padding: 16px; font-size: 14px; }
+
+.sizes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 16px 0; font: 13px var(--mono); }
+.sizes button { font: inherit; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 2px; padding: 6px 10px; cursor: pointer; }
+.sizes button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.sizes label { display: inline-flex; gap: 6px; align-items: center; margin-left: auto; color: var(--muted); }
+.pair { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 52rem) { .pair { grid-template-columns: 1fr 1fr; } }
+.pair figure { margin: 0; border: 1px solid var(--rule); border-radius: 2px; background: var(--panel); }
+.pair figcaption { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px; font: 700 13px var(--mono); letter-spacing: .06em; text-transform: uppercase; border-bottom: 1px solid var(--rule); }
+.pair figcaption a { font-weight: 400; text-transform: none; letter-spacing: 0; }
+.viewport { position: relative; overflow: hidden; height: 70vh; min-height: 26rem; background: #fff; }
+.viewport.phone { max-width: 390px; margin: 0 auto; }
+.viewport iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; }
+.pair .size-note { margin: 0; padding: 6px 12px; font: 12px var(--mono); color: var(--muted); border-top: 1px solid var(--rule); }
 </style>
 </head>
 <body>
@@ -57,6 +71,7 @@ details pre { white-space: pre-wrap; background: var(--panel); padding: 16px; fo
 <ul class="chips"><li><b>Category:</b> Widget</li><li><b>Made with:</b> v0.1.1</li><li><b>View:</b> 2D</li><li><b>Motion:</b> Shape morph</li></ul>
 <div role="tablist" aria-label="Views">
 <button role="tab" id="tab-prompt" aria-controls="prompt" aria-selected="true">Prompt</button>
+<button role="tab" id="tab-compare" aria-controls="compare" aria-selected="false" tabindex="-1">Side by side</button>
 <button role="tab" id="tab-without" aria-controls="without" aria-selected="false" tabindex="-1">Without kit</button>
 <button role="tab" id="tab-with" aria-controls="with" aria-selected="false" tabindex="-1">With kit</button>
 </div>
@@ -76,6 +91,11 @@ Build it with index.html as the entry file. Then end with a final message to the
 <div class="scroll"><table><thead><tr><th>Check</th><th>Without kit</th><th>With kit</th></tr></thead><tbody><tr><td>Files the assistant left in the project (scratch folder not counted)</td><td>2 (index.html, today.js)</td><td>9 (index.html, card.css, card.js, README, design notes, project card, package.json, a test file, .gitignore)</td></tr><tr><td>README with daily steps</td><td>No</td><td>Yes</td></tr><tr><td>Automatic tests kept in the project</td><td>None (a browser check script in _checks/)</td><td>7 tests, npm test, pass (re-run by the maintainer)</td></tr><tr><td>Where its own screenshots and check scripts went</td><td>_checks/ in the project folder</td><td>Git-ignored .uca-workspace/ scratch folder</td></tr><tr><td>Loads at 390 px and 1366 px with no console errors (headless Chrome, run by the maintainer)</td><td>Yes</td><td>Yes</td></tr><tr><td>Senior Bar check (static checklist, v0.1.1)</td><td>7 of 10</td><td>12 of 14</td></tr><tr><td>Closing answer says it is not ready yet and lists what was not checked</td><td>Yes</td><td>Yes</td></tr></tbody></table></div>
 <p class="note">Both runs found the same real limit on their own: with no server, the buttons only change the card in the owner&#x27;s browser, so readers need the values pasted into a file. Both checked the morph in a browser and fixed bugs from screenshots. The with-kit run left tests, a README and design notes; the without-kit run left fewer files. One run per side.</p>
 <p><a href="PROMPT.md">PROMPT.md</a> has the exact prompt and how to repeat this yourself.</p>
+</section>
+<section role="tabpanel" id="compare" aria-labelledby="tab-compare" hidden>
+<div class="sizes" role="group" aria-label="Preview width"><button type="button" data-w="390" aria-pressed="true">Phone, 390 px</button><button type="button" data-w="1280" aria-pressed="false">Laptop, 1280 px</button><label><input type="checkbox" id="sync" checked> Scroll together</label></div>
+<div class="pair"><figure><figcaption><span>Without kit</span><a href="without-kit/index.html" target="_blank" rel="noopener">Open full page</a></figcaption><div class="viewport"><iframe data-src="without-kit/index.html" title="Weather mood card, without kit, side by side" tabindex="0"></iframe></div><p class="size-note" aria-live="polite"></p></figure><figure><figcaption><span>With kit</span><a href="with-kit/index.html" target="_blank" rel="noopener">Open full page</a></figcaption><div class="viewport"><iframe data-src="with-kit/index.html" title="Weather mood card, with kit, side by side" tabindex="0"></iframe></div><p class="size-note" aria-live="polite"></p></figure></div>
+<p class="note">Both pages are the real files, running live. The laptop view is the full 1280 px page scaled down to fit; nothing was retouched.</p>
 </section>
 <section role="tabpanel" id="without" aria-labelledby="tab-without" hidden><div class="frame"><iframe src="without-kit/index.html" title="Weather mood card, without kit" loading="lazy"></iframe>
 <div class="open"><span>Without kit: 2 file(s): <code>index.html</code>, <code>today.js</code></span><a href="without-kit/index.html" target="_blank" rel="noopener">Open full page</a></div></div>
@@ -177,6 +197,62 @@ This folder isn&#x27;t saved with Git (a tool that keeps a history of versions s
   });
   var start = tabs.filter(function (t) { return "#" + t.getAttribute("aria-controls") === location.hash; })[0];
   if (start) show(start, false);
+})();
+</script>
+<script>
+(function () {
+  var panel = document.getElementById("compare");
+  if (!panel) return;
+  var width = 390, loaded = false;
+  var frames = Array.prototype.slice.call(panel.querySelectorAll("iframe"));
+  var buttons = Array.prototype.slice.call(panel.querySelectorAll("[data-w]"));
+  var sync = document.getElementById("sync");
+  function fit() {
+    frames.forEach(function (frame) {
+      var box = frame.parentNode;
+      box.classList.toggle("phone", width === 390);
+      var scale = Math.min(1, box.clientWidth / width);
+      frame.style.width = width + "px";
+      frame.style.height = Math.ceil(box.clientHeight / scale) + "px";
+      frame.style.transform = "scale(" + scale + ")";
+      var note = box.parentNode.querySelector(".size-note");
+      if (note) note.textContent = width + " px wide" + (scale < 1 ? ", shown at " + Math.round(scale * 100) + "%" : ", actual size");
+    });
+  }
+  function load() {
+    if (loaded) return;
+    loaded = true;
+    frames.forEach(function (frame) { frame.src = frame.getAttribute("data-src"); frame.addEventListener("load", function () { hook(frame); }); });
+    fit();
+  }
+  // Scroll together: same fraction of the page in both, when the browser allows reading the frame (same site).
+  var busy = false;
+  function hook(frame) {
+    try {
+      var win = frame.contentWindow;
+      win.addEventListener("scroll", function () {
+        if (!sync.checked || busy) return;
+        var doc = win.document.documentElement, max = doc.scrollHeight - win.innerHeight;
+        var ratio = max > 0 ? win.scrollY / max : 0;
+        busy = true;
+        frames.forEach(function (other) {
+          if (other === frame) return;
+          try { var w = other.contentWindow, d = w.document.documentElement; w.scrollTo(0, ratio * (d.scrollHeight - w.innerHeight)); } catch (e) {}
+        });
+        requestAnimationFrame(function () { busy = false; });
+      });
+    } catch (e) { sync.disabled = true; sync.parentNode.title = "Not available when the page is opened as a local file"; }
+  }
+  buttons.forEach(function (b) {
+    b.addEventListener("click", function () {
+      width = Number(b.getAttribute("data-w"));
+      buttons.forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      fit();
+    });
+  });
+  window.addEventListener("resize", fit);
+  new MutationObserver(function () { if (!panel.hidden) load(), fit(); }).observe(panel, { attributes: true, attributeFilter: ["hidden"] });
+  if (!panel.hidden) load();
 })();
 </script>
 </body>

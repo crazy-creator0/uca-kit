@@ -1,0 +1,350 @@
+/* UCA Kit home page
+   Palette: cool review-paper, navy ink, check green, blue pencil for interaction. */
+:root {
+  --paper: #eef1f0;
+  --sheet: #ffffff;
+  --ink: #18202b;
+  --graphite: #4e5866;
+  --rule: #c7cdcb;
+  --check: #1f6b4a;
+  --pencil: #2443b0;
+
+  --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, "Iowan Old Style", Georgia, serif;
+  --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+
+  --measure: 40rem;
+  --gutter: clamp(1.25rem, 5vw, 4rem);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+a { color: var(--pencil); text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible {
+  outline: 3px solid var(--pencil);
+  outline-offset: 3px;
+}
+
+.skip {
+  position: absolute;
+  left: var(--gutter);
+  top: -4rem;
+  background: var(--ink);
+  color: var(--sheet);
+  padding: 0.5rem 0.875rem;
+  border-radius: 4px;
+  z-index: 10;
+}
+.skip:focus { top: 0.75rem; }
+
+/* Header */
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 1.5rem var(--gutter) 0;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+.wordmark {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.01em;
+}
+.top-link { font-size: 1rem; }
+
+main, .foot {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* Hero */
+.hero { padding: clamp(3rem, 10vw, 7rem) 0 clamp(3rem, 8vw, 5.5rem); }
+
+.asks {
+  margin: 0;
+  font-size: clamp(2.25rem, 7.2vw, 5.25rem);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.ask {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.32em;
+}
+.ask + .ask { margin-top: 0.12em; }
+
+.box {
+  flex: none;
+  width: 0.78em;
+  height: 0.78em;
+  margin-top: 0.16em;
+  overflow: visible;
+}
+.box rect {
+  fill: var(--sheet);
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+.box .tick {
+  fill: none;
+  stroke: var(--check);
+  stroke-width: 5.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+/* The one moment of motion: the three boxes tick in order on load. */
+@media (prefers-reduced-motion: no-preference) {
+  .asks .tick {
+    stroke-dashoffset: 1;
+    animation: tick 420ms cubic-bezier(.6, 0, .3, 1) forwards;
+  }
+  .asks .ask:nth-child(1) .tick { animation-delay: 350ms; }
+  .asks .ask:nth-child(2) .tick { animation-delay: 750ms; }
+  .asks .ask:nth-child(3) .tick { animation-delay: 1150ms; }
+}
+@keyframes tick { to { stroke-dashoffset: 0; } }
+
+.lede {
+  max-width: var(--measure);
+  margin: clamp(1.75rem, 4vw, 2.5rem) 0 0;
+  font-size: clamp(1.1875rem, 2.2vw, 1.375rem);
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+/* Install */
+.install {
+  max-width: 50rem;
+  margin-top: clamp(2.25rem, 5vw, 3.25rem);
+}
+
+.tools {
+  border: 0;
+  padding: 0;
+  margin: 0 0 0.875rem;
+  min-width: 0;
+}
+.tools legend {
+  padding: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: var(--graphite);
+}
+.tool-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.tool-list label {
+  position: relative;
+  cursor: pointer;
+}
+.tool-list input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+}
+.tool-list span {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border: 1.5px solid #7f8890; /* 3.2:1 on paper, enough to see the chip edge */
+  border-radius: 4px;
+  font-size: 1rem;
+  line-height: 1.4;
+  background: transparent;
+  color: var(--ink);
+}
+.tool-list label:hover span { border-color: var(--graphite); }
+.tool-list input:checked + span {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--sheet);
+}
+.tool-list input:focus-visible + span {
+  outline: 3px solid var(--pencil);
+  outline-offset: 2px;
+}
+
+.command {
+  display: flex;
+  align-items: stretch;
+  background: var(--sheet);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+}
+.command pre {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0.95rem 1rem;
+  font-family: var(--mono);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.command pre::before {
+  content: "$ ";
+  color: var(--graphite);
+}
+/* Keep each argument on one line when it fits, so the command wraps only at spaces. */
+.command .tok { display: inline-block; max-width: 100%; }
+#cmd-platform { color: var(--check); font-weight: 700; }
+
+.copy {
+  flex: none;
+  border: 0;
+  border-left: 2px solid var(--ink);
+  border-radius: 0 3px 3px 0;
+  background: var(--ink);
+  color: var(--sheet);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0 1.125rem;
+  min-height: 3rem;
+  cursor: pointer;
+}
+.copy:hover { background: #2b3747; }
+.copy:focus-visible { background: var(--pencil); outline-offset: 3px; }
+.copy.is-done { background: var(--check); border-left-color: var(--check); }
+
+.install-note {
+  margin: 0.75rem 0 0;
+  font-size: 1rem;
+  color: var(--graphite);
+  max-width: var(--measure);
+}
+.copy-status {
+  margin: 0.25rem 0 0;
+  min-height: 1.6em;
+  font-size: 1rem;
+  color: var(--check);
+}
+
+/* Sections below the hero */
+.contents, .limits {
+  border-top: 2px solid var(--ink);
+  padding: clamp(2.5rem, 6vw, 4rem) 0;
+}
+h2 {
+  margin: 0 0 1.25rem;
+  font-size: clamp(1.625rem, 3.2vw, 2.125rem);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+table {
+  width: 100%;
+  max-width: 50rem;
+  border-collapse: collapse;
+}
+th, td {
+  text-align: left;
+  vertical-align: baseline;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+th {
+  font-weight: 400;
+  width: 13rem;
+  padding-right: 1rem;
+}
+td.n {
+  width: 4rem;
+  padding-right: 1.5rem;
+  text-align: right;
+  font-weight: 700;
+  font-size: 1.375rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+td:last-child { color: var(--graphite); }
+
+.limits-intro {
+  max-width: var(--measure);
+  margin: 0 0 1.75rem;
+}
+.open-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: var(--measure);
+}
+.open-list li {
+  display: flex;
+  gap: 0.875rem;
+  align-items: flex-start;
+  font-size: 1.1875rem;
+}
+.open-list li + li { margin-top: 1rem; }
+.open-list .box {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.3rem;
+}
+.open-list .box rect { stroke-dasharray: 5 4; stroke-width: 3; }
+
+/* Footer */
+.foot-inner {
+  border-top: 1px solid var(--rule);
+  padding-top: 1.5rem;
+  padding-bottom: 3rem;
+}
+.foot {
+  font-size: 1rem;
+  color: var(--graphite);
+}
+.foot p { margin: 0 0 0.375rem; }
+
+/* Phones */
+@media (max-width: 34rem) {
+  body { font-size: 1.0625rem; }
+  .command { flex-direction: column; }
+  .copy {
+    border-left: 0;
+    border-top: 2px solid var(--ink);
+    border-radius: 0 0 3px 3px;
+    min-height: 2.875rem;
+  }
+  .command pre { font-size: 0.8125rem; padding: 0.875rem; }
+
+  table, tbody, tr { display: block; }
+  tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 1rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  th, td { border: 0; padding: 0; width: auto; }
+  td.n { grid-column: 2; grid-row: 1; padding: 0; }
+  td:last-child { grid-column: 1 / -1; font-size: 1rem; }
+  td:last-child:empty { display: none; }
+}
+
+@media (forced-colors: active) {
+  .tool-list input:checked + span { outline: 2px solid CanvasText; }
+}

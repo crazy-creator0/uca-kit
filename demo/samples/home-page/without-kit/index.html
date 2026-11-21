@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UCA Kit: plan first, check the work, say what wasn't checked</title>
+  <meta name="description" content="UCA Kit is a free, open-source set of instructions and small read-only scripts you install into a project folder. Your AI coding assistant reads them and is asked to plan first, check its work, and say what it did not check.">
+  <meta property="og:title" content="UCA Kit">
+  <meta property="og:description" content="Instructions and small read-only scripts that ask your AI coding assistant to plan first, check its work, and say what it did not check. Free, MIT licensed.">
+  <meta property="og:type" content="website">
+  <meta name="color-scheme" content="light">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#install">Skip to install command</a>
+
+  <header class="top">
+    <p class="wordmark">UCA Kit</p>
+    <a class="top-link" href="https://github.com/crazy-creator0/uca-kit">Source on GitHub</a>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title" class="asks">
+        <span class="ask"><svg class="box" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><rect x="3" y="3" width="34" height="34" rx="3"/><path class="tick" pathLength="1" d="M10 21 L17 28 L31 12"/></svg><span>Plan first.</span></span>
+        <span class="ask"><svg class="box" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><rect x="3" y="3" width="34" height="34" rx="3"/><path class="tick" pathLength="1" d="M10 21 L17 28 L31 12"/></svg><span>Check the work.</span></span>
+        <span class="ask"><svg class="box" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><rect x="3" y="3" width="34" height="34" rx="3"/><path class="tick" pathLength="1" d="M10 21 L17 28 L31 12"/></svg><span>Say what wasn’t checked.</span></span>
+      </h1>
+
+      <p class="lede">
+        UCA Kit is a set of instructions and small read-only scripts you install into a project folder.
+        Your AI coding assistant reads them and is asked to work this way.
+      </p>
+
+      <div class="install" id="install">
+        <fieldset class="tools">
+          <legend>Install for</legend>
+          <div class="tool-list">
+            <label><input type="radio" name="platform" value="claude" checked><span>Claude</span></label>
+            <label><input type="radio" name="platform" value="cursor"><span>Cursor</span></label>
+            <label><input type="radio" name="platform" value="copilot"><span>Copilot</span></label>
+            <label><input type="radio" name="platform" value="gemini"><span>Gemini</span></label>
+            <label><input type="radio" name="platform" value="codex"><span>Codex</span></label>
+            <label><input type="radio" name="platform" value="opencode"><span>OpenCode</span></label>
+            <label><input type="radio" name="platform" value="windsurf"><span>Windsurf</span></label>
+          </div>
+        </fieldset>
+
+        <div class="command">
+          <pre id="cmd-box"><code id="cmd"><span class="tok">npx</span> <span class="tok">--yes</span> <span class="tok">github:crazy-creator0/uca-kit#v0.1.1</span> <span class="tok">init</span> <span class="tok">.</span> <span class="tok">--platform</span> <span class="tok" id="cmd-platform">claude</span></code></pre>
+          <button type="button" class="copy" id="copy" aria-describedby="copy-status">Copy command</button>
+        </div>
+        <p class="install-note">
+          Run it from your project folder. These are 7 of the 11 tool setups; the repository has the rest.
+        </p>
+        <p class="copy-status" id="copy-status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="contents" aria-labelledby="contents-title">
+      <h2 id="contents-title">What goes into your project</h2>
+      <table>
+        <tbody>
+          <tr><th scope="row">Tool setups</th><td class="n">11</td><td>Claude, Cursor, Copilot, Gemini, Codex, OpenCode, Windsurf and more</td></tr>
+          <tr><th scope="row">Tiers</th><td class="n">3</td><td>lite, standard, full</td></tr>
+          <tr><th scope="row">Skills</th><td class="n">16</td><td></td></tr>
+          <tr><th scope="row">Workflows</th><td class="n">5</td><td></td></tr>
+          <tr><th scope="row">Runtime dependencies</th><td class="n">0</td><td>Instructions and small read-only scripts</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="limits" aria-labelledby="limits-title">
+      <h2 id="limits-title">What we have not checked</h2>
+      <p class="limits-intro">
+        UCA Kit asks your assistant to be clear about the limits of its work. Here are the limits of ours.
+      </p>
+      <ul class="open-list">
+        <li>
+          <svg class="box" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><rect x="3" y="3" width="34" height="34" rx="3"/></svg>
+          <div><strong>It is not a guarantee.</strong> A model can ignore instructions.</div>
+        </li>
+        <li>
+          <svg class="box" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><rect x="3" y="3" width="34" height="34" rx="3"/></svg>
+          <div><strong>It is not benchmarked.</strong> We have not measured how much it changes results.</div>
+        </li>
+        <li>
+          <svg class="box" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><rect x="3" y="3" width="34" height="34" rx="3"/></svg>
+          <div><strong>It is not tested on every tool.</strong> It may not work the same way with yours.</div>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="foot-inner">
+      <p>
+        UCA Kit is free and open source under the MIT license. Written by Crazy Creators.
+      </p>
+      <p>
+        <a href="https://github.com/crazy-creator0/uca-kit">github.com/crazy-creator0/uca-kit</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

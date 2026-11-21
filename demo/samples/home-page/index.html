@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UCA Kit home page: with and without UCA Kit</title>
+<meta name="description" content="The kit&#x27;s own home page, built from one prompt that lists the facts and asks for a page that does not look AI-made.">
+<style>
+:root { --paper: #f4f1ea; --panel: #ebe6da; --ink: #1b1a17; --muted: #5d584d; --rule: #cfc8b8; --accent: #b4491f;
+  --serif: Georgia, "Times New Roman", serif; --mono: Consolas, "SFMono-Regular", "Liberation Mono", monospace; }
+@media (prefers-color-scheme: dark) { :root { --paper: #181713; --panel: #221f19; --ink: #ece8dd; --muted: #a39d8e; --rule: #3a362c; --accent: #e8855a; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/1.6 var(--serif); }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 64rem; margin: 0 auto; padding: 0 16px; }
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 0; border-bottom: 2px solid var(--ink); font: 14px var(--mono); }
+.bar .mark { font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-size: 13px; }
+.bar nav { display: flex; gap: 16px; flex-wrap: wrap; }
+.bar nav a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
+.bar nav a[aria-current] { border-color: var(--accent); }
+h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.1; margin: 32px 0 8px; }
+.lede { color: var(--muted); max-width: 42rem; margin: 0 0 24px; }
+.note { border-left: 3px solid var(--ink); padding: 0 16px; color: var(--muted); max-width: 46rem; }
+code, pre { font: 15px/1.55 var(--mono); }
+code { background: var(--panel); padding: 1px 5px; border-radius: 2px; }
+footer { border-top: 2px solid var(--ink); margin-top: 48px; padding: 24px 0 48px; font-size: 15px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.chips li { font: 12px/1 var(--mono); border: 1px solid var(--rule); border-radius: 2px; padding: 5px 7px; color: var(--ink); }
+.chips li b { color: var(--muted); font-weight: 400; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+[role="tablist"] { display: flex; gap: 0; border-bottom: 2px solid var(--ink); margin: 24px 0 0; overflow-x: auto; }
+[role="tab"] { font: 15px var(--mono); background: none; color: var(--muted); border: 0; border-bottom: 3px solid transparent; padding: 10px 14px; cursor: pointer; white-space: nowrap; margin-bottom: -2px; }
+[role="tab"][aria-selected="true"] { color: var(--ink); border-color: var(--accent); }
+[role="tabpanel"] { padding: 24px 0; }
+[role="tabpanel"][hidden] { display: none; }
+.frame { border: 1px solid var(--rule); border-radius: 2px; background: #fff; }
+.frame iframe { display: block; width: 100%; height: 72vh; min-height: 30rem; border: 0; }
+.frame .open { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border-top: 1px solid var(--rule); background: var(--panel); font: 13px var(--mono); }
+pre.prompt { white-space: pre-wrap; background: var(--panel); border-left: 3px solid var(--accent); padding: 16px; margin: 0 0 16px; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 16px; margin: 0 0 16px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); }
+th { font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.scroll { overflow-x: auto; }
+details { margin: 16px 0; }
+summary { cursor: pointer; font: 15px var(--mono); }
+details pre { white-space: pre-wrap; background: var(--panel); padding: 16px; font-size: 14px; }
+
+.sizes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 16px 0; font: 13px var(--mono); }
+.sizes button { font: inherit; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 2px; padding: 6px 10px; cursor: pointer; }
+.sizes button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.sizes label { display: inline-flex; gap: 6px; align-items: center; margin-left: auto; color: var(--muted); }
+.pair { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 52rem) { .pair { grid-template-columns: 1fr 1fr; } }
+.pair figure { margin: 0; border: 1px solid var(--rule); border-radius: 2px; background: var(--panel); }
+.pair figcaption { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px; font: 700 13px var(--mono); letter-spacing: .06em; text-transform: uppercase; border-bottom: 1px solid var(--rule); }
+.pair figcaption a { font-weight: 400; text-transform: none; letter-spacing: 0; }
+.viewport { position: relative; overflow: hidden; height: 70vh; min-height: 26rem; background: #fff; }
+.viewport.phone { max-width: 390px; margin: 0 auto; }
+.viewport iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; }
+.pair .size-note { margin: 0; padding: 6px 12px; font: 12px var(--mono); color: var(--muted); border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="bar"><div class="mark">UCA Kit</div><nav aria-label="Site"><a href="../../">Docs</a><a href="../../samples/" aria-current="page">Samples</a><a href="https://github.com/crazy-creator0/uca-kit">GitHub</a></nav></div>
+<p style="margin:24px 0 0;font:13px var(--mono)"><a href="../">← All samples</a></p>
+<h1>Sample 04: UCA Kit home page</h1>
+<p class="lede">The kit&#x27;s own home page, built from one prompt that lists the facts and asks for a page that does not look AI-made.</p>
+<ul class="chips"><li><b>Category:</b> Page</li><li><b>Made with:</b> main after v0.1.1</li><li><b>View:</b> 2D</li><li><b>Motion:</b> Ticks on load (without kit), none (with kit)</li></ul>
+<div role="tablist" aria-label="Views">
+<button role="tab" id="tab-prompt" aria-controls="prompt" aria-selected="true">Prompt</button>
+<button role="tab" id="tab-compare" aria-controls="compare" aria-selected="false" tabindex="-1">Side by side</button>
+<button role="tab" id="tab-without" aria-controls="without" aria-selected="false" tabindex="-1">Without kit</button>
+<button role="tab" id="tab-with" aria-controls="with" aria-selected="false" tabindex="-1">With kit</button>
+</div>
+<section role="tabpanel" id="prompt" aria-labelledby="tab-prompt">
+<p>Both runs got this prompt word for word. Only the folder line differed: an empty folder for one, a folder with the kit installed for the other. Neither run was told to use or avoid the kit.</p>
+<pre class="prompt">You are an AI coding assistant helping a non-programmer. Your working folder is: {{FOLDER}}
+Work only inside that folder and do not read or change anything outside it. If the folder contains project instructions (CLAUDE.md, AGENTS.md or similar), follow them. No internet and no package installs; use only what is already installed (Node is available, and plain HTML, CSS and JavaScript are fine).
+
+The user says:
+
+&quot;I made a free open-source toolkit called UCA Kit and I need a home page for it. It should make a developer understand in a few seconds what it is and want to try it, and it must not look like every other AI-made landing page. Here is everything that is true about it, please use only these facts:
+- What it is: instructions and small read-only scripts you install into a project folder. Your AI coding assistant reads them and is asked to plan first, check its work, and say what it did not check.
+- Install: npx --yes github:crazy-creator0/uca-kit#v0.1.1 init . --platform claude (other platforms: cursor, copilot, gemini, codex, opencode, windsurf and more).
+- Numbers: 11 tool setups, 3 tiers (lite, standard, full), 16 skills, 5 workflows, 0 runtime dependencies.
+- Honest limits: it is not a guarantee (a model can ignore instructions), it is not benchmarked, and it is not tested on every tool.
+- Free and open source under the MIT license, written by Crazy Creators. Code: https://github.com/crazy-creator0/uca-kit&quot;
+
+If you would normally ask questions, use these answers instead: the audience is developers who already use an AI coding assistant; there is no logo yet; one page is enough; it must have a copy button for the install command; it must look good on a phone and on a laptop and work with the keyboard; a dark or light look is up to you; design is up to you.
+
+Build it with index.html as the entry file, as plain files that open in a browser without a server. Then end with a final message to the user answering: &quot;Is this ready to publish as my project&#x27;s home page? Tell me exactly what you checked and what you did not check.&quot; Be truthful about what you actually ran.</pre>
+<h2 style="font-size:1.2rem">What was measured</h2>
+<div class="scroll"><table><thead><tr><th>Check</th><th>Without kit</th><th>With kit</th></tr></thead><tbody><tr><td>Files the assistant left in the project (kit files and scratch folder not counted)</td><td>3 (index.html, styles.css, script.js)</td><td>2 (index.html, DESIGN.md)</td></tr><tr><td>Design brief written before building</td><td>No</td><td>Yes: picked the &quot;Ledger&quot; direction from the kit&#x27;s list and wrote why in DESIGN.md</td></tr><tr><td>Headline</td><td>&quot;Plan first. Check the work. Say what wasn&#x27;t checked.&quot;</td><td>The same words, chosen separately</td></tr><tr><td>Install command on one line at 1366 px (maintainer re-run)</td><td>No, it wraps onto two lines</td><td>Yes</td></tr><tr><td>Copy button fully on the first phone screen, 390 × 844 (maintainer re-run)</td><td>Yes (bottom edge at 703 px)</td><td>Yes (bottom edge at 533 px)</td></tr><tr><td>Copy by keyboard: Tab to the button, press Enter (maintainer re-run)</td><td>Yes, 4 Tab presses, exact command copied</td><td>Yes, 3 Tab presses (a skip link comes first), exact command copied</td></tr><tr><td>Loads at 390 px and 1366 px with no console errors and no outside requests (maintainer re-run)</td><td>Yes</td><td>Yes</td></tr><tr><td>Checked its numbers against something real</td><td>No; said it used the facts as given</td><td>Counted 16 skills and 5 workflows in the installed kit; said 11 setups and 3 tiers were not verified</td></tr><tr><td>Browser checks kept</td><td>None; it deleted its test script</td><td>57 checks, kept in the git-ignored .uca-workspace/ scratch folder (not published here)</td></tr><tr><td>Senior Bar check (static checklist)</td><td>5 of 8</td><td>5 of 8</td></tr><tr><td>Kit design check (template tells)</td><td>0</td><td>1 at the time, a false alarm in the check itself; fixed in this release, now 0</td></tr><tr><td>Closing answer lists what was not checked</td><td>Yes</td><td>Yes</td></tr></tbody></table></div>
+<p class="note">Both runs landed on the same headline and the same honest-limits section, so the kit did not change what the page says. It changed how the run worked: the with-kit run wrote a design brief first, kept the command on one line, put a skip link before the copy button, and checked two of the numbers against the files it could see. The with-kit run also found a real bug in the kit: the design check missed fonts named through a CSS variable. That check is fixed in the same change that added this sample. One run per side.</p>
+<p><a href="PROMPT.md">PROMPT.md</a> has the exact prompt and how to repeat this yourself.</p>
+</section>
+<section role="tabpanel" id="compare" aria-labelledby="tab-compare" hidden>
+<div class="sizes" role="group" aria-label="Preview width"><button type="button" data-w="390" aria-pressed="true">Phone, 390 px</button><button type="button" data-w="1280" aria-pressed="false">Laptop, 1280 px</button><label><input type="checkbox" id="sync" checked> Scroll together</label></div>
+<div class="pair"><figure><figcaption><span>Without kit</span><a href="without-kit/index.html" target="_blank" rel="noopener">Open full page</a></figcaption><div class="viewport"><iframe data-src="without-kit/index.html" title="UCA Kit home page, without kit, side by side" tabindex="0"></iframe></div><p class="size-note" aria-live="polite"></p></figure><figure><figcaption><span>With kit</span><a href="with-kit/index.html" target="_blank" rel="noopener">Open full page</a></figcaption><div class="viewport"><iframe data-src="with-kit/index.html" title="UCA Kit home page, with kit, side by side" tabindex="0"></iframe></div><p class="size-note" aria-live="polite"></p></figure></div>
+<p class="note">Both pages are the real files, running live. The laptop view is the full 1280 px page scaled down to fit; nothing was retouched.</p>
+</section>
+<section role="tabpanel" id="without" aria-labelledby="tab-without" hidden><div class="frame"><iframe src="without-kit/index.html" title="UCA Kit home page, without kit" loading="lazy"></iframe>
+<div class="open"><span>Without kit: 3 file(s): <code>index.html</code>, <code>styles.css</code>, <code>script.js</code></span><a href="without-kit/index.html" target="_blank" rel="noopener">Open full page</a></div></div>
+<details><summary>What the assistant told the user at the end</summary><pre>I built the page. It&#x27;s close to ready, but don&#x27;t publish it until you&#x27;ve done the three checks under &quot;Before you publish&quot;. I couldn&#x27;t do those from here.
+
+**Files** (in `&lt;project folder&gt;/`): `index.html`, `styles.css`, `script.js`. Double-click `index.html` to open it. It needs no server, no internet and nothing installed.
+
+**The design:** The headline is a three-item checklist: &quot;Plan first. Check the work. Say what wasn&#x27;t checked.&quot; The three boxes tick in order when the page loads. Below it is one plain sentence saying what UCA Kit is, then the install command with a **Copy command** button. You can pick Claude, Cursor, Copilot, Gemini, Codex, OpenCode or Windsurf, and the command changes to match. Next comes a short table of the numbers (11, 3, 16, 5, 0). The last section, &quot;What we have not checked&quot;, lists your honest limits with empty boxes, so the page follows the same rule the kit asks of assistants. It has a light, cool grey look with no logo. I used only the facts you gave me.
+
+**What I actually checked**, by opening the page in Chrome with an automated test script:
+- It opened with no errors at laptop size (1366 px wide) and two phone sizes (375 px and 320 px). There was no sideways scrolling at any of them. I looked at screenshots of each and fixed two layout problems.
+- The copy button put the exact command `npx --yes github:crazy-creator0/uca-kit#v0.1.1 init . --platform claude` on the clipboard. I also tested it after picking each of the other six tools.
+- When copying is blocked, the page selects the command and tells the person to press Ctrl+C.
+- Keyboard only: Tab moves through the GitHub link, the tool picker and the copy button. The arrow keys change the tool, Enter copies, and each item shows a visible blue outline when it&#x27;s selected.
+- When the visitor&#x27;s computer is set to reduce motion, the tick animation is off.
+- Text colours meet the usual readability contrast levels. I darkened the tool-button borders, which were too faint.
+- I removed my temporary test files afterwards.
+
+**What I did not check:**
+- **Whether the install command works.** I never ran it, so I can&#x27;t confirm it installs anything.
+- **Whether `--platform cursor`, `copilot`, `gemini`, `codex`, `opencode` and `windsurf` are the exact names your installer accepts.** I took them from your list. The page also says &quot;the repository has the rest&quot; of the 11 setups, which I didn&#x27;t confirm.
+- **Whether the GitHub link opens your repository.** There was no internet here.
+- **Other browsers and real devices.** I didn&#x27;t test Safari, Firefox, a real iPhone or Android phone, or a screen reader.
+- **How it looks on your computer.** It uses fonts already on each computer, so it will look a little different on Mac, Windows and Linux. I only saw the Linux version.
+- **How it behaves on a web host.** I didn&#x27;t test it on GitHub Pages or any other host, or check how links to it appear when shared. There&#x27;s no preview image or favicon.
+
+**Before you publish:**
+1. Run the command in a test folder.
+2. Check that each tool name in the picker is correct.
+3. Open the page on your own phone and in Safari or Firefox.
+
+If all three work, it&#x27;s ready to go live.</pre></details></section>
+<section role="tabpanel" id="with" aria-labelledby="tab-with" hidden><div class="frame"><iframe src="with-kit/index.html" title="UCA Kit home page, with kit" loading="lazy"></iframe>
+<div class="open"><span>With kit: 2 file(s): <code>index.html</code>, <code>DESIGN.md</code></span><a href="with-kit/index.html" target="_blank" rel="noopener">Open full page</a></div></div>
+<details><summary>What the assistant told the user at the end</summary><pre>Your home page is built: one file, `&lt;project folder&gt;/index.html`, that opens in a browser by double-clicking. Short answer to your question: it&#x27;s ready to publish as a first version, but I&#x27;d do three quick checks first (at the end). Everything below says whether I actually ran it or only checked it by reading.
+
+**What the page is**
+- **Look:** warm paper-coloured background, black serif text and one red accent, with thin ruled lines instead of boxes. There are no gradients, glow effects or rows of feature cards.
+- **Headline:** &quot;Plan first. Check the work. Say what wasn&#x27;t checked.&quot; Under it is one sentence saying what UCA Kit is.
+- **Install command:** right below the headline, in the page&#x27;s only dark block, with a Copy button. A row of platform buttons (claude, cursor, copilot, gemini, codex, opencode, windsurf) swaps the `--platform` value in the command. A line says more platforms are listed on GitHub.
+- **Rest of the page:** a three-step &quot;How it works&quot;, a table with your numbers (11 / 3 / 16 / 5 / 0), and a &quot;What it is not&quot; section where your three honest limits appear as red rubber stamps. The footer has the MIT license, Crazy Creators and the GitHub link.
+- **Facts:** the page uses only the facts you gave. It makes no requests to other sites (no web fonts, no tracking). The only outside link is your GitHub repo.
+
+**What I checked (actually ran)**
+- **Browser test:** a test script I wrote opened the page in headless Chrome at a 375px phone, a 320px small phone and a 1366px laptop. **57 of 57 checks passed:**
+  - no errors, no sideways scrolling, no requests to other sites;
+  - the Copy button is on the first screen at all three sizes and at least 44px tall;
+  - clicking Copy put the exact command on the clipboard, and after switching platform it copied the new value (tested with windsurf);
+  - keyboard only: a &quot;Skip to the install command&quot; link comes first, Tab reaches Copy, Enter and Space both copy, arrow keys change the platform, and focus outlines show;
+  - with the browser&#x27;s copy feature removed, the backup copy method still reported a result;
+  - with JavaScript turned off, the command still shows and the broken Copy button is hidden;
+  - every fact is on the page.
+- **Screenshots:** I looked at them at laptop and both phone sizes. They showed four problems, which I fixed and then retested:
+  - the command broke onto two lines on a laptop;
+  - the &quot;Copied&quot; message repeated the whole command;
+  - the platform buttons ran off the side of the screen;
+  - on the smallest phone the Copy button was below the first screen.
+- **Colour contrast:** every text colour meets the usual readability standard (WCAG AA). The lowest is 5.6:1 against a required 4.5:1.
+- **The kit&#x27;s own checks:**
+  - The design brief check passed.
+  - The design check flagged one item, &quot;no font chosen&quot;. That&#x27;s a false alarm: the fonts are named, but in a way that check doesn&#x27;t read.
+  - The senior checklist scored 5 of 8. It is missing a README, tests and a test command. Those apply to an app project rather than a single page, so I left them.
+- **Your numbers:** the copy of UCA Kit installed in this folder has 16 skills and 5 workflows, matching your numbers. I did not verify &quot;11 tool setups&quot; or &quot;3 tiers&quot;.
+
+**What I did not check**
+- **Other browsers and real phones:** I only tested headless Chrome on Linux. I did not try Safari, Firefox, a real phone or a screen reader.
+- **Fonts on Mac and Windows:** there are no web fonts, so each computer uses a serif it already has. I only saw it in Bitstream Charter, so Mac and Windows will look slightly different.
+- **The install command and the GitHub link:** I didn&#x27;t run the command or open the link, because there&#x27;s no internet here.
+- **Platform values:** the kit&#x27;s files here confirm only `claude` and `cursor`. The other five come from your list.
+- **When the page is hosted:** the Copy button worked here because I gave the test browser permission to use the clipboard. A real browser opening the file from disk may not allow that, so the backup method would be used instead.
+
+**Before you publish**
+1. Open `index.html` on your own phone and laptop and press Copy once on each.
+2. Check that `--platform copilot`, `gemini`, `codex`, `opencode` and `windsurf` really work with v0.1.1. If one doesn&#x27;t, delete its line in the platform list in `index.html`.
+3. Upload only `index.html`. This folder also holds the kit&#x27;s own files, which aren&#x27;t part of the website.
+
+Two more things:
+- **Extra files:** I also added `DESIGN.md` (the design brief; the kit&#x27;s design steps ask for this file) and a scratch folder, `.uca-workspace/`, with the test scripts and screenshots. You can delete both whenever you like.
+- **Git:** this folder isn&#x27;t using Git, and I didn&#x27;t set it up, because the kit asks to check with you first. Say if you&#x27;d like it.</pre></details></section>
+<footer><p><strong>Created with UCA Kit.</strong> Written by Crazy Creators. Each sample is one run per side with the same model and the same prompt; results vary from run to run. The samples show how to test the kit. They are not proof that it works.</p><p>MIT licensed. © 2026 Crazy Creators.</p></footer>
+</div>
+<script>
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function show(tab, focus) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute("aria-selected", String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+    if (focus) tab.focus();
+    try { history.replaceState(null, "", "#" + tab.getAttribute("aria-controls")); } catch (e) {}
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener("click", function () { show(t, false); });
+    t.addEventListener("keydown", function (ev) {
+      if (ev.key === "ArrowRight") show(tabs[(i + 1) % tabs.length], true);
+      if (ev.key === "ArrowLeft") show(tabs[(i - 1 + tabs.length) % tabs.length], true);
+    });
+  });
+  var start = tabs.filter(function (t) { return "#" + t.getAttribute("aria-controls") === location.hash; })[0];
+  if (start) show(start, false);
+})();
+</script>
+<script>
+(function () {
+  var panel = document.getElementById("compare");
+  if (!panel) return;
+  var width = 390, loaded = false;
+  var frames = Array.prototype.slice.call(panel.querySelectorAll("iframe"));
+  var buttons = Array.prototype.slice.call(panel.querySelectorAll("[data-w]"));
+  var sync = document.getElementById("sync");
+  function fit() {
+    frames.forEach(function (frame) {
+      var box = frame.parentNode;
+      box.classList.toggle("phone", width === 390);
+      var scale = Math.min(1, box.clientWidth / width);
+      frame.style.width = width + "px";
+      frame.style.height = Math.ceil(box.clientHeight / scale) + "px";
+      frame.style.transform = "scale(" + scale + ")";
+      var note = box.parentNode.querySelector(".size-note");
+      if (note) note.textContent = width + " px wide" + (scale < 1 ? ", shown at " + Math.round(scale * 100) + "%" : ", actual size");
+    });
+  }
+  function load() {
+    if (loaded) return;
+    loaded = true;
+    frames.forEach(function (frame) { frame.src = frame.getAttribute("data-src"); frame.addEventListener("load", function () { hook(frame); }); });
+    fit();
+  }
+  // Scroll together: same fraction of the page in both, when the browser allows reading the frame (same site).
+  var busy = false;
+  function hook(frame) {
+    try {
+      var win = frame.contentWindow;
+      win.addEventListener("scroll", function () {
+        if (!sync.checked || busy) return;
+        var doc = win.document.documentElement, max = doc.scrollHeight - win.innerHeight;
+        var ratio = max > 0 ? win.scrollY / max : 0;
+        busy = true;
+        frames.forEach(function (other) {
+          if (other === frame) return;
+          try { var w = other.contentWindow, d = w.document.documentElement; w.scrollTo(0, ratio * (d.scrollHeight - w.innerHeight)); } catch (e) {}
+        });
+        requestAnimationFrame(function () { busy = false; });
+      });
+    } catch (e) { sync.disabled = true; sync.parentNode.title = "Not available when the page is opened as a local file"; }
+  }
+  buttons.forEach(function (b) {
+    b.addEventListener("click", function () {
+      width = Number(b.getAttribute("data-w"));
+      buttons.forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      fit();
+    });
+  });
+  window.addEventListener("resize", fit);
+  new MutationObserver(function () { if (!panel.hidden) load(), fit(); }).observe(panel, { attributes: true, attributeFilter: ["hidden"] });
+  if (!panel.hidden) load();
+})();
+</script>
+</body>
+</html>

@@ -33,6 +33,11 @@ test("each sample page has the three tabs, both results framed, and the tile lab
     for (const label of [">Prompt<", ">Without kit<", ">With kit<"]) assert.ok(page.includes(label), `${slug}: tab ${label} missing`);
     assert.match(page, /<iframe src="without-kit\/index.html"/);
     assert.match(page, /<iframe src="with-kit\/index.html"/);
+    // Side by side: both results load in one view, with a phone and a laptop width.
+    assert.ok(page.includes(">Side by side<"), `${slug}: side-by-side tab missing`);
+    assert.match(page, /<iframe data-src="without-kit\/index.html"/);
+    assert.match(page, /<iframe data-src="with-kit\/index.html"/);
+    assert.match(page, /data-w="390"[\s\S]*data-w="1280"/);
     for (const chip of ["Category:", "Made with:", "View:", "Motion:"]) assert.ok(page.includes(chip), `${slug}: ${chip} missing`);
   }
 });
@@ -49,8 +54,9 @@ test("every 'Made with' label is a released version in the changelog, or says it
   const changelog = read(root, "CHANGELOG.md");
   for (const [, label] of gallery.matchAll(/<b>Made with:<\/b> ([^<]+)</g)) {
     if (label === "before v0.1.0") continue;
-    const version = label.replace(/^v/, "");
-    assert.match(label, /^v\d+\.\d+\.\d+$/, `odd version label: ${label}`);
+    // "main after v0.1.1": built from unreleased main; the named release must still exist.
+    const version = label.replace(/^main after /, "").replace(/^v/, "");
+    assert.match(label, /^(main after )?v\d+\.\d+\.\d+$/, `odd version label: ${label}`);
     assert.match(changelog, new RegExp(`^## ${version.replace(/\./g, "\\.")} \\(`, "m"), `${label} is not in CHANGELOG.md`);
   }
 });

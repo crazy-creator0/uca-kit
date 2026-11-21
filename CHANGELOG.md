@@ -9,6 +9,11 @@ Changed
 - Routes written inside comments are skipped, and a FastAPI decorator is no longer also reported as a plain router call.
 - Routes are grouped one line per file within a budget of about 3,000 characters. FastAPI prefixes from `APIRouter(prefix=...)` and `include_router(..., prefix=...)` are joined into full paths; a prefix that is not a string literal (or a constant set to one in an imported file) is shown as `{unread prefix}` instead of guessed. On the FastAPI full-stack template the routes block went from 3,193 to 1,175 bytes.
 - `fuzz/`, `testdata/`, `benches/` and `test_*` folders are treated like tests.
+- Design check: fonts named through a CSS variable (`font-family: var(--serif)` with `--serif` set in the same file) now count as a chosen typeface. Sample 04 found this false alarm.
+- Samples site: every sample page has a **Side by side** tab that runs both results live next to each other, at phone (390 px) or laptop (1280 px) width scaled to fit, with an option to scroll both together.
+
+Added (samples)
+- Sample 04, the UCA Kit home page: the same prompt of plain facts, built once without and once with the kit (main after v0.1.1). Both runs chose the same headline. With the kit, the run wrote a design brief first, kept the install command on one line at laptop width and checked two of the numbers against the installed files. The Senior Bar check gave both 5 of 8.
 
 Added
 - An import map block: starting from the entry files, it follows local imports breadth first (JavaScript, TypeScript with tsconfig path aliases, Python, Go packages through the `go.mod` module path, and Rust `mod`, `use crate::` and workspace crates) and lists who imports what, within a fixed budget of about 3,000 characters. Leaf files share one line, and source files no entry reaches are counted. Tested on Express, Koa, Fastify, got, chalk, the FastAPI full-stack template, gin, ripgrep and axum.

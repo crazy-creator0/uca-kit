@@ -54,13 +54,25 @@ const RULES = [
       const found = [];
       const families = [...matches(text, /font-family\s*:\s*([^;}{]+)/i)];
       const tailwind = [...matches(text, /\bfont-(?:sans|serif|mono)\b/)];
+      // font-family: var(--serif) takes its names from "--serif: ..." in the same file. A variable defined
+      // elsewhere cannot be read here, so it is not reported as a default.
+      const variables = new Map([...matches(text, /(--[\w-]+)\s*:\s*([^;}{]+)/)].map((found) => [found[1], found[2]]));
       const names = [];
-      for (const family of families) {
-        for (const part of family[1].split(",")) names.push(part.replace(/!important/gi, "").replace(/["']/g, "").trim().toLowerCase());
-      }
-      const named = names.filter((name) => name && !name.startsWith("var(") && !GENERIC_FONTS.has(name));
+      let unknownVariable = false;
+      const add = (value, depth) => {
+        for (const part of value.split(",")) {
+          const name = part.replace(/!important/gi, "").replace(/["']/g, "").trim();
+          const variable = /^var\(\s*(--[\w-]+)/.exec(name);
+          if (variable && depth < 3) {
+            if (variables.has(variable[1])) add(variables.get(variable[1]), depth + 1);
+            else unknownVariable = true;
+          } else if (!variable) names.push(name.toLowerCase());
+        }
+      };
+      for (const family of families) add(family[1], 0);
+      const named = names.filter((name) => name && !GENERIC_FONTS.has(name));
       const importsFont = /fonts\.googleapis\.com|@font-face|fonts\.bunny\.net|@fontsource|next\/font/i.test(text);
-      if (named.length === 0 && !importsFont && (families.length || tailwind.length)) {
+      if (named.length === 0 && !unknownVariable && !importsFont && (families.length || tailwind.length)) {
         found.push({ line: families.length ? lineOf(text, families[0].index) : lineOf(text, tailwind[0].index), evidence: families.length ? families[0][0].trim() : tailwind[0][0] });
       }
       return found;
