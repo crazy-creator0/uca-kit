@@ -121,8 +121,7 @@ test("frontend app: stack, entry points, routes, state and tooling are found wit
     "- React Router: declared ^6.22.0 (source: package.json)",
     "- file present: index.html (source: index.html)",
     "- file present: src/main.tsx (source: src/main.tsx)",
-    "- Page /cart (source: src/App.tsx:2)",
-    "- Page /checkout (source: src/App.tsx:2)",
+    "- Page in src/App.tsx: /cart, /checkout (source: src/App.tsx:2)",
     "- Source folder: src/components/ (source: src/components)",
     "- Dependency declared: Zustand (source: package.json)",
     "- Dependency declared: Tailwind CSS (source: package.json)",
@@ -151,9 +150,7 @@ test("backend API: routes, database, auth dependencies and env names are found",
   for (const expected of [
     "- package main: src/server.js (source: package.json)",
     "- Express: declared ^4.19.2 (source: package.json)",
-    "- API GET /health (source: src/server.js:3)",
-    "- API POST /login (source: src/server.js:4)",
-    "- API GET /orders/:id (source: src/server.js:6)",
+    "- API in src/server.js: GET /health, POST /login, GET /orders/:id (source: src/server.js:3)",
     "- Dependency declared: SQLite driver (better-sqlite3) (source: package.json)",
     "- Migration folder: migrations/ (source: migrations)",
     "- Dependency declared: jsonwebtoken (source: package.json)",
@@ -182,11 +179,9 @@ test("full-stack Next.js app: file routes, API routes, schema, auth and integrat
   for (const expected of [
     "- Next.js: declared 14.1.0 (source: package.json)",
     "- Package manager: yarn (source: yarn.lock)",
-    "- API GET/POST /api/orders (source: app/api/orders/route.ts)",
-    "- API any /api/legacy (source: pages/api/legacy.ts)",
-    "- Page / (source: app/page.tsx)",
-    "- Page /dashboard (source: app/dashboard/page.tsx)",
-    "- Page /login (source: app/(auth)/login/page.tsx)",
+    "- API in app/ (file routes): GET/POST /api/orders (source: app/api/orders/route.ts)",
+    "- API in pages/ (file routes): any /api/legacy (source: pages/api/legacy.ts)",
+    "- Page in app/ (file routes): /, /dashboard, /login (source: app/page.tsx)",
     "- Prisma schema, provider postgresql, models: User, Order (source: prisma/schema.prisma)",
     "- Dependency declared: NextAuth (source: package.json)",
     "- Dependency declared: Stripe (source: package.json)",
@@ -203,8 +198,7 @@ test("Python backend: Flask routes with methods, SQLAlchemy, Alembic, pytest, Py
   for (const expected of [
     "- Python: >=3.11 (source: pyproject.toml)",
     "- Flask (Python dependency) (source: requirements.txt)",
-    "- API GET/POST /items (Flask-style decorator) (source: app.py:4)",
-    "- API GET /health (Flask-style decorator) (source: app.py:8)",
+    "- API in app.py (Flask): GET/POST /items, GET /health (source: app.py:4)",
     "- Python dependency: SQLAlchemy (source: requirements.txt)",
     "- Alembic is configured (source: alembic.ini)",
     "- Python dependency: PyJWT (source: requirements.txt)",
@@ -275,7 +269,7 @@ test("--write keeps text the developer wrote, before, between and after the bloc
     assert.ok(after.includes(kept), `lost: ${kept}`);
   }
   assert.ok(!after.includes("STALE LINE THAT SHOULD BE REPLACED"), "generated block was not refreshed");
-  assert.match(after, /- API PUT \/extra \(source: src\/extra\.js:2\)/);
+  assert.match(after, /- API in src\/extra\.js: PUT \/extra \(source: src\/extra\.js:2\)/);
 });
 
 test("--section updates only the named blocks", () => {
@@ -431,7 +425,7 @@ test("routes: examples written inside comments are not reported as routes", () =
     "package.json": JSON.stringify({ name: "lib", main: "lib/res.js" }),
     "lib/res.js": "/**\n * Example:\n *\n *     app.get('/user/:id/photo', fn)\n */\n// app.post('/old', fn)\napp.get('/real', fn);\n"
   }));
-  assert.match(out, /- API GET \/real \(source: lib\/res\.js:7\)/);
+  assert.match(out, /- API in lib\/res\.js: GET \/real \(source: lib\/res\.js:7\)/);
   assert.doesNotMatch(out, /\/user\/:id\/photo|\/old/);
 });
 
@@ -476,7 +470,7 @@ test("import map: tsconfig path aliases are followed, and an entry-like file rea
 test("routes: a FastAPI decorator is reported once, not also as a plain router call", () => {
   const out = card(repo({ "app/main.py": "from fastapi import APIRouter\nrouter = APIRouter()\n@router.get(\"/items\")\ndef items(): pass\n" }));
   assert.equal((out.match(/\/items/g) || []).length, 1, out);
-  assert.match(out, /- API GET \/items \(FastAPI-style decorator\) \(source: app\/main\.py:3\)/);
+  assert.match(out, /- API in app\/main\.py \(FastAPI\): GET \/items \(source: app\/main\.py:3\)/);
 });
 
 test("import map: the map stays within a fixed character budget", () => {
@@ -489,4 +483,102 @@ test("import map: the map stays within a fixed character budget", () => {
   const branchLines = lines(block).filter((line) => / imports: /.test(line));
   assert.ok(branchLines.join("\n").length <= 3100, `branch lines use ${branchLines.join("\n").length} chars`);
   assert.match(block, /- \.\.\. and \d+ more importing file\(s\) not listed/);
+});
+
+test("routes: FastAPI prefixes from APIRouter and include_router are joined into full paths", () => {
+  const out = card(repo({
+    "backend/app/main.py": "from fastapi import FastAPI\nfrom app.api.main import api_router\nfrom app.core.config import settings\napp = FastAPI()\napp.include_router(api_router, prefix=settings.API_V1_STR)\n",
+    "backend/app/core/config.py": "class Settings:\n    API_V1_STR: str = \"/api/v1\"\nsettings = Settings()\n",
+    "backend/app/api/main.py": "from fastapi import APIRouter\nfrom app.api.routes import items, users\napi_router = APIRouter()\napi_router.include_router(users.router)\napi_router.include_router(items.router, prefix=\"/items\")\n",
+    "backend/app/api/routes/users.py": "from fastapi import APIRouter\nrouter = APIRouter(prefix=\"/users\", tags=[\"users\"])\n@router.get(\"/\")\ndef a(): pass\n@router.get(\"/me\")\ndef b(): pass\n@router.delete(\"/{user_id}\")\ndef c(): pass\n",
+    "backend/app/api/routes/items.py": "from fastapi import APIRouter\nrouter = APIRouter()\n@router.get(\"/\")\ndef a(): pass\n@router.post(\"/{id}\")\ndef b(): pass\n",
+    "backend/app/api/routes/__init__.py": ""
+  }));
+  assert.match(out, /- API in backend\/app\/api\/routes\/users\.py \(FastAPI\), under \/api\/v1\/users: GET \/, GET \/me, DELETE \/\{user_id\} \(source: backend\/app\/api\/routes\/users\.py:3\)/);
+  assert.match(out, /- API in backend\/app\/api\/routes\/items\.py \(FastAPI\), under \/api\/v1\/items: GET \/, POST \/\{id\} \(source: backend\/app\/api\/routes\/items\.py:3\)/);
+});
+
+test("routes: a prefix that cannot be read from a literal is shown as unknown, not guessed", () => {
+  const out = card(repo({
+    "main.py": "from fastapi import FastAPI\nimport os\nfrom routes import router\napp = FastAPI()\napp.include_router(router, prefix=os.environ[\"BASE\"])\n",
+    "routes.py": "from fastapi import APIRouter\nrouter = APIRouter()\n@router.get(\"/ping\")\ndef p(): pass\n"
+  }));
+  assert.match(out, /- API in routes\.py \(FastAPI\), under \{unread prefix\}: GET \/ping \(source: routes\.py:3\)/);
+});
+
+test("routes: the block stays within a character budget and long files are cut with a count", () => {
+  const files = {};
+  for (let f = 0; f < 30; f += 1) files[`src/routes/resource${f}.js`] = Array.from({ length: 20 }, (_, i) => `router.get("/resource${f}/item${i}/detail", h);`).join("\n");
+  const out = card(repo(files));
+  const block = out.split("<!-- uca:generated:routes -->")[1].split("<!-- /uca:generated -->")[0];
+  const routeLines = lines(block).filter((line) => line.startsWith("- API"));
+  assert.ok(routeLines.join("\n").length <= 3100, `routes use ${routeLines.join("\n").length} chars`);
+  assert.match(routeLines[0], /\(\+\d+ more\)/);
+  assert.match(block, /- \.\.\. and \d+ more route file\(s\) not listed/);
+});
+
+test("import map: Go packages are followed through the go.mod module path", () => {
+  const out = card(repo({
+    "go.mod": "module example.com/shop\n\ngo 1.22\n",
+    "cmd/api/main.go": "package main\n\nimport (\n\t\"fmt\"\n\t\"example.com/shop/internal/http\"\n\tdb \"example.com/shop/internal/store\"\n)\n\nfunc main() { fmt.Println(http.X, db.Y) }\n",
+    "internal/http/server.go": "package http\n\nimport \"example.com/shop/internal/store\"\n\nvar X = store.Y\n",
+    "internal/http/server_test.go": "package http\n\nimport \"example.com/shop/internal/testkit\"\n",
+    "internal/store/store.go": "package store\n\nvar Y = 1\n",
+    "internal/testkit/kit.go": "package testkit\n",
+    "tools/gen.go": "package tools\n"
+  }));
+  const block = out.split("<!-- uca:generated:map -->")[1].split("<!-- /uca:generated -->")[0];
+  assert.match(block, /- cmd\/api\/ \(entry, Go package main\) imports: internal\/http\/, internal\/store\/ \(source: cmd\/api\/main\.go\)/);
+  assert.match(block, /- internal\/http\/ \(depth 1\) imports: internal\/store\/ \(source: internal\/http\/server\.go\)/);
+  assert.doesNotMatch(block, /imports: [^\n]*testkit/, "imports in _test.go files are not followed");
+  assert.match(block, /not reached from an entry, e\.g\. .*tools\/gen\.go/);
+  assert.doesNotMatch(out, /Go and Rust imports are not followed/);
+});
+
+test("import map: a Go library with no main package starts at its root package", () => {
+  const out = card(repo({
+    "go.mod": "module github.com/x/lib\n",
+    "lib.go": "package lib\n\nimport \"github.com/x/lib/internal/bytesconv\"\n",
+    "internal/bytesconv/b.go": "package bytesconv\n",
+    "examples/basic/main.go": "package main\n\nimport \"github.com/x/lib\"\n"
+  }));
+  const block = out.split("<!-- uca:generated:map -->")[1].split("<!-- /uca:generated -->")[0];
+  assert.match(block, /- \.\/ \(entry, Go root package\) imports: internal\/bytesconv\/ \(source: lib\.go\)/);
+  assert.doesNotMatch(block, /examples/);
+});
+
+test("import map: Rust modules, crate paths, custom bin paths and workspace crates are followed", () => {
+  const out = card(repo({
+    "Cargo.toml": "[package]\nname = \"rg\"\n\n[[bin]]\nname = \"rg\"\npath = \"crates/core/main.rs\"\n\n[workspace]\nmembers = [\"crates/searcher\"]\n",
+    "crates/core/main.rs": "mod flags;\n#[path = \"hay/stack.rs\"]\nmod haystack;\nuse grep_searcher::Searcher;\nfn main() {}\n",
+    "crates/core/flags/mod.rs": "mod parse;\nuse crate::haystack::Thing;\n",
+    "crates/core/flags/parse.rs": "pub fn p() {}\n",
+    "crates/core/hay/stack.rs": "pub struct Thing;\n",
+    "crates/searcher/Cargo.toml": "[package]\nname = \"grep-searcher\"\n",
+    "crates/searcher/src/lib.rs": "mod sink;\npub mod searcher { }\n",
+    "crates/searcher/src/sink.rs": "pub struct Sink;\n",
+    "crates/searcher/tests/it.rs": "mod extra;\n",
+    "build.rs": "fn main() {}\n"
+  }));
+  const entry = out.split("<!-- uca:generated:entry-points -->")[1].split("<!-- /uca:generated -->")[0];
+  assert.match(entry, /- Cargo bin rg: crates\/core\/main\.rs \(source: Cargo\.toml\)/);
+  assert.match(entry, /- Cargo lib grep-searcher: crates\/searcher\/src\/lib\.rs \(source: crates\/searcher\/Cargo\.toml\)/);
+  const block = out.split("<!-- uca:generated:map -->")[1].split("<!-- /uca:generated -->")[0];
+  assert.match(block, /- crates\/core\/main\.rs \(entry\) imports: \.\/flags\/mod\.rs, \.\/hay\/stack\.rs, crates\/searcher\/src\/lib\.rs \(source: crates\/core\/main\.rs\)/);
+  assert.match(block, /- crates\/core\/flags\/mod\.rs \(depth 1\) imports: \.\/parse\.rs, crates\/core\/hay\/stack\.rs/);
+  assert.match(block, /- crates\/searcher\/src\/lib\.rs \(depth 1\) imports: \.\/sink\.rs/);
+  assert.doesNotMatch(block, /tests\/it\.rs|build\.rs/);
+});
+
+test("fuzz harnesses and test_files folders are set apart like tests", () => {
+  const out = card(repo({
+    "Cargo.toml": "[package]\nname = \"tool\"\n",
+    "src/main.rs": "fn main() {}\n",
+    "fuzz/Cargo.toml": "[package]\nname = \"tool-fuzz\"\n\n[[bin]]\nname = \"fuzz_parse\"\npath = \"fuzz_targets/fuzz_parse.rs\"\n",
+    "fuzz/fuzz_targets/fuzz_parse.rs": "fn main() {}\n",
+    "extra/test_files/index.html": "<p>fixture</p>\n"
+  }));
+  const entry = out.split("<!-- uca:generated:entry-points -->")[1].split("<!-- /uca:generated -->")[0];
+  assert.match(entry, /- Cargo bin tool: src\/main\.rs \(source: Cargo\.toml\)/);
+  assert.doesNotMatch(entry, /fuzz_parse|- file present: extra\/test_files/);
 });

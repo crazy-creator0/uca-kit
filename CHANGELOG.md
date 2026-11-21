@@ -7,9 +7,11 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 Changed
 - Project scanner (`uca-project-discover.cjs`): the entry point the package declares now comes first (main, bin, exports, or Node's default `index.js`); a built path such as `dist/index.js` points to its source file when one exists. Entry-like files and routes inside example, test, fixture and benchmark folders are counted on one line instead of listed as the app's own. On Express this cut the entry list from 26 lines to 2 and the routes from 47 lines to 2.
 - Routes written inside comments are skipped, and a FastAPI decorator is no longer also reported as a plain router call.
+- Routes are grouped one line per file within a budget of about 3,000 characters. FastAPI prefixes from `APIRouter(prefix=...)` and `include_router(..., prefix=...)` are joined into full paths; a prefix that is not a string literal (or a constant set to one in an imported file) is shown as `{unread prefix}` instead of guessed. On the FastAPI full-stack template the routes block went from 3,193 to 1,175 bytes.
+- `fuzz/`, `testdata/`, `benches/` and `test_*` folders are treated like tests.
 
 Added
-- An import map block: starting from the entry files, it follows local imports breadth first (JavaScript, TypeScript with tsconfig path aliases, and Python) and lists who imports what, within a fixed budget of about 3,000 characters. Leaf files share one line, and source files no entry reaches are counted. Tested on Express, Koa, Fastify, got, chalk and the FastAPI full-stack template.
+- An import map block: starting from the entry files, it follows local imports breadth first (JavaScript, TypeScript with tsconfig path aliases, Python, Go packages through the `go.mod` module path, and Rust `mod`, `use crate::` and workspace crates) and lists who imports what, within a fixed budget of about 3,000 characters. Leaf files share one line, and source files no entry reaches are counted. Tested on Express, Koa, Fastify, got, chalk, the FastAPI full-stack template, gin, ripgrep and axum.
 
 ## 0.1.1 (2026-11-15)
 
