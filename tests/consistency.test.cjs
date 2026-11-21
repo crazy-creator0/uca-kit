@@ -87,6 +87,8 @@ test("publishing docs point at the same repository as package.json", () => {
   const slug = /github\.com\/([^/]+\/[^/.]+)/.exec(pkg.repository.url)[1];
   const pub = read("PUBLISHING.md");
   for (const m of pub.matchAll(/github\.com\/([^/\s)]+\/[^/\s).]+)/g)) assert.equal(m[1], slug);
+  assert.ok(pub.includes(`Version in \`package.json\`: \`${pkg.version}\``), "PUBLISHING.md names a different version than package.json");
+  assert.ok(pub.includes(`#v${pkg.version} init`), "PUBLISHING.md release check pins a different version");
 });
 
 // The hand-offs between the planning workflow and the skills it names must point at things that exist and say the same thing.

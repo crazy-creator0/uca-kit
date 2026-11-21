@@ -38,6 +38,8 @@ test("CITATION.cff names the project, author, repository and license, with no pe
     assert.match(citation, line);
   }
   assert.doesNotMatch(citation, /@|email/i);
+  const version = require(path.join(root, "package.json")).version;
+  assert.match(citation, new RegExp(`^version: "${version.replace(/\./g, "\\.")}"$`, "m"), "CITATION.cff version differs from package.json");
 });
 
 test("README states the license change and the MIT history; site footers no longer say plain MIT", () => {
