@@ -27,6 +27,10 @@ test("each rule fires on its own tell and not on a near miss", () => {
   assert.ok(ruleIds("body { font-family: Inter, sans-serif; }").has("default-typeface"));
   assert.ok(!ruleIds('body { font-family: "Newsreader", serif; }').has("default-typeface"));
   assert.ok(!ruleIds('@import url("https://fonts.googleapis.com/css2?family=Lora"); body { font-family: system-ui; }').has("default-typeface"));
+  // Fonts named through a CSS custom property count as chosen (found by sample 04: a false alarm before).
+  assert.ok(!ruleIds(':root { --serif: "Iowan Old Style", Charter, Georgia, serif; } body { font-family: var(--serif); }').has("default-typeface"));
+  assert.ok(ruleIds(':root { --sans: system-ui, sans-serif; } body { font-family: var(--sans); }').has("default-typeface"));
+  assert.ok(ruleIds('body { font-family: var(--not-defined-here); }').has("default-typeface") === false, "an unknown variable is not reported as a default");
   assert.ok(ruleIds("a { background: linear-gradient(90deg, #8b5cf6, #3b82f6); }").has("purple-blue-gradient"));
   assert.ok(!ruleIds("a { background: linear-gradient(90deg, #1d1b16, #3b3a33); }").has("purple-blue-gradient"));
   assert.ok(!ruleIds("a { background: linear-gradient(90deg, #ef4444, #f59e0b); }").has("purple-blue-gradient"));

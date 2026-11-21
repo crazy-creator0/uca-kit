@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UCA Kit: plan first, check the work, say what wasn't checked</title>
+<meta name="description" content="UCA Kit is a free, open-source set of instructions and small read-only scripts you install into a project folder. Your AI coding assistant reads them and is asked to plan first, check its work, and say what it did not check.">
+<meta property="og:title" content="UCA Kit">
+<meta property="og:description" content="Instructions and small read-only scripts for your AI coding assistant: plan first, check the work, say what wasn't checked. Free and open source, MIT license.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#F4EFE6">
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --paper: #F4EFE6;
+    --ink: #1D1B16;
+    --muted: #5A5346;
+    --rule: #C9BFA9;
+    --stamp: #B3261E;
+    --ok: #2F6B3A;
+    --serif: "Iowan Old Style", Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+    --mono: "IBM Plex Mono", "JetBrains Mono", "SF Mono", "Cascadia Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+    --s1: 8px; --s2: 16px; --s3: 24px; --s4: 40px; --s5: 64px; --s6: 96px;
+    --radius: 2px;
+    --margin-col: 180px;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.55;
+  }
+  ::selection { background: var(--ink); color: var(--paper); }
+
+  a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:hover { color: var(--stamp); }
+
+  :focus-visible { outline: 2px solid var(--stamp); outline-offset: 3px; }
+
+  .skip {
+    position: absolute; left: var(--s2); top: -100px;
+    background: var(--ink); color: var(--paper); padding: var(--s1) var(--s2);
+    font-family: var(--mono); font-size: 14px; z-index: 10;
+  }
+  .skip:focus { top: var(--s2); }
+
+  .page { max-width: 1040px; margin: 0 auto; padding: 0 var(--s3); }
+
+  /* Masthead */
+  .mast {
+    display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--s1) var(--s3);
+    padding: var(--s3) 0 var(--s2);
+    border-bottom: 1px solid var(--ink);
+    font-family: var(--mono); font-size: 14px;
+  }
+  .wordmark { font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: 0.01em; }
+  .mast-meta { display: flex; gap: var(--s3); flex-wrap: wrap; color: var(--muted); }
+  .mast-meta a { color: var(--ink); }
+
+  /* Lead */
+  .lead { padding: var(--s5) 0 var(--s4); }
+  h1 {
+    font-size: clamp(36px, 7vw, 68px);
+    line-height: 1.04;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0 0 var(--s3);
+    max-width: 15ch;
+  }
+  h1 span { display: block; }
+  h1 .last { color: var(--stamp); }
+  .what { font-size: 22px; line-height: 1.45; max-width: 36em; margin: 0 0 var(--s4); }
+
+  /* Install block: the only dark surface */
+  .install {
+    background: var(--ink); color: var(--paper);
+    border-radius: var(--radius);
+    padding: var(--s3);
+  }
+  .install-label {
+    font-family: var(--mono); font-size: 14px; margin: 0 0 var(--s2);
+    color: #CFC6B4;
+  }
+  .cmd-row { display: flex; gap: var(--s2); align-items: flex-start; }
+  .cmd {
+    flex: 1; min-width: 0; margin: 0;
+    font-family: var(--mono); font-size: 16px; line-height: 1.6;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .cmd .nw { white-space: nowrap; }
+  .cmd .prompt { color: #9C9382; user-select: none; -webkit-user-select: none; }
+  .cmd .plat { color: #F0B9A8; }
+  .copy {
+    flex: none;
+    font: 600 14px var(--mono);
+    background: var(--paper); color: var(--ink);
+    border: 1px solid var(--paper); border-radius: var(--radius);
+    padding: 10px 16px; min-height: 44px; min-width: 96px;
+    cursor: pointer;
+  }
+  .copy:hover { background: #FFFFFF; }
+  .copy:focus-visible { outline-color: #F0B9A8; }
+  .copy[data-state="done"] { background: var(--paper); color: var(--ok); }
+
+  .platforms {
+    border: 0; margin: var(--s3) 0 0; padding: var(--s2) 0 0;
+    border-top: 1px solid #4A4539;
+  }
+  .platforms legend {
+    padding: 0; font-family: var(--mono); font-size: 14px; color: #CFC6B4;
+    float: left; margin: 0 var(--s2) var(--s1) 0; line-height: 36px;
+  }
+  .plat-list { display: flex; flex-wrap: wrap; gap: var(--s1); }
+  .plat-list label { position: relative; }
+  .plat-list input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .plat-list span {
+    display: inline-block; font-family: var(--mono); font-size: 14px;
+    padding: 6px 12px; min-height: 36px; line-height: 24px;
+    border: 1px solid #4A4539; border-radius: var(--radius);
+    color: #CFC6B4; cursor: pointer;
+  }
+  .plat-list span:hover { border-color: #CFC6B4; }
+  .plat-list input:checked + span { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+  .plat-list input:focus-visible + span { outline: 2px solid #F0B9A8; outline-offset: 2px; }
+  .more { font-family: var(--mono); font-size: 14px; color: #CFC6B4; margin: var(--s2) 0 0; }
+  .more a { color: var(--paper); }
+
+  .status { font-family: var(--mono); font-size: 14px; min-height: 22px; margin: var(--s1) 0 0; color: #CFC6B4; }
+
+  /* Ruled sections */
+  section.ruled {
+    display: grid; grid-template-columns: var(--margin-col) 1fr; gap: var(--s3);
+    border-top: 1px solid var(--ink);
+    padding: var(--s4) 0 var(--s5);
+  }
+  .margin-label {
+    font-family: var(--mono); font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--muted); margin: 6px 0 0; font-weight: 400;
+  }
+
+  ol.steps { list-style: none; margin: 0; padding: 0; }
+  ol.steps li {
+    display: grid; grid-template-columns: 48px 1fr; gap: var(--s2);
+    padding: var(--s2) 0; border-bottom: 1px solid var(--rule);
+  }
+  ol.steps li:first-child { padding-top: 0; }
+  ol.steps .n { font-family: var(--mono); font-size: 16px; color: var(--muted); padding-top: 2px; }
+  ol.steps p { margin: 0; }
+  ol.steps strong { font-weight: 600; }
+
+  table.ledger { width: 100%; border-collapse: collapse; }
+  .ledger caption { text-align: left; color: var(--muted); font-size: 16px; padding-bottom: var(--s2); }
+  .ledger th, .ledger td { text-align: left; vertical-align: baseline; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .ledger thead th { font-family: var(--mono); font-size: 14px; font-weight: 400; color: var(--muted); border-bottom-color: var(--ink); padding-top: 0; }
+  .ledger td.fig {
+    font-family: var(--mono); font-size: 30px; line-height: 1.1; font-variant-numeric: tabular-nums;
+    width: 120px; text-align: right; padding-right: var(--s3);
+  }
+  .ledger thead th.fig-h { text-align: right; padding-right: var(--s3); }
+  .ledger tbody th { font-weight: 600; font-size: 18px; }
+  .ledger .note { display: block; font-weight: 400; color: var(--muted); font-size: 16px; font-family: var(--mono); }
+  .ledger tr.zero td.fig { color: var(--stamp); }
+
+  .limits { list-style: none; margin: 0; padding: 0; }
+  .limits li {
+    display: grid; grid-template-columns: minmax(0, 260px) 1fr; gap: var(--s3); align-items: center;
+    padding: var(--s3) 0; border-bottom: 1px solid var(--rule);
+  }
+  .limits li:first-child { padding-top: 0; }
+  .stamp {
+    justify-self: start;
+    font-family: var(--mono); font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--stamp); border: 2px solid var(--stamp); border-radius: var(--radius);
+    padding: 4px 10px; transform: rotate(-2deg);
+  }
+  .limits li:nth-child(2) .stamp { transform: rotate(1.5deg); }
+  .limits li:nth-child(3) .stamp { transform: rotate(-1deg); }
+  .limits p { margin: 0; }
+  .limits-intro { margin: 0 0 var(--s3); max-width: 34em; }
+
+  footer {
+    border-top: 1px solid var(--ink);
+    padding: var(--s3) 0 var(--s5);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--s2) var(--s4);
+    font-size: 16px;
+  }
+  footer p { margin: 0; }
+  footer .mono { font-family: var(--mono); font-size: 14px; }
+
+  @media (max-width: 760px) {
+    body { font-size: 17px; }
+    .page { padding: 0 var(--s2); }
+    .lead { padding: var(--s4) 0 var(--s4); }
+    .what { font-size: 19px; margin-bottom: var(--s3); }
+    .install { padding: var(--s2); }
+    .cmd-row { flex-direction: column; align-items: stretch; }
+    .cmd { font-size: 15px; }
+    .copy { width: 100%; }
+    .platforms legend { width: 100%; line-height: 1.5; margin-bottom: var(--s1); }
+    .plat-list { clear: both; }
+    section.ruled { grid-template-columns: 1fr; gap: var(--s2); padding: var(--s3) 0 var(--s4); }
+    .ledger td.fig { font-size: 24px; width: 72px; padding-right: var(--s2); }
+    .ledger thead th.fig-h { padding-right: var(--s2); }
+    .limits li { grid-template-columns: 1fr; gap: var(--s1); }
+  }
+
+  @media (max-width: 400px) {
+    .mast { padding: var(--s2) 0 12px; }
+    .mast-meta { gap: 12px; font-size: 13px; }
+    .lead { padding: var(--s3) 0 var(--s4); }
+    h1 { font-size: 31px; margin-bottom: var(--s2); }
+    .what { font-size: 17px; }
+    .install-label { margin-bottom: var(--s1); }
+    .cmd { font-size: 14px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#install">Skip to the install command</a>
+
+<div class="page">
+  <header class="mast">
+    <span class="wordmark">UCA Kit</span>
+    <nav class="mast-meta" aria-label="Project links">
+      <span>v0.1.1</span>
+      <span>MIT license</span>
+      <a href="https://github.com/crazy-creator0/uca-kit">Code on GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <div class="lead">
+      <h1>
+        <span>Plan first.</span>
+        <span>Check the work.</span>
+        <span class="last">Say what wasn&rsquo;t checked.</span>
+      </h1>
+      <p class="what">UCA Kit is a set of instructions and small read-only scripts you install into a project folder. Your AI coding assistant reads them and is asked to work this way.</p>
+
+      <div class="install" id="install" tabindex="-1">
+        <p class="install-label" id="install-label">Run in your project folder</p>
+        <div class="cmd-row">
+          <pre class="cmd" aria-labelledby="install-label"><span class="prompt" aria-hidden="true">$ </span><code id="cmd">npx --yes github:crazy-creator0/uca-kit#v0.1.1 init . <span class="nw">--platform <span class="plat" id="plat">claude</span></span></code></pre>
+          <button type="button" class="copy" id="copy" hidden>Copy</button>
+        </div>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+
+        <fieldset class="platforms" id="platforms" hidden>
+          <legend>Your assistant:</legend>
+          <div class="plat-list">
+            <label><input type="radio" name="platform" value="claude" checked><span>claude</span></label>
+            <label><input type="radio" name="platform" value="cursor"><span>cursor</span></label>
+            <label><input type="radio" name="platform" value="copilot"><span>copilot</span></label>
+            <label><input type="radio" name="platform" value="gemini"><span>gemini</span></label>
+            <label><input type="radio" name="platform" value="codex"><span>codex</span></label>
+            <label><input type="radio" name="platform" value="opencode"><span>opencode</span></label>
+            <label><input type="radio" name="platform" value="windsurf"><span>windsurf</span></label>
+          </div>
+        </fieldset>
+        <noscript><p class="more">Other values for <code>--platform</code>: cursor, copilot, gemini, codex, opencode, windsurf.</p></noscript>
+        <p class="more">More platforms are listed in the <a href="https://github.com/crazy-creator0/uca-kit">repository</a>.</p>
+      </div>
+    </div>
+
+    <section class="ruled" aria-labelledby="how">
+      <h2 class="margin-label" id="how">How it works</h2>
+      <ol class="steps">
+        <li><span class="n" aria-hidden="true">01</span><p><strong>Install.</strong> One command adds instructions and small read-only scripts to your project folder.</p></li>
+        <li><span class="n" aria-hidden="true">02</span><p><strong>Your assistant reads them.</strong> They sit in your project folder, where the AI coding assistant you already use can read them.</p></li>
+        <li><span class="n" aria-hidden="true">03</span><p><strong>It is asked to work carefully.</strong> Plan first, check its work, and tell you what it did not check.</p></li>
+      </ol>
+    </section>
+
+    <section class="ruled" aria-labelledby="count">
+      <h2 class="margin-label" id="count">What&rsquo;s inside</h2>
+      <table class="ledger">
+        <caption>UCA Kit v0.1.1, counted.</caption>
+        <thead>
+          <tr><th scope="col" class="fig-h">Count</th><th scope="col">Item</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="fig">11</td><th scope="row">tool setups</th></tr>
+          <tr><td class="fig">3</td><th scope="row">tiers <span class="note">lite, standard, full</span></th></tr>
+          <tr><td class="fig">16</td><th scope="row">skills</th></tr>
+          <tr><td class="fig">5</td><th scope="row">workflows</th></tr>
+          <tr class="zero"><td class="fig">0</td><th scope="row">runtime dependencies</th></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="ruled" aria-labelledby="limits">
+      <h2 class="margin-label" id="limits">What it is not</h2>
+      <div>
+        <p class="limits-intro">A kit that asks your assistant to say what it did not check should say the same about itself.</p>
+        <ul class="limits">
+          <li><span class="stamp">Not a guarantee</span><p>A model can ignore instructions. UCA Kit asks; it cannot force.</p></li>
+          <li><span class="stamp">Not benchmarked</span><p>There are no benchmark results for it.</p></li>
+          <li><span class="stamp">Not tested everywhere</span><p>It has not been tested on every tool.</p></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Free and open source under the MIT license. Written by Crazy Creators.</p>
+    <p class="mono"><a href="https://github.com/crazy-creator0/uca-kit">github.com/crazy-creator0/uca-kit</a></p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var cmd = document.getElementById("cmd");
+  var plat = document.getElementById("plat");
+  var button = document.getElementById("copy");
+  var status = document.getElementById("status");
+  var platforms = document.getElementById("platforms");
+  var timer;
+
+  button.hidden = false;
+  platforms.hidden = false;
+
+  platforms.addEventListener("change", function (event) {
+    if (event.target.name === "platform") {
+      plat.textContent = event.target.value;
+      reset();
+    }
+  });
+
+  function reset() {
+    clearTimeout(timer);
+    button.textContent = "Copy";
+    button.removeAttribute("data-state");
+  }
+
+  function done(ok) {
+    clearTimeout(timer);
+    if (ok) {
+      button.textContent = "Copied";
+      button.setAttribute("data-state", "done");
+      status.textContent = "Copied to clipboard.";
+    } else {
+      selectCommand();
+      status.textContent = "Could not copy automatically. The command is selected: press Ctrl+C (or Cmd+C on a Mac).";
+    }
+    timer = setTimeout(function () { reset(); status.textContent = ""; }, 4000);
+  }
+
+  function selectCommand() {
+    var range = document.createRange();
+    range.selectNodeContents(cmd);
+    var selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  function fallbackCopy(text) {
+    var area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(area);
+    button.focus();
+    return ok;
+  }
+
+  button.addEventListener("click", function () {
+    var text = cmd.textContent;
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(
+        function () { done(true); },
+        function () { done(fallbackCopy(text)); }
+      );
+    } else {
+      done(fallbackCopy(text));
+    }
+  });
+})();
+</script>
+</body>
+</html>
