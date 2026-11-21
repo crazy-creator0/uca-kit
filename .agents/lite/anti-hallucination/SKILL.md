@@ -1,6 +1,6 @@
 ---
 name: anti-hallucination
-description: Prevent unsupported claims about files, APIs, commands, dependencies, and test results.
+description: Use when stating facts on files, APIs or tests: claim only what you saw or ran.
 ---
 
 # Anti-hallucination (Lite)

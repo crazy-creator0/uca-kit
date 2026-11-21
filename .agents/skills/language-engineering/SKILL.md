@@ -1,6 +1,6 @@
 ---
 name: language-engineering
-description: Apply maintainable engineering practices across programming languages and stacks; use for coding tasks when no more specific, genuinely additive skill is needed.
+description: Use for a coding task in any language when no more specific skill fits; follows the repository's conventions with the smallest change and its own checks.
 metadata:
   domain: general
   triggers: a language or stack with no dedicated skill

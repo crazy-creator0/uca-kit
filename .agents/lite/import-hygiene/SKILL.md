@@ -1,6 +1,6 @@
 ---
 name: import-hygiene
-description: Avoid circular imports and stop import-error spirals; fix shared code by moving it, not by adding imports.
+description: Use when an import fails or code moves: avoid cycles; move shared code, don't add imports.
 ---
 
 # Import hygiene (Lite)

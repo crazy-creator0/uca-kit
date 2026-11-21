@@ -1,6 +1,6 @@
 ---
 name: data-engineering-analytics
-description: Build and check data pipelines, cleaning steps, and analyses so the numbers can be trusted and reproduced.
+description: Use when processing files or tables, building pipelines, cleaning data, defining metrics or producing numbers; makes results reproducible and checkable.
 metadata:
   domain: data
   triggers: CSV or file processing, ETL pipeline, data cleaning, metric definition, analysis numbers

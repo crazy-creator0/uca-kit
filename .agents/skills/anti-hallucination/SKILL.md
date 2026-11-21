@@ -1,6 +1,6 @@
 ---
 name: anti-hallucination
-description: Ground engineering claims in files, tool output, tests, official docs, and explicit uncertainty.
+description: Use when describing code, APIs, versions or results, or saying a check passed; grounds every claim in files, tool output or tests and states what is unknown.
 metadata:
   domain: guardrail
   triggers: claiming a file, API, command, or result exists or passed

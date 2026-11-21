@@ -1,6 +1,6 @@
 ---
 name: frontend-engineering
-description: Build accessible, responsive frontends with robust API integration, clear states, and measured performance.
+description: Use when building screens, components, forms or client state, calling an API from the browser, or fixing accessibility or front-end speed.
 metadata:
   domain: frontend
   triggers: screen, component, accessibility, state, front-end speed

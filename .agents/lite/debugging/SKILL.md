@@ -1,6 +1,6 @@
 ---
 name: debugging
-description: Find the cause of a bug with a reproduction and evidence before changing code.
+description: Use when broken: reproduce, find the cause with evidence, then change code.
 ---
 
 # Debugging (Lite)
