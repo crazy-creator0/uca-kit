@@ -11,6 +11,14 @@ metadata:
 
 # Frontend Engineering
 
+## Read first
+Use when: screens, components, forms, state, accessibility, browser API calls, front-end speed.
+Not when: choosing the look (design-taste-discovery); 3D or shaders (frontend-visuals-and-3d).
+Must do: keep the stack; one slice with loading, empty, error and success states; keyboard, labels, contrast; no secrets in the browser.
+Done when: key behavior is tested and checked at phone and desktop widths.
+Stop here if: a text or style tweak in one component.
+Read on only for: "Stack decision" for a new project; "API integration" for backend calls.
+
 ## Inspect first
 Identify the actual framework, routing, component and styling conventions, design system, package scripts, test setup, and API contracts. Keep the current stack unless a change is justified.
 
