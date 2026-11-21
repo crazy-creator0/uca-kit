@@ -17,7 +17,7 @@ Not when: backend or non-visual work; a small fix inside an existing design syst
 Must do: learn the domain and real data; at most one taste question; a written brief with real fonts, hex colors and a signature; avoid Step 5 patterns.
 Done when: the build follows the brief and was looked at and marked pass or fail with evidence.
 Stop here if: the user only asked which direction to take.
-Read on only for: Step 3 before building, Step 5 before finishing; `directions.md` or `motion.md` when a step points there.
+Read on only for: Step 3 before building; `review.md` before finishing; `directions.md`, `techniques.md` or `motion.md` when a step points there.
 
 ## Principle
 The user's taste comes before the tool list. Do not pick a design library because the kit lists it. Understand the look the user wants, commit to a specific design, then suggest only tools that fit.
@@ -47,46 +47,16 @@ Before any code, write these down in a few lines. Every line must be a concrete 
 For a substantial new UI or a new dependency, show the brief and ask for approval; for a small change in an established design system, confirm the inferred direction. If the user says to decide, state your assumptions and proceed.
 
 ## Step 4 — pick the cheapest technique that fits the taste, not a trend
-Read `UI-EFFECTS-GUIDE.md` only when an effect beyond plain HTML/CSS is relevant.
-- Minimal, editorial or content-led: semantic HTML/CSS and design tokens; no library may be needed.
-- Polished motion on components: CSS transitions, or the motion library the project already has.
-- Liquid, particle, shader or procedural canvas effects: CSS/SVG first, then Canvas 2D, then WebGL.
-- A real authored 3D scene that serves the product: needs a real asset and a size budget; use the 3D approach already in the project.
-- A real custom GPU/WebGPU/WGSL or compute need: WebGPU. Never use it for a fashionable glow.
-
-Suggest only techniques with clear value, and name a simpler alternative. Install nothing without asking.
+Plain HTML/CSS first; climb to SVG, Canvas 2D, WebGL, 3D or WebGPU only as far as the brief needs, and name a simpler alternative. Install nothing without asking. The full ladder is in `.agents/skills/design-taste-discovery/techniques.md`.
 
 ## Step 5 — avoid generic AI-generated UI patterns
-Treat these as warning signs to evaluate, not a rigid ban. Keep one only when it serves the product and the user's references:
-- A hero with a large headline, subhead and two buttons on a page whose job is not marketing.
-- A row of three feature cards with an icon, a heading and two lines of text.
-- Purple-to-blue gradients, glows, blobs, sparkles or floating shapes with no product purpose.
-- Rounded cards inside rounded cards, pill buttons everywhere, a shadow on every surface.
-- The framework's default font and one pastel palette regardless of the app.
-- Slogans, testimonials, stats and "trusted by" strips that could belong to any product.
-
-Before styling, identify the product's primary job and the information users need most. Give that content and its main action visual priority. For a task manager, the task input and task list should lead; a brand statement and decorative side panel should not.
-
-Prefer a specific visual system over a fashionable template:
-- Choose type scale, density, spacing, contrast, borders, and corner radius intentionally for the content and audience.
-- Use flat surfaces, restrained color and compact controls when they help scanning; do not flatten everything by default.
-- Empty states should explain the next useful action in the app's own terms, not add generic encouragement.
-- Do not add a date, score, stats panel, quote, icon, or other decoration unless it helps the user decide or finish a task.
-- Test with realistic content: empty, populated, completed, long-text, and error states, plus narrow mobile widths.
+Give the product's main job and its main action visual priority, and test with realistic content. Before finishing, read `.agents/skills/design-taste-discovery/review.md`: it lists the warning signs (such as a row of three feature cards, or a purple gradient with no purpose) and the visual-system rules.
 
 ## Step 6 — design intentional, distinctive motion when requested
 When the user asks for advanced animation, page transitions or a unique animated experience, treat motion as part of the brief and follow `.agents/skills/design-taste-discovery/motion.md`.
 
 ## Step 7 — review like a product designer
-Check each item, and mark it pass or fail with the evidence:
-1. **Brief followed:** the type, colors, spacing and layout in the code match the Step 3 brief.
-2. **Not a template:** run `node scripts/uca-design-check.cjs <ui folder>` when it exists. Each finding needs a product reason or a change; a clean result is not proof, so also check the Step 5 patterns by eye.
-3. **Three specific choices:** name three decisions that suit this product, not "looks modern".
-4. **Hierarchy:** the main action and main content are the most prominent things on screen.
-5. **Quality:** alignment, density, responsive behavior, keyboard use, contrast, reduced motion, and empty/error states.
-6. **Evidence:** if screenshots or a browser are available, look at the result. Do not claim visual inspection when only source code was checked.
-
-Fix every failed item with a targeted change. Do not replace one generic template with another, and do not equate “less AI-looking” with “unstyled.”
+Check each item in `.agents/skills/design-taste-discovery/review.md`, and mark it pass or fail with the evidence. Do not claim visual inspection when only source code was checked. Fix every failed item with a targeted change.
 
 ## Step 8 — approval and implementation
 - Ask before adding dependencies, external services, plugins or third-party code. Do not install reference tools as a preset.
