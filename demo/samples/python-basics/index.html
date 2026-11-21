@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python basics, visualised: with and without UCA Kit</title>
+<meta name="description" content="A long study page for adults who have never programmed: data types, operators, strings, list, tuple, set, dict and OOP, where every printed output can be checked.">
+<style>
+:root { --paper: #f4f1ea; --panel: #ebe6da; --ink: #1b1a17; --muted: #5d584d; --rule: #cfc8b8; --accent: #b4491f;
+  --serif: Georgia, "Times New Roman", serif; --mono: Consolas, "SFMono-Regular", "Liberation Mono", monospace; }
+@media (prefers-color-scheme: dark) { :root { --paper: #181713; --panel: #221f19; --ink: #ece8dd; --muted: #a39d8e; --rule: #3a362c; --accent: #e8855a; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/1.6 var(--serif); }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 64rem; margin: 0 auto; padding: 0 16px; }
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 0; border-bottom: 2px solid var(--ink); font: 14px var(--mono); }
+.bar .mark { font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-size: 13px; }
+.bar nav { display: flex; gap: 16px; flex-wrap: wrap; }
+.bar nav a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
+.bar nav a[aria-current] { border-color: var(--accent); }
+h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.1; margin: 32px 0 8px; }
+.lede { color: var(--muted); max-width: 42rem; margin: 0 0 24px; }
+.note { border-left: 3px solid var(--ink); padding: 0 16px; color: var(--muted); max-width: 46rem; }
+code, pre { font: 15px/1.55 var(--mono); }
+code { background: var(--panel); padding: 1px 5px; border-radius: 2px; }
+footer { border-top: 2px solid var(--ink); margin-top: 48px; padding: 24px 0 48px; font-size: 15px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.chips li { font: 12px/1 var(--mono); border: 1px solid var(--rule); border-radius: 2px; padding: 5px 7px; color: var(--ink); }
+.chips li b { color: var(--muted); font-weight: 400; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+[role="tablist"] { display: flex; gap: 0; border-bottom: 2px solid var(--ink); margin: 24px 0 0; overflow-x: auto; }
+[role="tab"] { font: 15px var(--mono); background: none; color: var(--muted); border: 0; border-bottom: 3px solid transparent; padding: 10px 14px; cursor: pointer; white-space: nowrap; margin-bottom: -2px; }
+[role="tab"][aria-selected="true"] { color: var(--ink); border-color: var(--accent); }
+[role="tabpanel"] { padding: 24px 0; }
+[role="tabpanel"][hidden] { display: none; }
+.frame { border: 1px solid var(--rule); border-radius: 2px; background: #fff; }
+.frame iframe { display: block; width: 100%; height: 72vh; min-height: 30rem; border: 0; }
+.frame .open { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border-top: 1px solid var(--rule); background: var(--panel); font: 13px var(--mono); }
+pre.prompt { white-space: pre-wrap; background: var(--panel); border-left: 3px solid var(--accent); padding: 16px; margin: 0 0 16px; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 16px; margin: 0 0 16px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); }
+th { font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.scroll { overflow-x: auto; }
+details { margin: 16px 0; }
+summary { cursor: pointer; font: 15px var(--mono); }
+details pre { white-space: pre-wrap; background: var(--panel); padding: 16px; font-size: 14px; }
+
+.sizes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 16px 0; font: 13px var(--mono); }
+.sizes button { font: inherit; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 2px; padding: 6px 10px; cursor: pointer; }
+.sizes button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.sizes label { display: inline-flex; gap: 6px; align-items: center; margin-left: auto; color: var(--muted); }
+.pair { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 52rem) { .pair { grid-template-columns: 1fr 1fr; } }
+.pair figure { margin: 0; border: 1px solid var(--rule); border-radius: 2px; background: var(--panel); }
+.pair figcaption { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px; font: 700 13px var(--mono); letter-spacing: .06em; text-transform: uppercase; border-bottom: 1px solid var(--rule); }
+.pair figcaption a { font-weight: 400; text-transform: none; letter-spacing: 0; }
+.viewport { position: relative; overflow: hidden; height: 70vh; min-height: 26rem; background: #fff; }
+.viewport.phone { max-width: 390px; margin: 0 auto; }
+.viewport iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; }
+.pair .size-note { margin: 0; padding: 6px 12px; font: 12px var(--mono); color: var(--muted); border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="bar"><div class="mark">UCA Kit</div><nav aria-label="Site"><a href="../../">Docs</a><a href="../../samples/" aria-current="page">Samples</a><a href="https://github.com/crazy-creator0/uca-kit">GitHub</a></nav></div>
+<p style="margin:24px 0 0;font:13px var(--mono)"><a href="../">← All samples</a></p>
+<h1>Sample 05: Python basics, visualised</h1>
+<p class="lede">A long study page for adults who have never programmed: data types, operators, strings, list, tuple, set, dict and OOP, where every printed output can be checked.</p>
+<ul class="chips"><li><b>Category:</b> Learning</li><li><b>Made with:</b> v0.2.0</li><li><b>View:</b> 2D</li><li><b>Motion:</b> Interactive step-throughs</li></ul>
+<div role="tablist" aria-label="Views">
+<button role="tab" id="tab-prompt" aria-controls="prompt" aria-selected="true">Prompt</button>
+<button role="tab" id="tab-compare" aria-controls="compare" aria-selected="false" tabindex="-1">Side by side</button>
+<button role="tab" id="tab-without" aria-controls="without" aria-selected="false" tabindex="-1">Without kit</button>
+<button role="tab" id="tab-with" aria-controls="with" aria-selected="false" tabindex="-1">With kit</button>
+</div>
+<section role="tabpanel" id="prompt" aria-labelledby="tab-prompt">
+<p>Both runs got this prompt word for word. Only the folder line differed: an empty folder for one, a folder with the kit installed for the other. Neither run was told to use or avoid the kit.</p>
+<pre class="prompt">You are an AI coding assistant helping a non-programmer. Your working folder is: {{FOLDER}}
+Work only inside that folder and do not read or change anything outside it. If the folder contains project instructions (CLAUDE.md, AGENTS.md or similar), follow them. No internet and no package installs; use only what is already installed (Node and Python 3 are available, and plain HTML, CSS and JavaScript are fine).
+
+The user says:
+
+&quot;I teach Python to beginners and I want one study page they can open in a browser: Python basics, visualised, so it is easy to understand. It should cover:
+- variables and how names point to values,
+- the data types: int, float, str, bool, None, and how to convert between them,
+- operators: arithmetic (including // and % ), comparison, logical, identity (is), membership (in), and assignment like +=,
+- strings and their common methods,
+- list, tuple, set and dict: how to create them, read from them, change them, loop over them, and their most useful methods, and when to pick which one,
+- OOP in an easy way: class, object, __init__ and self, attributes and methods, class versus instance attributes, inheritance and super(), and __str__.
+Use pictures and diagrams where they help more than words, and small interactive parts if they help learning. Every code example must show the output Python really prints. Put each code example in a &lt;pre&gt;&lt;code class=&quot;language-python&quot;&gt; block and its printed output in a &lt;pre class=&quot;output&quot;&gt; block right after it, so I can check them later. Beginners will read this, so a wrong output or a wrong explanation is worse than a missing topic.&quot;
+
+If you would normally ask questions, use these answers instead: the students are adults who have never programmed; Python version is 3.12 or newer; one page is fine but it can be long; it must work on a phone and a laptop and with the keyboard; it must work offline; design is up to you.
+
+Build it with index.html as the entry file, as plain files that open in a browser without a server. Then end with a final message to the user answering: &quot;Can I give this to my students as it is? Tell me exactly what you checked and what you did not check.&quot; Be truthful about what you actually ran.</pre>
+<h2 style="font-size:1.2rem">What was measured</h2>
+<div class="scroll"><table><thead><tr><th>Check</th><th>Without kit</th><th>With kit</th></tr></thead><tbody><tr><td>Outputs that match real Python (maintainer re-run, 8 hash seeds)</td><td>132 of 132</td><td>82 of 82</td></tr><tr><td>Wrong statements on a 20-point list of common beginner traps (maintainer review)</td><td>0 (19 covered, 1 missing)</td><td>0 (19 covered, 1 missing)</td></tr><tr><td>Code examples / words of explanation</td><td>132 / about 6,600</td><td>82 / about 5,000</td></tr><tr><td>Diagrams (SVG)</td><td>14</td><td>9</td></tr><tr><td>Extras</td><td>10 predict-the-output questions, a one-page summary, short intros to for, if and def</td><td>A collection chooser, a table of 38 conversion values checked in Python</td></tr><tr><td>Script errors and outside requests at 390 px and 1366 px (maintainer re-run)</td><td>None</td><td>None</td></tr><tr><td>Visible focus outline, first 25 Tab stops (maintainer re-run)</td><td>25 of 25</td><td>25 of 25</td></tr><tr><td>Left for the next person</td><td>Two checker scripts</td><td>README, checker, two test files, design brief, project card</td></tr><tr><td>Proofreading it reported</td><td>Re-read the text and diagrams</td><td>Tested doubtful sentences in Python; fixed six imprecise ones</td></tr><tr><td>Senior Bar check (static checklist)</td><td>5 of 8</td><td>8 of 9</td></tr><tr><td>Kit design check (template tells)</td><td>1 (emoji used as icons)</td><td>0</td></tr><tr><td>Closing answer lists what was not checked</td><td>Yes</td><td>Yes</td></tr></tbody></table></div>
+<p class="note">On what matters most for students, the two pages are equal: every output is right, and the maintainer review found no wrong statement on either. Without the kit the run made a bigger, more visual page. With the kit it made a shorter page and left a README, tests and a design brief, which helps the next person who edits it. The sample also found a false alarm in the kit&#x27;s Senior Bar check, fixed in the same change. One run per side; the full review is in <a href="REVIEW.md">REVIEW.md</a>.</p>
+<p><a href="PROMPT.md">PROMPT.md</a> has the exact prompt and how to repeat this yourself.</p>
+</section>
+<section role="tabpanel" id="compare" aria-labelledby="tab-compare" hidden>
+<div class="sizes" role="group" aria-label="Preview width"><button type="button" data-w="390" aria-pressed="true">Phone, 390 px</button><button type="button" data-w="1280" aria-pressed="false">Laptop, 1280 px</button><label><input type="checkbox" id="sync" checked> Scroll together</label></div>
+<div class="pair"><figure><figcaption><span>Without kit</span><a href="without-kit/index.html" target="_blank" rel="noopener">Open full page</a></figcaption><div class="viewport"><iframe data-src="without-kit/index.html" title="Python basics, visualised, without kit, side by side" tabindex="0"></iframe></div><p class="size-note" aria-live="polite"></p></figure><figure><figcaption><span>With kit</span><a href="with-kit/index.html" target="_blank" rel="noopener">Open full page</a></figcaption><div class="viewport"><iframe data-src="with-kit/index.html" title="Python basics, visualised, with kit, side by side" tabindex="0"></iframe></div><p class="size-note" aria-live="polite"></p></figure></div>
+<p class="note">Both pages are the real files, running live. The laptop view is the full 1280 px page scaled down to fit; nothing was retouched.</p>
+</section>
+<section role="tabpanel" id="without" aria-labelledby="tab-without" hidden><div class="frame"><iframe src="without-kit/index.html" title="Python basics, visualised, without kit" loading="lazy"></iframe>
+<div class="open"><span>Without kit: 5 file(s): <code>index.html</code>, <code>style.css</code>, <code>app.js</code>, <code>tools/check_examples.py</code>, <code>tools/check_widgets.py</code></span><a href="without-kit/index.html" target="_blank" rel="noopener">Open full page</a></div></div>
+<details><summary>What the assistant told the user at the end</summary><pre>Mostly yes, but read it through once yourself before you hand it out. Every code example&#x27;s output has been checked against real Python. The explanations were checked only by me, and nobody has tested the page on a real phone.
+
+The page is `&lt;project folder&gt;/index.html`. It uses `style.css` and `app.js` in the same folder, so send the whole folder. It opens straight from the files, needs no internet and loads nothing from outside.
+
+## What I checked, and how
+
+**Outputs (all 132 code examples).** I wrote a checker, `tools/check_examples.py`, and ran it with Python 3.12.3 and 3.13.18. It takes every `&amp;lt;pre&amp;gt;&amp;lt;code class=&quot;language-python&quot;&amp;gt;` block, runs it as a fresh program and compares the result with the `&amp;lt;pre class=&quot;output&quot;&amp;gt;` block right after it. Each example runs three times with different random settings, to catch output that changes from run to run. Result: **132 examples, 0 failures** on both versions. I also changed some outputs on purpose to make sure the checker reports them, and it did.
+
+Two kinds of output work differently:
+- **Error examples** have a red box (`class=&quot;output error&quot;`). It shows only the **last line** of the error message, and the box is labelled that way. Python prints a few more lines above it, which differ between versions and computers.
+- **The `__str__` example** prints a memory address like `0x7f3a…`. That number is different on every run, and the page says so.
+
+**The interactive parts.** A second script, `tools/check_widgets.py`, checks that they agree with real Python:
+- the True/False buttons and the set-operation buttons
+- the step-by-step arrow pictures, line by line
+- the string slice explorer, against about 2,500 cases
+- the list playground, against about 2,000 random operations
+- the sweets `//` and `%` sliders
+
+All of these passed.
+
+**In a browser.** I used headless Chrome with networking switched off, at laptop width (1280px) and phone width (375px), in light and dark mode.
+- There were no script errors and no network requests.
+- The page doesn&#x27;t scroll sideways on a phone. The five widest diagrams scroll sideways inside their own box on small screens.
+- I clicked through every interactive part, and the &quot;Show the answer&quot; buttons work.
+- The Tab key reaches every interactive part, and Enter works on the answer buttons.
+- The colour highlighting doesn&#x27;t change any code text.
+- I looked at screenshots and fixed what I found: labels that were cut off, overlapping arrows and broken letter boxes.
+
+## What I did not check
+
+- **Explanations.** I re-read the text and diagrams for accuracy, but no second person has. Several points are simplified for beginners, for example &quot;zero and empty things are False&quot; and the rule for how Python finds an attribute. Please read it as the teacher.
+- **Python 3.14 or later.** Normal outputs should be the same, but the wording of error messages can change between versions.
+- **Real devices and other browsers.** I didn&#x27;t test a real phone, Safari, Firefox or Edge. The padlock emoji in one diagram may not show on some systems.
+- **Screen readers.** I added text descriptions to the diagrams and pictures but didn&#x27;t try them with a screen reader. I also didn&#x27;t measure colour contrast or try printing.
+
+## Before you give it out
+
+1. Read it once yourself.
+2. Open it on a phone.
+3. If you edit any example, run `python3 tools/check_examples.py` (only standard Python needed). It reports any output that no longer matches. Run `python3 tools/check_widgets.py` too if you change the interactive parts; that one also needs Node.
+
+What the page covers:
+- **Variables:** how names point to values, with two step-by-step arrow pictures, including the &quot;two names, one list&quot; case.
+- **Data types:** int, float, str, bool and None, converting between them, and which values count as True or False.
+- **Operators:** including `//`, `%`, `is` versus `==`, `in` and `+=`.
+- **Strings:** indexing, slicing and the common methods.
+- **list, tuple, set and dict:** creating, reading, changing, looping and the useful methods of each, plus a chooser and a table for when to pick which.
+- **Classes:** `__init__` and `self`, class versus instance attributes (with the usual traps), inheritance, `super()` and `__str__`.
+
+There are 10 &quot;predict the output&quot; questions and a one-page summary. The page also adds short intros to `for`, `if` and `def`, because the later chapters need them.</pre></details></section>
+<section role="tabpanel" id="with" aria-labelledby="tab-with" hidden><div class="frame"><iframe src="with-kit/index.html" title="Python basics, visualised, with kit" loading="lazy"></iframe>
+<div class="open"><span>With kit: 10 file(s): <code>index.html</code>, <code>style.css</code>, <code>logic.js</code>, <code>app.js</code>, <code>README.md</code>, <code>DESIGN.md</code>, <code>PROJECT.md</code>, <code>check_examples.py</code>, <code>tests/test_logic.py</code>, <code>tests/browser_check.cjs</code></span><a href="with-kit/index.html" target="_blank" rel="noopener">Open full page</a></div></div>
+<details><summary>What the assistant told the user at the end</summary><pre>**Mostly yes. The code and outputs are ready to hand out. Before you do, read the explanations yourself once (about 30–40 minutes) and open the page on one real phone.** Every output on the page was produced by real Python and compared automatically. The explanations were only checked by me, and I also wrote them.
+
+To use it, double-click `index.html`. To share it, copy these four files together: `index.html`, `style.css`, `logic.js`, `app.js`. The page has six chapters as you asked, with diagrams (names drawn as luggage tags pointing to values) and five small interactive parts:
+- step through code and watch the name tags move
+- a &quot;True or False?&quot; quiz on truthy values
+- a `//` and `%` calculator drawn as sweets in bags
+- a slicing explorer on `&quot;PYTHON&quot;`
+- a &quot;which collection should I pick?&quot; helper
+
+**What I checked, and actually ran:**
+- **All 82 code examples:** each one runs on its own in Python 3.13.18, three times, and what it prints matches its output block exactly. Every example has its output block right after it, in the format you asked for.
+- **Checks on the checker:** I deliberately put four wrong outputs into a copy of the page, and it caught all four.
+- **All 38 values shown in tables** (for example `int(-3.9)` gives `-3`) match real Python.
+- **Errors** are shown as the first line, `...`, and the last line of Python&#x27;s message. The page explains this, and only those two lines are compared, because the lines in between depend on your file name.
+- **The maths behind the interactive parts** gave the same answers as Python in 100,009 comparisons, including tricky cases such as `-7 // 2` and `0 / -5` printing `-0.0`.
+- **In headless Chrome, from the file with no server:** 47 of 47 checks passed, on two clean runs in a row. That covers:
+  - no script errors, and every interactive part clicked through
+  - every link, button and input reachable with Tab, all with a visible focus outline
+  - Enter and Space work on the buttons
+  - nothing pushes the page sideways at 320, 375, 768 or 1280px wide
+  - all buttons and inputs at least 44px
+- **Looks:** I looked at screenshots at phone and laptop size, and fixed what was wrong (overlapping labels in three diagrams).
+- **Colours:** all text and background pairs pass the contrast minimum for readable text.
+- **Explanations:** I proofread every factual sentence and tested the doubtful ones in Python. That found and fixed six imprecise statements, for example &quot;operators of the same level go left to right&quot;, which is false for `**`.
+
+**What I did not check:**
+- **Other Python versions:** I only had 3.13. The examples are chosen to behave the same on 3.12 and newer, but I did not run them there. You can test any version with `python3 check_examples.py --python python3.12`.
+- **Real phones, Safari, Firefox:** I only used headless Chrome on Linux. Fonts come from each device, so the look will vary a little.
+- **Screen readers:** not tested.
+- **The page with JavaScript turned off:** not tested. It should still show all the text, code and outputs, and each interactive part has a fallback message.
+- **Wording:** no teacher or student has read the explanations yet.
+
+**Good to know:**
+- On a phone, about 20 long lines (mostly error messages and lines in the class examples) scroll sideways inside their box. The page itself does not.
+- `check_examples.py` is yours to keep: rerun it after any edit.
+- The other files in the folder:
+  - `README.md` explains how to open the page and run the checks.
+  - `DESIGN.md` and `PROJECT.md` were required by your project&#x27;s rules.
+  - `tests/` holds my two developer checks.
+  - `.uca-workspace/` is my scratch folder with the screenshots; you can delete it.
+- I did not set up Git (version history), because your project&#x27;s rules say to ask first. Tell me if you want it.</pre></details></section>
+<footer><p><strong>Created with UCA Kit.</strong> Written by Crazy Creators. Each sample is one run per side with the same model and the same prompt; results vary from run to run. The samples show how to test the kit. They are not proof that it works.</p><p>Apache-2.0 licensed from v0.2.0; v0.1.1 and earlier are MIT. © 2026 Crazy Creators.</p></footer>
+</div>
+<script>
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function show(tab, focus) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute("aria-selected", String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+    if (focus) tab.focus();
+    try { history.replaceState(null, "", "#" + tab.getAttribute("aria-controls")); } catch (e) {}
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener("click", function () { show(t, false); });
+    t.addEventListener("keydown", function (ev) {
+      if (ev.key === "ArrowRight") show(tabs[(i + 1) % tabs.length], true);
+      if (ev.key === "ArrowLeft") show(tabs[(i - 1 + tabs.length) % tabs.length], true);
+    });
+  });
+  var start = tabs.filter(function (t) { return "#" + t.getAttribute("aria-controls") === location.hash; })[0];
+  if (start) show(start, false);
+})();
+</script>
+<script>
+(function () {
+  var panel = document.getElementById("compare");
+  if (!panel) return;
+  var width = 390, loaded = false;
+  var frames = Array.prototype.slice.call(panel.querySelectorAll("iframe"));
+  var buttons = Array.prototype.slice.call(panel.querySelectorAll("[data-w]"));
+  var sync = document.getElementById("sync");
+  function fit() {
+    frames.forEach(function (frame) {
+      var box = frame.parentNode;
+      box.classList.toggle("phone", width === 390);
+      var scale = Math.min(1, box.clientWidth / width);
+      frame.style.width = width + "px";
+      frame.style.height = Math.ceil(box.clientHeight / scale) + "px";
+      frame.style.transform = "scale(" + scale + ")";
+      var note = box.parentNode.querySelector(".size-note");
+      if (note) note.textContent = width + " px wide" + (scale < 1 ? ", shown at " + Math.round(scale * 100) + "%" : ", actual size");
+    });
+  }
+  function load() {
+    if (loaded) return;
+    loaded = true;
+    frames.forEach(function (frame) { frame.src = frame.getAttribute("data-src"); frame.addEventListener("load", function () { hook(frame); }); });
+    fit();
+  }
+  // Scroll together: same fraction of the page in both, when the browser allows reading the frame (same site).
+  var busy = false;
+  function hook(frame) {
+    try {
+      var win = frame.contentWindow;
+      win.addEventListener("scroll", function () {
+        if (!sync.checked || busy) return;
+        var doc = win.document.documentElement, max = doc.scrollHeight - win.innerHeight;
+        var ratio = max > 0 ? win.scrollY / max : 0;
+        busy = true;
+        frames.forEach(function (other) {
+          if (other === frame) return;
+          try { var w = other.contentWindow, d = w.document.documentElement; w.scrollTo(0, ratio * (d.scrollHeight - w.innerHeight)); } catch (e) {}
+        });
+        requestAnimationFrame(function () { busy = false; });
+      });
+    } catch (e) { sync.disabled = true; sync.parentNode.title = "Not available when the page is opened as a local file"; }
+  }
+  buttons.forEach(function (b) {
+    b.addEventListener("click", function () {
+      width = Number(b.getAttribute("data-w"));
+      buttons.forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      fit();
+    });
+  });
+  window.addEventListener("resize", fit);
+  new MutationObserver(function () { if (!panel.hidden) load(), fit(); }).observe(panel, { attributes: true, attributeFilter: ["hidden"] });
+  if (!panel.hidden) load();
+})();
+</script>
+</body>
+</html>

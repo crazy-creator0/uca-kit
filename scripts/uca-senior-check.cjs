@@ -126,7 +126,8 @@ function context(root) {
     }
   }
   const sourceText = source.map((file) => ({ file, text: read(file.rel) })).filter((item) => item.text !== null);
-  const usesEnv = sourceText.some((item) => /process\.env|os\.environ|os\.getenv|import\.meta\.env|\bgetenv\(|\bENV\[/.test(item.text));
+  // Reading a named setting counts; passing the whole environment on (dict(os.environ, ...), { ...process.env }) does not.
+  const usesEnv = sourceText.some((item) => /process\.env(?:\.\w|\[)|os\.environ(?:\[|\.get\(|\.setdefault\()|os\.getenv\(|import\.meta\.env\.\w|\bgetenv\(|\bENV\[/.test(item.text));
   return { root, files, names, rootNames, read, source, scanned, manifests, hasUI, hasHtml, pkg, sourceText, usesEnv, truncated, hasSource: source.length > 0, staticSite: manifests.length === 0 && hasHtml };
 }
 

@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Basics, Visualised</title>
+<meta name="description" content="A study page for adults learning Python from zero: variables, data types, operators, strings, collections and classes, with pictures and real outputs.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the lessons</a>
+
+<div class="layout">
+<header class="page-head">
+  <p class="kicker">Study page · Python 3.12 and newer</p>
+  <h1>Python Basics, Visualised</h1>
+  <p class="lede">Six short chapters with pictures. Every example shows the code and, right under it, exactly what Python prints.</p>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <h2 class="toc-title">Contents</h2>
+  <ol>
+    <li><a href="#read">How to read this page</a></li>
+    <li><a href="#variables">1. Variables: names point to values</a></li>
+    <li><a href="#types">2. Data types and converting</a></li>
+    <li><a href="#operators">3. Operators</a></li>
+    <li><a href="#strings">4. Strings</a></li>
+    <li><a href="#collections">5. List, tuple, set, dict</a>
+      <ol>
+        <li><a href="#lists">Lists</a></li>
+        <li><a href="#tuples">Tuples</a></li>
+        <li><a href="#sets">Sets</a></li>
+        <li><a href="#dicts">Dicts</a></li>
+        <li><a href="#choosing">Which one to pick</a></li>
+      </ol>
+    </li>
+    <li><a href="#oop">6. Classes and objects</a></li>
+  </ol>
+</nav>
+
+<main id="main" tabindex="-1">
+
+<section id="read" aria-labelledby="read-h">
+<h2 id="read-h">How to read this page</h2>
+<p>Each example has two parts. The light box is the <strong>code</strong> you type. The dark box under it is the <strong>output</strong>: exactly what Python prints when you run that code.</p>
+<pre><code class="language-python">print("Hello, world!")
+print(2 + 3)</code></pre>
+<pre class="output">Hello, world!
+5</pre>
+<ul>
+  <li><strong>Every example works on its own.</strong> Copy one into a new file (in IDLE: <em>File → New File</em>, paste, then <em>Run → Run Module</em>) and you will see the same output.</li>
+  <li><strong>Lines starting with <code>#</code> are comments.</strong> Python ignores them. They are notes for you.</li>
+  <li><strong>Errors are shown short.</strong> When Python stops with an error, it prints a few lines that say where the error happened. Those lines depend on your file name, so this page replaces them with <code>...</code> and keeps the first and the last line. The last line is the one to read: it names the error and explains it.</li>
+  <li><strong>The outputs were checked</strong> by running every example in Python 3.13.</li>
+</ul>
+<p class="note"><strong>The <code>&gt;&gt;&gt;</code> shell is slightly different.</strong> If you type a value straight into the Python shell (the window with <code>&gt;&gt;&gt;</code>), it shows the value without <code>print</code>, and shows text <em>with</em> quotes: <code>'hello'</code>. <code>print</code> shows text <em>without</em> quotes: <code>hello</code>. This page uses <code>print</code> everywhere.</p>
+</section>
+
+<!-- ============ 1. VARIABLES ============ -->
+<section id="variables" aria-labelledby="variables-h">
+<h2 id="variables-h"><span class="num">1</span> Variables: names point to values</h2>
+
+<p>A <strong>variable</strong> is a name that points to a value. You create one with <code>=</code>.</p>
+<p class="key">In Python, <code>=</code> does <em>not</em> mean "is equal to". It means: <strong>work out the value on the right, then tie the name on the left to it.</strong></p>
+
+<figure class="diagram">
+<svg viewBox="0 0 400 128" role="img" aria-labelledby="d-names-t">
+  <title id="d-names-t">Two name tags. The tag age is tied to the value 30, an int. The tag name is tied to the value "Amina", a str.</title>
+  <defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="d-head"/></marker></defs>
+  <g class="d-tag"><path d="M14 14H104V50H14L2 32Z"/><circle cx="16" cy="32" r="3"/><text x="58" y="37">age</text></g>
+  <line x1="104" y1="32" x2="196" y2="32" class="d-line" marker-end="url(#ar1)"/>
+  <rect x="200" y="12" width="140" height="40" class="d-box"/><text x="270" y="37" class="d-code">30</text>
+  <text x="350" y="37" class="d-type">int</text>
+  <g class="d-tag"><path d="M14 76H104V112H14L2 94Z"/><circle cx="16" cy="94" r="3"/><text x="58" y="99">name</text></g>
+  <line x1="104" y1="94" x2="196" y2="94" class="d-line" marker-end="url(#ar1)"/>
+  <rect x="200" y="74" width="140" height="40" class="d-box"/><text x="270" y="99" class="d-code">"Amina"</text>
+  <text x="350" y="99" class="d-type">str</text>
+</svg>
+<figcaption>Names are like luggage tags tied to values. The value lives in the box; the name is only a label pointing at it.</figcaption>
+</figure>
+
+<pre><code class="language-python">age = 30
+name = "Amina"
+print(age)
+print(name)
+print(name, "is", age)</code></pre>
+<pre class="output">30
+Amina
+Amina is 30</pre>
+<p><code>print</code> can take several things separated by commas. It prints them on one line with a space between them.</p>
+
+<h3>Changing what a name points to</h3>
+<p>If you use <code>=</code> again with the same name, the tag moves to the new value. The old value is not changed; the name just points somewhere else now.</p>
+<figure class="diagram">
+<svg viewBox="0 0 400 120" role="img" aria-labelledby="d-move-t">
+  <title id="d-move-t">The tag score used to be tied to 10 (dashed line). After score = 25 it is tied to 25 (solid line).</title>
+  <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="d-head"/></marker></defs>
+  <g class="d-tag"><path d="M14 42H104V78H14L2 60Z"/><circle cx="16" cy="60" r="3"/><text x="58" y="65">score</text></g>
+  <path d="M104 60C150 60 150 30 196 30" class="d-line d-old" marker-end="url(#ar2)"/>
+  <path d="M104 60C150 60 150 90 196 90" class="d-line" marker-end="url(#ar2)"/>
+  <rect x="200" y="10" width="120" height="40" class="d-box d-faded"/><text x="260" y="35" class="d-code d-faded-text">10</text>
+  <text x="330" y="35" class="d-type">before</text>
+  <rect x="200" y="70" width="120" height="40" class="d-box d-new"/><text x="260" y="95" class="d-code">25</text>
+  <text x="330" y="95" class="d-type">now</text>
+</svg>
+</figure>
+<pre><code class="language-python">score = 10
+print(score)
+score = 25
+print(score)</code></pre>
+<pre class="output">10
+25</pre>
+
+<p>Because the right side is worked out first, a name can appear on both sides:</p>
+<pre><code class="language-python">count = 5
+count = count + 1
+print(count)</code></pre>
+<pre class="output">6</pre>
+<p>Read it as: take the value <code>count</code> points to (5), add 1, then tie <code>count</code> to the result (6).</p>
+
+<h3>Two names, one value</h3>
+<p>Step through these two small programs. Watch the tags: <code>y = x</code> and <code>b = a</code> do not copy anything. They tie a second tag to the <em>same</em> value.</p>
+
+<div class="widget" id="stepper">
+  <div class="widget-head">
+    <h4 class="widget-title">Try it: step through the code</h4>
+    <div class="seg" role="group" aria-label="Choose a program">
+      <button type="button" data-program="numbers" aria-pressed="true">With numbers</button>
+      <button type="button" data-program="lists" aria-pressed="false">With a list</button>
+    </div>
+  </div>
+  <div class="stepper-body">
+    <ol class="stepper-code" aria-label="Program"></ol>
+    <div class="stepper-pic"></div>
+  </div>
+  <p class="stepper-note" aria-live="polite"></p>
+  <div class="stepper-out"><span class="stepper-out-label">Printed so far:</span> <samp></samp></div>
+  <div class="stepper-nav">
+    <button type="button" class="btn" data-step="-1">← Back</button>
+    <span class="stepper-count"></span>
+    <button type="button" class="btn btn-main" data-step="1">Next line →</button>
+  </div>
+  <noscript><p>This interactive part needs JavaScript. The same two programs are shown below with their output.</p></noscript>
+</div>
+
+<pre><code class="language-python">x = 5
+y = x
+x = x + 1
+print(x, y)</code></pre>
+<pre class="output">6 5</pre>
+<pre><code class="language-python">a = [1, 2]
+b = a
+b.append(3)
+print(a)
+print(b)</code></pre>
+<pre class="output">[1, 2, 3]
+[1, 2, 3]</pre>
+<p><code>[1, 2]</code> is a <strong>list</strong> (chapter 5), and <code>append</code> adds an item to it. The list itself changed, and both names point to that one list, so both show <code>[1, 2, 3]</code>.</p>
+<p>With numbers you never see this effect, because a number cannot be changed. <code>x = x + 1</code> makes a <em>new</em> value, 6, and moves only the tag <code>x</code>. <code>y</code> still points to 5.</p>
+
+<h3>Rules for names</h3>
+<ul>
+  <li>Use letters, digits and the underscore <code>_</code>. No spaces.</li>
+  <li>A name cannot start with a digit: <code>2nd_place</code> is not allowed, <code>place_2</code> is fine.</li>
+  <li>Capital letters matter: <code>Age</code> and <code>age</code> are two different names.</li>
+  <li>You cannot use Python's own words such as <code>if</code>, <code>for</code>, <code>class</code>, <code>True</code> or <code>None</code> as names.</li>
+  <li>The usual style is lowercase words joined by underscores: <code>first_name</code>, <code>total_price</code>.</li>
+</ul>
+<pre><code class="language-python">first_name = "Lee"
+Age = 40
+age = 41
+print(first_name, Age, age)</code></pre>
+<pre class="output">Lee 40 41</pre>
+
+<h3>Several names at once</h3>
+<pre><code class="language-python">x, y = 1, 2
+print(x, y)
+x, y = y, x
+print(x, y)</code></pre>
+<pre class="output">1 2
+2 1</pre>
+<p>The right side is worked out completely first (<code>2, 1</code>), then the names are tied to the values. That is how the second line swaps <code>x</code> and <code>y</code>.</p>
+
+<div class="remember">
+  <h4>Remember</h4>
+  <ul>
+    <li><code>=</code> ties a name to a value. The right side is worked out first.</li>
+    <li>Two names can point to the same value. For a list, a change made through one name is seen through the other.</li>
+  </ul>
+</div>
+</section>
+
+<!-- ============ 2. TYPES ============ -->
+<section id="types" aria-labelledby="types-h">
+<h2 id="types-h"><span class="num">2</span> Data types and converting between them</h2>
+<p>Every value has a <strong>type</strong>. The type decides what you can do with the value. These five are the basics:</p>
+
+<div class="table-wrap">
+<table>
+  <caption>The five basic types</caption>
+  <thead><tr><th scope="col">Type</th><th scope="col">What it holds</th><th scope="col">Examples</th></tr></thead>
+  <tbody>
+    <tr><th scope="row"><code>int</code></th><td>Whole numbers, positive or negative, as big as you like</td><td><code>0</code>, <code>42</code>, <code>-7</code></td></tr>
+    <tr><th scope="row"><code>float</code></th><td>Numbers with a decimal point</td><td><code>3.14</code>, <code>-0.5</code>, <code>2.0</code></td></tr>
+    <tr><th scope="row"><code>str</code></th><td>Text ("string"), written in quotes</td><td><code>"hello"</code>, <code>'42'</code>, <code>""</code></td></tr>
+    <tr><th scope="row"><code>bool</code></th><td>Yes or no: only two values</td><td><code>True</code>, <code>False</code></td></tr>
+    <tr><th scope="row"><code>NoneType</code></th><td>"Nothing here": only one value</td><td><code>None</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><code>type()</code> tells you the type of any value:</p>
+<pre><code class="language-python">print(type(42))
+print(type(3.14))
+print(type("hello"))
+print(type(True))
+print(type(None))</code></pre>
+<pre class="output">&lt;class 'int'&gt;
+&lt;class 'float'&gt;
+&lt;class 'str'&gt;
+&lt;class 'bool'&gt;
+&lt;class 'NoneType'&gt;</pre>
+
+<h3><code>int</code>: whole numbers</h3>
+<p>Python's whole numbers have no fixed maximum: they can grow as big as your computer's memory allows. You can write underscores in long numbers to make them easier to read; Python ignores them.</p>
+<pre><code class="language-python">big = 2 ** 100
+print(big)
+print(1_000_000)</code></pre>
+<pre class="output">1267650600228229401496703205376
+1000000</pre>
+
+<h3><code>float</code>: numbers with a decimal point</h3>
+<p>Dividing with <code>/</code> always gives a float, even when the result is whole.</p>
+<pre><code class="language-python">print(7 / 2)
+print(10 / 2)
+print(0.1 + 0.2)</code></pre>
+<pre class="output">3.5
+5.0
+0.30000000000000004</pre>
+<p class="note warn"><strong>Why 0.30000000000000004?</strong> The computer stores floats in binary, and most decimals such as 0.1 cannot be stored exactly, just as 1/3 cannot be written exactly as 0.333… So tiny errors can appear. This happens in almost every programming language. Round when you show a result, and do not test floats with <code>==</code>:</p>
+<pre><code class="language-python">total = 0.1 + 0.2
+print(round(total, 2))
+print(total == 0.3)</code></pre>
+<pre class="output">0.3
+False</pre>
+
+<h3><code>str</code>: text</h3>
+<p>Text goes inside quotes. Single <code>'...'</code> and double <code>"..."</code> quotes mean the same thing; pick the one that is not inside your text. Text that looks like a number is still text:</p>
+<pre><code class="language-python">a = "It's sunny"
+b = 'She said "hi"'
+print(a)
+print(b)
+print("5" + "5")
+print(5 + 5)</code></pre>
+<pre class="output">It's sunny
+She said "hi"
+55
+10</pre>
+<p><code>"5" + "5"</code> joins two pieces of text. <code>5 + 5</code> adds two numbers. Chapter 4 is all about strings.</p>
+
+<h3><code>bool</code>: True or False</h3>
+<p>Only two values, written with a capital letter. Comparisons give you a bool.</p>
+<pre><code class="language-python">is_open = True
+print(is_open)
+print(3 &gt; 2)
+print(type(3 &gt; 2))</code></pre>
+<pre class="output">True
+True
+&lt;class 'bool'&gt;</pre>
+
+<h3><code>None</code>: nothing here</h3>
+<p><code>None</code> means "no value". Use it when something is not known yet. Check for it with <code>is None</code> (more on <code>is</code> in chapter 3).</p>
+<pre><code class="language-python">middle_name = None
+print(middle_name)
+print(middle_name is None)
+result = print("hi")
+print(result)</code></pre>
+<pre class="output">None
+True
+hi
+None</pre>
+<p>The last two lines show something useful: <code>print</code> shows text on the screen but gives back <code>None</code>. So <code>result</code> points to <code>None</code>.</p>
+
+<h3>Converting between types</h3>
+<p>Use the type's name like a function to convert a value: <code>int()</code>, <code>float()</code>, <code>str()</code>, <code>bool()</code>.</p>
+
+<div class="table-wrap">
+<table class="conv">
+  <caption>Conversions. The last column shows the value you get (strings shown with quotes).</caption>
+  <thead><tr><th scope="col">From → to</th><th scope="col">Code</th><th scope="col">Value</th><th scope="col">Note</th></tr></thead>
+  <tbody>
+    <tr><td>str → int</td><td><code data-expr>int("42")</code></td><td><code data-value>42</code></td><td>Text must be a whole number</td></tr>
+    <tr><td>str → int</td><td><code data-expr>int(" 42 ")</code></td><td><code data-value>42</code></td><td>Spaces around it are allowed</td></tr>
+    <tr><td>str → float</td><td><code data-expr>float("3.5")</code></td><td><code data-value>3.5</code></td><td></td></tr>
+    <tr><td>int → float</td><td><code data-expr>float(7)</code></td><td><code data-value>7.0</code></td><td></td></tr>
+    <tr><td>float → int</td><td><code data-expr>int(3.9)</code></td><td><code data-value>3</code></td><td>Cuts off the decimals, does <strong>not</strong> round</td></tr>
+    <tr><td>float → int</td><td><code data-expr>int(-3.9)</code></td><td><code data-value>-3</code></td><td>Cuts off towards zero</td></tr>
+    <tr><td>float → int</td><td><code data-expr>round(3.9)</code></td><td><code data-value>4</code></td><td>Use <code>round()</code> to round</td></tr>
+    <tr><td>int → str</td><td><code data-expr>str(99)</code></td><td><code data-value>'99'</code></td><td></td></tr>
+    <tr><td>float → str</td><td><code data-expr>str(2.5)</code></td><td><code data-value>'2.5'</code></td><td></td></tr>
+    <tr><td>int → bool</td><td><code data-expr>bool(0)</code></td><td><code data-value>False</code></td><td>See "truthy" below</td></tr>
+    <tr><td>bool → int</td><td><code data-expr>int(True)</code></td><td><code data-value>1</code></td><td><code>True</code> counts as 1, <code>False</code> as 0</td></tr>
+  </tbody>
+</table>
+</div>
+
+<pre><code class="language-python">text = "42"
+number = int(text)
+print(number + 8)
+print(str(99) + " balloons")
+print(int(3.9))
+print(round(3.9))</code></pre>
+<pre class="output">50
+99 balloons
+3
+4</pre>
+<p class="note warn"><strong>Rounding halves:</strong> <code>round()</code> sends an exact half to the nearest <em>even</em> number. That surprises people:</p>
+<pre><code class="language-python">print(round(2.5))
+print(round(3.5))</code></pre>
+<pre class="output">2
+4</pre>
+
+<h4>Typed input is always text</h4>
+<p><code>input()</code> lets the user type something, and it always gives you a <code>str</code>, even if they typed digits. Convert it before doing maths. (This example uses a fixed value instead of <code>input()</code> so it runs without typing.)</p>
+<pre><code class="language-python">answer = "25"  # as if typed in
+print(answer + answer)
+print(int(answer) + int(answer))</code></pre>
+<pre class="output">2525
+50</pre>
+
+<h4>When a conversion fails</h4>
+<p><code>int()</code> only accepts text that is a whole number:</p>
+<pre><code class="language-python">print(int("3.5"))</code></pre>
+<pre class="output">Traceback (most recent call last):
+  ...
+ValueError: invalid literal for int() with base 10: '3.5'</pre>
+<p>Go through <code>float</code> first instead: <code>int(float("3.5"))</code> gives <code>3</code>.</p>
+<p>Python also will not join text and a number with <code>+</code>:</p>
+<pre><code class="language-python">age = 30
+print("Age: " + age)</code></pre>
+<pre class="output">Traceback (most recent call last):
+  ...
+TypeError: can only concatenate str (not "int") to str</pre>
+<p>Three ways to fix it:</p>
+<pre><code class="language-python">age = 30
+print("Age: " + str(age))
+print("Age:", age)
+print(f"Age: {age}")</code></pre>
+<pre class="output">Age: 30
+Age: 30
+Age: 30</pre>
+<p>The last one is an <strong>f-string</strong>: put an <code>f</code> before the quotes and any name inside <code>{ }</code> is replaced by its value. Chapter 4 shows more.</p>
+
+<h3>Truthy and falsy</h3>
+<p><code>bool()</code> turns any value into <code>True</code> or <code>False</code>. The rule is short:</p>
+<p class="key">These are <strong>falsy</strong> (become <code>False</code>): <code>False</code>, <code>None</code>, zero (<code>0</code>, <code>0.0</code>), and anything empty (<code>""</code>, <code>[]</code>, <code>()</code>, <code>{}</code>, <code>set()</code>). <strong>Everything else is truthy.</strong></p>
+<pre><code class="language-python">print(bool(0))
+print(bool(42))
+print(bool(""))
+print(bool("False"))
+print(bool(None))
+print(bool([]))</code></pre>
+<pre class="output">False
+True
+False
+True
+False
+False</pre>
+<p>This matters because <code>if</code> and <code>while</code> use these rules: <code>if name:</code> means "if name is not empty".</p>
+
+<div class="widget" id="truthy">
+  <div class="widget-head">
+    <h4 class="widget-title">Try it: True or False?</h4>
+    <p class="widget-sub">What does <code>bool(value)</code> give? Choose an answer for each value.</p>
+  </div>
+  <ul class="quiz-list"></ul>
+  <p class="quiz-score" aria-live="polite"></p>
+  <noscript><p>This quiz needs JavaScript. The rule above and the example before it cover the same values.</p></noscript>
+</div>
+
+<div class="remember">
+  <h4>Remember</h4>
+  <ul>
+    <li><code>type(x)</code> tells you what kind of value <code>x</code> is.</li>
+    <li><code>/</code> always gives a float. <code>int()</code> cuts off decimals; <code>round()</code> rounds.</li>
+    <li><code>input()</code> gives text. Convert it with <code>int()</code> or <code>float()</code> before maths.</li>
+  </ul>
+</div>
+</section>
+
+<!-- ============ 3. OPERATORS ============ -->
+<section id="operators" aria-labelledby="operators-h">
+<h2 id="operators-h"><span class="num">3</span> Operators</h2>
+<p>An <strong>operator</strong> is a symbol that does something with values, like <code>+</code> or <code>==</code>.</p>
+
+<h3>Arithmetic</h3>
+<div class="table-wrap">
+<table>
+  <caption>Arithmetic operators</caption>
+  <thead><tr><th scope="col">Operator</th><th scope="col">Meaning</th><th scope="col">Example</th><th scope="col">Value</th></tr></thead>
+  <tbody>
+    <tr><td><code>+</code></td><td>add</td><td><code data-expr>7 + 2</code></td><td><code data-value>9</code></td></tr>
+    <tr><td><code>-</code></td><td>subtract</td><td><code data-expr>7 - 2</code></td><td><code data-value>5</code></td></tr>
+    <tr><td><code>*</code></td><td>multiply</td><td><code data-expr>7 * 2</code></td><td><code data-value>14</code></td></tr>
+    <tr><td><code>/</code></td><td>divide (always a float)</td><td><code data-expr>7 / 2</code></td><td><code data-value>3.5</code></td></tr>
+    <tr><td><code>//</code></td><td>floor division: how many whole times</td><td><code data-expr>7 // 2</code></td><td><code data-value>3</code></td></tr>
+    <tr><td><code>%</code></td><td>remainder ("modulo"): what is left over</td><td><code data-expr>7 % 2</code></td><td><code data-value>1</code></td></tr>
+    <tr><td><code>**</code></td><td>power</td><td><code data-expr>7 ** 2</code></td><td><code data-value>49</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4><code>//</code> and <code>%</code> as sweets in bags</h4>
+<p>You have 17 sweets and put them into bags of 5. <code>17 // 5</code> is how many <strong>full bags</strong> you get (3). <code>17 % 5</code> is how many sweets are <strong>left over</strong> (2).</p>
+<pre><code class="language-python">sweets = 17
+bag_size = 5
+print(sweets // bag_size)
+print(sweets % bag_size)</code></pre>
+<pre class="output">3
+2</pre>
+
+<div class="widget" id="divcalc">
+  <div class="widget-head">
+    <h4 class="widget-title">Try it: division calculator</h4>
+    <p class="widget-sub">Type two whole numbers. The picture appears for 0 to 60 sweets and bags of 1 to 12.</p>
+  </div>
+  <div class="calc-inputs">
+    <label>a (sweets) <input type="number" id="calc-a" value="17" min="-999" max="999" step="1" inputmode="numeric"></label>
+    <label>b (bag size) <input type="number" id="calc-b" value="5" min="-999" max="999" step="1" inputmode="numeric"></label>
+  </div>
+  <div class="calc-results" aria-live="polite"></div>
+  <div class="calc-pic" aria-hidden="true"></div>
+  <noscript><p>This calculator needs JavaScript.</p></noscript>
+</div>
+
+<p>Two everyday uses: turning minutes into hours and minutes, and checking if a number is even (even numbers leave remainder 0 when divided by 2).</p>
+<pre><code class="language-python">minutes = 135
+hours = minutes // 60
+rest = minutes % 60
+print(hours, "h", rest, "min")
+print(10 % 2 == 0)
+print(7 % 2 == 0)</code></pre>
+<pre class="output">2 h 15 min
+True
+False</pre>
+
+<p class="note warn"><strong>Careful with negative numbers.</strong> <code>//</code> always rounds <em>down</em>, to the next smaller whole number. For <code>-7 / 2 = -3.5</code>, "down" is <code>-4</code>, not <code>-3</code>. The remainder then fits the rule <code>(a // b) * b + a % b == a</code>: <code>-4 * 2 + 1 = -7</code>. And if either number is a float, <code>//</code> gives a float.</p>
+<pre><code class="language-python">print(-7 // 2)
+print(-7 % 2)
+print(7.5 // 2)</code></pre>
+<pre class="output">-4
+1
+3.0</pre>
+
+<h4>Which operator goes first</h4>
+<p>Like in school maths: <code>**</code> first, then <code>*</code> <code>/</code> <code>//</code> <code>%</code>, then <code>+</code> <code>-</code>. Operators of the same level go left to right (only <code>**</code> goes right to left). Brackets <code>( )</code> go before everything; when in doubt, add brackets.</p>
+<pre><code class="language-python">print(2 + 3 * 4)
+print((2 + 3) * 4)
+print(10 / 2 * 5)</code></pre>
+<pre class="output">14
+20
+25.0</pre>
+
+<h3>Comparison</h3>
+<p>Comparisons give <code>True</code> or <code>False</code>.</p>
+<div class="table-wrap">
+<table>
+  <caption>Comparison operators</caption>
+  <thead><tr><th scope="col">Operator</th><th scope="col">Means</th><th scope="col">Example</th><th scope="col">Value</th></tr></thead>
+  <tbody>
+    <tr><td><code>==</code></td><td>equal to</td><td><code data-expr>3 == 3</code></td><td><code data-value>True</code></td></tr>
+    <tr><td><code>!=</code></td><td>not equal to</td><td><code data-expr>3 != 3</code></td><td><code data-value>False</code></td></tr>
+    <tr><td><code>&lt;</code></td><td>less than</td><td><code data-expr>2 &lt; 3</code></td><td><code data-value>True</code></td></tr>
+    <tr><td><code>&gt;</code></td><td>greater than</td><td><code data-expr>2 &gt; 3</code></td><td><code data-value>False</code></td></tr>
+    <tr><td><code>&lt;=</code></td><td>less than or equal to</td><td><code data-expr>3 &lt;= 3</code></td><td><code data-value>True</code></td></tr>
+    <tr><td><code>&gt;=</code></td><td>greater than or equal to</td><td><code data-expr>2 &gt;= 3</code></td><td><code data-value>False</code></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="key">One <code>=</code> ties a name to a value. Two <code>==</code> ask "are these equal?". Mixing them up is the most common beginner mistake.</p>
+<pre><code class="language-python">age = 20
+print(age == 20)
+print(age != 20)
+print(age &gt; 18)
+print(age &lt;= 18)
+print(18 &lt;= age &lt; 65)</code></pre>
+<pre class="output">True
+False
+True
+False
+True</pre>
+<p>The last line is a <strong>chain</strong>: it means <code>18 &lt;= age and age &lt; 65</code>.</p>
+<p>Text is compared letter by letter, by each character's code number. All capital letters come before all small letters, so <code>"Zebra" &lt; "apple"</code> is <code>True</code>. Whole numbers and floats compare by value.</p>
+<pre><code class="language-python">print("apple" == "Apple")
+print("apple" &lt; "banana")
+print("Zebra" &lt; "apple")
+print(5 == 5.0)</code></pre>
+<pre class="output">False
+True
+True
+True</pre>
+
+<h3>Logical: <code>and</code>, <code>or</code>, <code>not</code></h3>
+<p>These combine <code>True</code>/<code>False</code> answers.</p>
+<div class="truth">
+<div class="table-wrap">
+<table>
+  <caption><code>and</code>: True only if both are True</caption>
+  <thead><tr><th scope="col">A</th><th scope="col">B</th><th scope="col">A and B</th></tr></thead>
+  <tbody>
+    <tr><td>True</td><td>True</td><td class="t">True</td></tr>
+    <tr><td>True</td><td>False</td><td class="f">False</td></tr>
+    <tr><td>False</td><td>True</td><td class="f">False</td></tr>
+    <tr><td>False</td><td>False</td><td class="f">False</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="table-wrap">
+<table>
+  <caption><code>or</code>: True if at least one is True</caption>
+  <thead><tr><th scope="col">A</th><th scope="col">B</th><th scope="col">A or B</th></tr></thead>
+  <tbody>
+    <tr><td>True</td><td>True</td><td class="t">True</td></tr>
+    <tr><td>True</td><td>False</td><td class="t">True</td></tr>
+    <tr><td>False</td><td>True</td><td class="t">True</td></tr>
+    <tr><td>False</td><td>False</td><td class="f">False</td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+<p><code>not</code> flips one value: <code>not True</code> is <code>False</code>, <code>not False</code> is <code>True</code>.</p>
+<pre><code class="language-python">age = 25
+has_ticket = True
+print(age &gt;= 18 and has_ticket)
+print(age &lt; 12 or age &gt; 65)
+print(not has_ticket)</code></pre>
+<pre class="output">True
+False
+False</pre>
+<p class="note"><strong>Good to know:</strong> <code>and</code> and <code>or</code> give back one of the two values, not always <code>True</code> or <code>False</code>. <code>a or b</code> gives <code>a</code> if <code>a</code> is truthy, otherwise <code>b</code>. <code>a and b</code> gives <code>a</code> if <code>a</code> is falsy, otherwise <code>b</code>. This is handy for default values:</p>
+<pre><code class="language-python">name = ""
+print(name or "Guest")
+print(0 and 5)
+print(3 and 5)</code></pre>
+<pre class="output">Guest
+0
+5</pre>
+
+<h3>Identity: <code>is</code></h3>
+<p><code>==</code> asks "do these have the same value?". <code>is</code> asks "are these the very same object?", meaning: do both names point to one value?</p>
+<figure class="diagram">
+<svg viewBox="0 0 400 150" role="img" aria-labelledby="d-is-t">
+  <title id="d-is-t">Tags a and b both point to one list [1, 2, 3]. Tag c points to a second, separate list that also contains [1, 2, 3].</title>
+  <defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="d-head"/></marker></defs>
+  <g class="d-tag"><path d="M14 6H84V40H14L2 23Z"/><circle cx="16" cy="23" r="3"/><text x="48" y="28">a</text></g>
+  <g class="d-tag"><path d="M14 52H84V86H14L2 69Z"/><circle cx="16" cy="69" r="3"/><text x="48" y="74">b</text></g>
+  <g class="d-tag"><path d="M14 108H84V142H14L2 125Z"/><circle cx="16" cy="125" r="3"/><text x="48" y="130">c</text></g>
+  <path d="M84 23C130 23 140 44 186 44" class="d-line" marker-end="url(#ar3)"/>
+  <path d="M84 69C130 69 140 48 186 48" class="d-line" marker-end="url(#ar3)"/>
+  <line x1="84" y1="125" x2="186" y2="125" class="d-line" marker-end="url(#ar3)"/>
+  <rect x="190" y="26" width="140" height="40" class="d-box"/><text x="260" y="51" class="d-code">[1, 2, 3]</text>
+  <rect x="190" y="105" width="140" height="40" class="d-box"/><text x="260" y="130" class="d-code">[1, 2, 3]</text>
+  <text x="340" y="51" class="d-type">list 1</text>
+  <text x="340" y="130" class="d-type">list 2</text>
+</svg>
+<figcaption><code>a == c</code> is True (same contents). <code>a is c</code> is False (two separate lists). <code>a is b</code> is True (one list, two tags).</figcaption>
+</figure>
+<pre><code class="language-python">a = [1, 2, 3]
+b = a
+c = [1, 2, 3]
+print(a == c)
+print(a is c)
+print(a is b)
+print(a is not c)</code></pre>
+<pre class="output">True
+False
+True
+True</pre>
+<p class="note warn"><strong>Use <code>is</code> mainly for <code>None</code>:</strong> write <code>x is None</code> or <code>x is not None</code>. To compare numbers or text, always use <code>==</code>. With <code>is</code> the result for numbers and text can change from one situation to another, and Python even warns you if you write something like <code>x is 5</code>.</p>
+
+<h3>Membership: <code>in</code></h3>
+<p><code>in</code> asks "is this inside that?". <code>not in</code> is the opposite.</p>
+<pre><code class="language-python">fruits = ["apple", "pear"]
+print("pear" in fruits)
+print("kiwi" not in fruits)
+print("py" in "python")
+ages = {"Ana": 31, "Ben": 27}
+print("Ana" in ages)
+print(31 in ages)</code></pre>
+<pre class="output">True
+True
+True
+True
+False</pre>
+<p>For text, <code>in</code> looks for a piece of the text. For a <strong>dict</strong> (chapter 5), <code>in</code> checks the <strong>keys</strong> (<code>"Ana"</code>), not the values (<code>31</code>).</p>
+
+<h3>Assignment shortcuts: <code>+=</code> and friends</h3>
+<p>For numbers and text, <code>x += 5</code> means the same as <code>x = x + 5</code>. Every arithmetic operator has one: <code>-=</code>, <code>*=</code>, <code>/=</code>, <code>//=</code>, <code>%=</code>, <code>**=</code>.</p>
+<pre><code class="language-python">points = 10
+points += 5
+print(points)
+points -= 3
+print(points)
+points *= 2
+print(points)
+points /= 4
+print(points)</code></pre>
+<pre class="output">15
+12
+24
+6.0</pre>
+<pre><code class="language-python">n = 17
+n //= 5
+print(n)
+m = 17
+m %= 5
+print(m)
+p = 3
+p **= 2
+print(p)
+word = "ha"
+word += "ha"
+print(word)</code></pre>
+<pre class="output">3
+2
+9
+haha</pre>
+<p>Python has no <code>++</code>. To add one, write <code>count += 1</code>.</p>
+
+<div class="remember">
+  <h4>Remember</h4>
+  <ul>
+    <li><code>//</code> gives full bags, <code>%</code> gives what is left over.</li>
+    <li><code>=</code> ties a name; <code>==</code> compares.</li>
+    <li><code>==</code> compares values; <code>is</code> checks for the same object. Use <code>is</code> for <code>None</code>.</li>
+  </ul>
+</div>
+</section>
+
+<!-- ============ 4. STRINGS ============ -->
+<section id="strings" aria-labelledby="strings-h">
+<h2 id="strings-h"><span class="num">4</span> Strings</h2>
+<p>A <strong>string</strong> (<code>str</code>) is a piece of text: a row of characters. Letters, digits, spaces and punctuation are all characters.</p>
+<pre><code class="language-python">greeting = "Hello"
+poem = """Roses are red,
+violets are blue."""
+print(greeting)
+print(poem)
+print("one\ntwo")
+print(len(greeting))</code></pre>
+<pre class="output">Hello
+Roses are red,
+violets are blue.
+one
+two
+5</pre>
+<ul>
+  <li>Three quotes <code>"""..."""</code> let a string go over several lines.</li>
+  <li><code>\n</code> inside a string means "new line".</li>
+  <li><code>len()</code> counts the characters.</li>
+</ul>
+
+<h3>Positions (indexes) and slices</h3>
+<p>Each character has a position number called an <strong>index</strong>. Counting starts at <strong>0</strong>, not 1. You can also count from the end with negative numbers: <code>-1</code> is the last character.</p>
+
+<div class="widget" id="slicer">
+  <div class="widget-head">
+    <h4 class="widget-title">Try it: pick letters from <code>word = "PYTHON"</code></h4>
+    <p class="widget-sub">Numbers above each letter count from the start; numbers below count from the end. Fill in start, stop and step (or leave them empty), or press an example.</p>
+  </div>
+  <div class="letters" aria-hidden="true"><div class="letter" data-i="0"><span class="ix">0</span><span class="ch">P</span><span class="ix">-6</span></div><div class="letter" data-i="1"><span class="ix">1</span><span class="ch">Y</span><span class="ix">-5</span></div><div class="letter" data-i="2"><span class="ix">2</span><span class="ch">T</span><span class="ix">-4</span></div><div class="letter" data-i="3"><span class="ix">3</span><span class="ch">H</span><span class="ix">-3</span></div><div class="letter" data-i="4"><span class="ix">4</span><span class="ch">O</span><span class="ix">-2</span></div><div class="letter" data-i="5"><span class="ix">5</span><span class="ch">N</span><span class="ix">-1</span></div></div>
+  <p class="sr-only">Indexes of "PYTHON": P is 0 or -6, Y is 1 or -5, T is 2 or -4, H is 3 or -3, O is 4 or -2, N is 5 or -1.</p>
+  <div class="slice-inputs">
+    <label>start <input type="text" id="sl-start" inputmode="numeric" autocomplete="off" value="1" size="3"></label>
+    <label>stop <input type="text" id="sl-stop" inputmode="numeric" autocomplete="off" value="4" size="3"></label>
+    <label>step <input type="text" id="sl-step" inputmode="numeric" autocomplete="off" value="" size="3"></label>
+  </div>
+  <div class="presets" role="group" aria-label="Examples">
+    <button type="button" data-slice="1,4,">[1:4]</button>
+    <button type="button" data-slice=",2,">[:2]</button>
+    <button type="button" data-slice="2,,">[2:]</button>
+    <button type="button" data-slice="-3,,">[-3:]</button>
+    <button type="button" data-slice=",,2">[::2]</button>
+    <button type="button" data-slice=",,-1">[::-1]</button>
+  </div>
+  <div class="slice-result" aria-live="polite"></div>
+  <noscript><p>This interactive part needs JavaScript. The example below shows the same slices.</p></noscript>
+</div>
+
+<p>A <strong>slice</strong> <code>word[start:stop]</code> takes the characters from <code>start</code> up to, <strong>but not including</strong>, <code>stop</code>. Leave out <code>start</code> to begin at the start; leave out <code>stop</code> to go to the end. A third number, the <strong>step</strong>, takes every 2nd (or 3rd…) character; a step of <code>-1</code> goes backwards.</p>
+<pre><code class="language-python">word = "PYTHON"
+print(word[0])
+print(word[5])
+print(word[-1])
+print(word[1:4])
+print(word[:2])
+print(word[2:])
+print(word[::-1])</code></pre>
+<pre class="output">P
+N
+N
+YTH
+PY
+THON
+NOHTYP</pre>
+<p class="note">A handy check: <code>word[1:4]</code> has <code>4 - 1 = 3</code> characters.</p>
+<p>Asking for a single position that does not exist is an error. A slice that goes too far is not: it just stops at the end.</p>
+<pre><code class="language-python">word = "PYTHON"
+print(word[2:100])
+print(word[6])</code></pre>
+<pre class="output">THON
+Traceback (most recent call last):
+  ...
+IndexError: string index out of range</pre>
+
+<h3>Strings cannot be changed</h3>
+<p>You cannot replace one character inside a string. Make a new string instead:</p>
+<pre><code class="language-python">word = "PYTHON"
+word[0] = "J"</code></pre>
+<pre class="output">Traceback (most recent call last):
+  ...
+TypeError: 'str' object does not support item assignment</pre>
+<pre><code class="language-python">word = "PYTHON"
+new_word = "J" + word[1:]
+print(new_word)
+print(word)</code></pre>
+<pre class="output">JYTHON
+PYTHON</pre>
+
+<h3>Joining and repeating</h3>
+<pre><code class="language-python">first = "Ada"
+last = "Lovelace"
+print(first + " " + last)
+print("ha" * 3)
+print("-" * 10)</code></pre>
+<pre class="output">Ada Lovelace
+hahaha
+----------</pre>
+
+<h3>f-strings: putting values into text</h3>
+<p>Write <code>f</code> before the quotes. Anything inside <code>{ }</code> is worked out and put into the text. Add <code>:.2f</code> to show a number with exactly 2 decimals.</p>
+<pre><code class="language-python">name = "Sam"
+price = 3.5
+qty = 3
+print(f"{name} owes {price * qty} euros")
+print(f"Total: {price * qty:.2f}")</code></pre>
+<pre class="output">Sam owes 10.5 euros
+Total: 10.50</pre>
+
+<h3>String methods</h3>
+<p>A <strong>method</strong> is a function that belongs to a value. You call it with a dot: <code>text.upper()</code>. The brackets are needed, even when empty.</p>
+<p class="key">String methods never change the original string. They give back a <strong>new</strong> string. Keep it by tying a name to it.</p>
+<pre><code class="language-python">shout = "hello"
+print(shout.upper())
+print(shout)
+shout = shout.upper()
+print(shout)</code></pre>
+<pre class="output">HELLO
+hello
+HELLO</pre>
+
+<div class="table-wrap">
+<table>
+  <caption>Common string methods. The last column shows the value you get back (strings shown with quotes, lists with square brackets).</caption>
+  <thead><tr><th scope="col">Method</th><th scope="col">What it does</th><th scope="col">Example</th><th scope="col">Value</th></tr></thead>
+  <tbody>
+    <tr><td><code>upper()</code></td><td>all capitals</td><td><code data-expr>"hello".upper()</code></td><td><code data-value>'HELLO'</code></td></tr>
+    <tr><td><code>lower()</code></td><td>all small letters</td><td><code data-expr>"HeLLo".lower()</code></td><td><code data-value>'hello'</code></td></tr>
+    <tr><td><code>title()</code></td><td>capital at the start of each word</td><td><code data-expr>"ada lovelace".title()</code></td><td><code data-value>'Ada Lovelace'</code></td></tr>
+    <tr><td><code>strip()</code></td><td>remove whitespace (spaces, tabs, new lines) at both ends</td><td><code data-expr>"  hi  ".strip()</code></td><td><code data-value>'hi'</code></td></tr>
+    <tr><td><code>replace(old, new)</code></td><td>replace every <code>old</code> with <code>new</code></td><td><code data-expr>"banana".replace("a", "o")</code></td><td><code data-value>'bonono'</code></td></tr>
+    <tr><td><code>split(sep)</code></td><td>cut into a list of pieces at <code>sep</code></td><td><code data-expr>"a,b,c".split(",")</code></td><td><code data-value>['a', 'b', 'c']</code></td></tr>
+    <tr><td><code>join(list)</code></td><td>glue a list of strings together</td><td><code data-expr>"-".join(["a", "b", "c"])</code></td><td><code data-value>'a-b-c'</code></td></tr>
+    <tr><td><code>count(x)</code></td><td>how many times <code>x</code> appears</td><td><code data-expr>"banana".count("a")</code></td><td><code data-value>3</code></td></tr>
+    <tr><td><code>find(x)</code></td><td>index of the first <code>x</code></td><td><code data-expr>"banana".find("n")</code></td><td><code data-value>2</code></td></tr>
+    <tr><td><code>find(x)</code></td><td>gives <code>-1</code> if not found</td><td><code data-expr>"banana".find("x")</code></td><td><code data-value>-1</code></td></tr>
+    <tr><td><code>startswith(x)</code></td><td>does it start with <code>x</code>?</td><td><code data-expr>"Python".startswith("Py")</code></td><td><code data-value>True</code></td></tr>
+    <tr><td><code>endswith(x)</code></td><td>does it end with <code>x</code>?</td><td><code data-expr>"photo.jpg".endswith(".jpg")</code></td><td><code data-value>True</code></td></tr>
+    <tr><td><code>isdigit()</code></td><td>is it only digits?</td><td><code data-expr>"2024".isdigit()</code></td><td><code data-value>True</code></td></tr>
+    <tr><td><code>isdigit()</code></td><td></td><td><code data-expr>"12a".isdigit()</code></td><td><code data-value>False</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><code>split()</code> with nothing in the brackets cuts wherever there is whitespace (spaces, tabs, new lines) and drops the empty pieces. <code>join</code> is the opposite of <code>split</code>.</p>
+<pre><code class="language-python">sentence = "  the quick   brown fox "
+words = sentence.split()
+print(words)
+print(len(words))
+print(" ".join(words))</code></pre>
+<pre class="output">['the', 'quick', 'brown', 'fox']
+4
+the quick brown fox</pre>
+<p>Methods can be chained, left to right. This is a common way to clean up what someone typed:</p>
+<pre><code class="language-python">raw = "  Yes \n"
+answer = raw.strip().lower()
+print(answer)
+print(answer == "yes")</code></pre>
+<pre class="output">yes
+True</pre>
+
+<h3>Going through a string letter by letter</h3>
+<p>A <code>for</code> loop runs the indented lines once for each character. Each time round, <code>letter</code> points to the next character.</p>
+<pre><code class="language-python">for letter in "hey":
+    print(letter)</code></pre>
+<pre class="output">h
+e
+y</pre>
+
+<div class="remember">
+  <h4>Remember</h4>
+  <ul>
+    <li>Indexes start at 0. <code>-1</code> is the last character.</li>
+    <li><code>s[start:stop]</code> stops <em>before</em> <code>stop</code>.</li>
+    <li>Strings never change. Methods give back a new string.</li>
+  </ul>
+</div>
+</section>
+
+<!-- ============ 5. COLLECTIONS ============ -->
+<section id="collections" aria-labelledby="collections-h">
+<h2 id="collections-h"><span class="num">5</span> List, tuple, set and dict</h2>
+<p>These four hold <strong>many values</strong> under one name. Each has its own brackets and its own strengths.</p>
+
+<div class="coll-grid">
+  <figure class="coll">
+    <figcaption><strong>list</strong> <code>[ ]</code> · a numbered row you can change</figcaption>
+    <div class="cells" role="img" aria-label="A list: eggs at index 0, milk at index 1, bread at index 2">
+      <span class="cell"><i>0</i>"eggs"</span><span class="cell"><i>1</i>"milk"</span><span class="cell"><i>2</i>"bread"</span>
+    </div>
+  </figure>
+  <figure class="coll">
+    <figcaption><strong>tuple</strong> <code>( )</code> · a numbered row that is sealed</figcaption>
+    <div class="cells sealed" role="img" aria-label="A tuple: 3 at index 0, 5 at index 1. It cannot be changed.">
+      <span class="cell"><i>0</i>3</span><span class="cell"><i>1</i>5</span><span class="seal">cannot change</span>
+    </div>
+  </figure>
+  <figure class="coll">
+    <figcaption><strong>set</strong> <code>{ }</code> · a bag of unique items, no order</figcaption>
+    <div class="bag" role="img" aria-label="A set: a bag holding red, green and blue, each only once, in no order">
+      <span>"red"</span><span>"blue"</span><span>"green"</span>
+    </div>
+  </figure>
+  <figure class="coll">
+    <figcaption><strong>dict</strong> <code>{key: value}</code> · labels pointing to values</figcaption>
+    <div class="pairs" role="img" aria-label="A dict: the key Ana points to 555-0101, the key Ben points to 555-0199">
+      <span class="tag">"Ana"</span><span class="arrow">→</span><span class="val">"555-0101"</span>
+      <span class="tag">"Ben"</span><span class="arrow">→</span><span class="val">"555-0199"</span>
+    </div>
+  </figure>
+</div>
+
+<div class="table-wrap">
+<table class="compare">
+  <caption>The four side by side</caption>
+  <thead><tr><th scope="col"></th><th scope="col">list</th><th scope="col">tuple</th><th scope="col">set</th><th scope="col">dict</th></tr></thead>
+  <tbody>
+    <tr><th scope="row">Written as</th><td><code>[1, 2]</code></td><td><code>(1, 2)</code></td><td><code>{1, 2}</code></td><td><code>{"a": 1}</code></td></tr>
+    <tr><th scope="row">Keeps the order?</th><td>yes</td><td>yes</td><td>no</td><td>yes (the order you added keys)</td></tr>
+    <tr><th scope="row">Can be changed?</th><td>yes</td><td>no</td><td>yes</td><td>yes</td></tr>
+    <tr><th scope="row">Duplicates?</th><td>allowed</td><td>allowed</td><td>no, kept once</td><td>keys are unique; values may repeat</td></tr>
+    <tr><th scope="row">Read an item by</th><td>index <code>x[0]</code></td><td>index <code>x[0]</code></td><td>no indexes; ask <code>in</code></td><td>key <code>x["a"]</code></td></tr>
+    <tr><th scope="row">Empty one</th><td><code>[]</code></td><td><code>()</code></td><td><code>set()</code></td><td><code>{}</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ---- LIST ---- -->
+<h3 id="lists">Lists</h3>
+<p>A list is a numbered row of values. Indexes and slices work exactly as for strings, but you <strong>can</strong> change a list.</p>
+<h4>Create and read</h4>
+<pre><code class="language-python">shopping = ["eggs", "milk", "bread"]
+print(shopping)
+print(shopping[0])
+print(shopping[-1])
+print(len(shopping))
+print(shopping[0:2])
+empty = []
+print(len(empty))</code></pre>
+<pre class="output">['eggs', 'milk', 'bread']
+eggs
+bread
+3
+['eggs', 'milk']
+0</pre>
+<p>Printing a whole list shows the strings inside it with quotes, so you can see where each one starts and ends.</p>
+
+<h4>Change</h4>
+<pre><code class="language-python">shopping = ["eggs", "milk", "bread"]
+shopping[1] = "oat milk"
+shopping.append("tea")
+shopping.insert(0, "jam")
+print(shopping)
+shopping.remove("eggs")
+last = shopping.pop()
+print(last)
+print(shopping)
+del shopping[0]
+print(shopping)</code></pre>
+<pre class="output">['jam', 'eggs', 'oat milk', 'bread', 'tea']
+tea
+['jam', 'oat milk', 'bread']
+['oat milk', 'bread']</pre>
+<ul>
+  <li><code>shopping[1] = ...</code> replaces the item at index 1.</li>
+  <li><code>append(x)</code> adds <code>x</code> at the end. <code>insert(i, x)</code> puts <code>x</code> at index <code>i</code> and moves the rest along.</li>
+  <li><code>remove(x)</code> removes the first item equal to <code>x</code> (an error if there is none).</li>
+  <li><code>pop()</code> removes the last item and gives it back; <code>pop(i)</code> does that for index <code>i</code>.</li>
+  <li><code>del shopping[0]</code> deletes the item at index 0.</li>
+</ul>
+<p><code>append</code> adds <em>one</em> item, even if that item is a list. <code>extend</code> adds each item of another list:</p>
+<pre><code class="language-python">a = [1, 2]
+a.append([3, 4])
+print(a)
+b = [1, 2]
+b.extend([3, 4])
+print(b)</code></pre>
+<pre class="output">[1, 2, [3, 4]]
+[1, 2, 3, 4]</pre>
+
+<h4>Loop</h4>
+<p>A <code>for</code> loop visits each item in order. <code>enumerate</code> also gives you the index.</p>
+<pre><code class="language-python">scores = [70, 85, 90]
+total = 0
+for s in scores:
+    total += s
+print(total)
+for i, s in enumerate(scores):
+    print(i, s)</code></pre>
+<pre class="output">245
+0 70
+1 85
+2 90</pre>
+
+<h4>Sorting and other useful tools</h4>
+<pre><code class="language-python">nums = [5, 2, 9, 1]
+print(sum(nums), min(nums), max(nums))
+print(sorted(nums))
+print(nums)
+nums.sort()
+print(nums)
+nums.sort(reverse=True)
+print(nums)</code></pre>
+<pre class="output">17 1 9
+[1, 2, 5, 9]
+[5, 2, 9, 1]
+[1, 2, 5, 9]
+[9, 5, 2, 1]</pre>
+<p><code>sorted(nums)</code> gives back a <strong>new</strong> sorted list and leaves <code>nums</code> alone. <code>nums.sort()</code> sorts <code>nums</code> itself and gives back <code>None</code>, a common trap:</p>
+<pre><code class="language-python">nums = [3, 1, 2]
+result = nums.sort()
+print(result)
+print(nums)</code></pre>
+<pre class="output">None
+[1, 2, 3]</pre>
+<pre><code class="language-python">letters = ["a", "b", "a"]
+print(letters.count("a"))
+print(letters.index("b"))
+backup = letters.copy()
+letters.clear()
+print(letters)
+print(backup)</code></pre>
+<pre class="output">2
+1
+[]
+['a', 'b', 'a']</pre>
+<p>Remember chapter 1: <code>backup = letters</code> would only tie a second tag to the same list, and <code>clear()</code> would empty both. <code>copy()</code> makes a real second list.</p>
+
+<div class="table-wrap">
+<table>
+  <caption>List methods at a glance (<code>x</code> is a value, <code>i</code> an index)</caption>
+  <thead><tr><th scope="col">Method</th><th scope="col">What it does</th><th scope="col">Gives back</th></tr></thead>
+  <tbody>
+    <tr><td><code>append(x)</code></td><td>add <code>x</code> at the end</td><td><code>None</code></td></tr>
+    <tr><td><code>extend(other)</code></td><td>add every item of <code>other</code> at the end</td><td><code>None</code></td></tr>
+    <tr><td><code>insert(i, x)</code></td><td>put <code>x</code> at index <code>i</code></td><td><code>None</code></td></tr>
+    <tr><td><code>remove(x)</code></td><td>remove the first <code>x</code></td><td><code>None</code></td></tr>
+    <tr><td><code>pop()</code> / <code>pop(i)</code></td><td>remove the last item / the item at <code>i</code></td><td>the removed item</td></tr>
+    <tr><td><code>sort()</code></td><td>sort the list itself</td><td><code>None</code></td></tr>
+    <tr><td><code>reverse()</code></td><td>reverse the list itself</td><td><code>None</code></td></tr>
+    <tr><td><code>count(x)</code></td><td>count how many <code>x</code></td><td>a number</td></tr>
+    <tr><td><code>index(x)</code></td><td>find where the first <code>x</code> is</td><td>an index</td></tr>
+    <tr><td><code>copy()</code></td><td>make a separate copy</td><td>a new list</td></tr>
+    <tr><td><code>clear()</code></td><td>remove everything</td><td><code>None</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ---- TUPLE ---- -->
+<h3 id="tuples">Tuples</h3>
+<p>A tuple is like a list that is <strong>sealed</strong>: once made, it cannot change. Use it for values that belong together and should stay as they are, such as a point on a map.</p>
+<h4>Create and read</h4>
+<pre><code class="language-python">point = (3, 5)
+print(point)
+print(point[0])
+print(len(point))
+x, y = point
+print(x, y)</code></pre>
+<pre class="output">(3, 5)
+3
+2
+3 5</pre>
+<p><code>x, y = point</code> is called <strong>unpacking</strong>: each name gets one value, in order.</p>
+<p class="note warn"><strong>A tuple with one item needs a comma.</strong> Brackets alone are just brackets, like in maths.</p>
+<pre><code class="language-python">one = (7,)
+not_a_tuple = (7)
+print(type(one))
+print(type(not_a_tuple))</code></pre>
+<pre class="output">&lt;class 'tuple'&gt;
+&lt;class 'int'&gt;</pre>
+
+<h4>"Change": make a new one</h4>
+<pre><code class="language-python">point = (3, 5)
+point[0] = 10</code></pre>
+<pre class="output">Traceback (most recent call last):
+  ...
+TypeError: 'tuple' object does not support item assignment</pre>
+<p>Instead, build a new tuple and move the name to it:</p>
+<pre><code class="language-python">point = (3, 5)
+point = (10, point[1])
+print(point)</code></pre>
+<pre class="output">(10, 5)</pre>
+
+<h4>Loop and methods</h4>
+<p>Tuples have only two methods, <code>count</code> and <code>index</code>, because there is nothing to change.</p>
+<pre><code class="language-python">days = ("Mon", "Tue", "Wed", "Tue")
+for d in days:
+    print(d)
+print(days.count("Tue"))
+print(days.index("Wed"))</code></pre>
+<pre class="output">Mon
+Tue
+Wed
+Tue
+2
+2</pre>
+<p>Some functions give back a tuple. <code>divmod</code> does <code>//</code> and <code>%</code> in one go:</p>
+<pre><code class="language-python">result = divmod(17, 5)
+print(result)
+bags, left = divmod(17, 5)
+print(bags, left)</code></pre>
+<pre class="output">(3, 2)
+3 2</pre>
+
+<!-- ---- SET ---- -->
+<h3 id="sets">Sets</h3>
+<p>A set is a bag of <strong>unique</strong> values. Duplicates are dropped, and there is <strong>no order</strong>, so there are no indexes.</p>
+<h4>Create and read</h4>
+<pre><code class="language-python">colours = {"red", "green", "red", "blue"}
+print(len(colours))
+print("red" in colours)
+print(sorted(colours))</code></pre>
+<pre class="output">3
+True
+['blue', 'green', 'red']</pre>
+<p>The second <code>"red"</code> was dropped, so there are 3 items. You cannot ask for <code>colours[0]</code>; you ask "is it in there?" with <code>in</code>, which is very fast for sets, even big ones.</p>
+<p class="note warn"><strong>Do not rely on the order.</strong> When you print a set, Python shows the items in whatever order it stores them. It is not the order you wrote and not sorted. With text, it can even change each time you run the program. That is why this page uses <code>sorted()</code> to print sets of text: it gives a sorted list.</p>
+<pre><code class="language-python">nums = {10, 3, 1, 3}
+print(nums)
+print(sorted(nums))</code></pre>
+<pre class="output">{1, 10, 3}
+[1, 3, 10]</pre>
+<p class="note">An empty set is written <code>set()</code>. Empty curly brackets <code>{}</code> make an empty <em>dict</em>.</p>
+<pre><code class="language-python">print(type(set()))
+print(type({}))</code></pre>
+<pre class="output">&lt;class 'set'&gt;
+&lt;class 'dict'&gt;</pre>
+
+<h4>Change</h4>
+<pre><code class="language-python">tags = {"python"}
+tags.add("beginner")
+tags.add("python")
+print(len(tags))
+tags.discard("missing")
+tags.remove("beginner")
+print(tags)</code></pre>
+<pre class="output">2
+{'python'}</pre>
+<p>Adding <code>"python"</code> again changes nothing: it is already in the set. <code>discard(x)</code> removes <code>x</code> if it is there and does nothing otherwise. <code>remove(x)</code> gives an error if <code>x</code> is missing.</p>
+
+<h4>Comparing two sets</h4>
+<figure class="diagram">
+<svg viewBox="0 0 400 190" role="img" aria-labelledby="d-venn-t">
+  <title id="d-venn-t">Two overlapping circles. Alice's circle holds jazz only on her side. Bob's circle holds folk only on his side. The overlap holds rock and pop, which both like.</title>
+  <circle cx="160" cy="100" r="80" class="d-set"/>
+  <circle cx="240" cy="100" r="80" class="d-set"/>
+  <text x="120" y="14" class="d-label">alice</text>
+  <text x="280" y="14" class="d-label">bob</text>
+  <text x="118" y="105" class="d-code">"jazz"</text>
+  <text x="200" y="90" class="d-code">"rock"</text>
+  <text x="200" y="122" class="d-code">"pop"</text>
+  <text x="282" y="105" class="d-code">"folk"</text>
+</svg>
+<figcaption><code>&amp;</code> both: rock, pop · <code>|</code> either: all four · <code>-</code> alice but not bob: jazz</figcaption>
+</figure>
+<pre><code class="language-python">alice = {"jazz", "rock", "pop"}
+bob = {"rock", "folk", "pop"}
+print(sorted(alice &amp; bob))
+print(sorted(alice | bob))
+print(sorted(alice - bob))</code></pre>
+<pre class="output">['pop', 'rock']
+['folk', 'jazz', 'pop', 'rock']
+['jazz']</pre>
+<p>The same as methods: <code>alice.intersection(bob)</code>, <code>alice.union(bob)</code>, <code>alice.difference(bob)</code>.</p>
+
+<h4>Loop, and removing duplicates</h4>
+<p>Turning a list into a set is the quickest way to drop duplicates, but the original order is lost. Loop over <code>sorted(...)</code> to get a fixed order.</p>
+<pre><code class="language-python">visits = ["Ana", "Ben", "Ana", "Cy", "Ben"]
+unique = set(visits)
+print(len(unique))
+for name in sorted(unique):
+    print(name)</code></pre>
+<pre class="output">3
+Ana
+Ben
+Cy</pre>
+
+<!-- ---- DICT ---- -->
+<h3 id="dicts">Dicts</h3>
+<p>A dict (dictionary) stores <strong>pairs</strong>: a <strong>key</strong> and its <strong>value</strong>. You look a value up by its key, the way you look up a word in a dictionary to find its meaning.</p>
+<figure class="diagram">
+<svg viewBox="0 0 400 128" role="img" aria-labelledby="d-dict-t">
+  <title id="d-dict-t">A dict called phone. The key "Ana" points to the value "555-0101". The key "Ben" points to "555-0199".</title>
+  <defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="d-head"/></marker></defs>
+  <text x="58" y="11" class="d-label">key</text><text x="275" y="11" class="d-label">value</text>
+  <g class="d-tag"><path d="M14 20H114V56H14L2 38Z"/><circle cx="16" cy="38" r="3"/><text x="64" y="43">"Ana"</text></g>
+  <line x1="114" y1="38" x2="196" y2="38" class="d-line" marker-end="url(#ar4)"/>
+  <rect x="200" y="18" width="150" height="40" class="d-box"/><text x="275" y="43" class="d-code">"555-0101"</text>
+  <g class="d-tag"><path d="M14 80H114V116H14L2 98Z"/><circle cx="16" cy="98" r="3"/><text x="64" y="103">"Ben"</text></g>
+  <line x1="114" y1="98" x2="196" y2="98" class="d-line" marker-end="url(#ar4)"/>
+  <rect x="200" y="78" width="150" height="40" class="d-box"/><text x="275" y="103" class="d-code">"555-0199"</text>
+</svg>
+<figcaption>Keys work like name tags inside the dict: each key points to one value.</figcaption>
+</figure>
+
+<h4>Create and read</h4>
+<pre><code class="language-python">phone = {"Ana": "555-0101", "Ben": "555-0199"}
+print(phone["Ana"])
+print(len(phone))
+print(phone.get("Cy"))
+print(phone.get("Cy", "unknown"))</code></pre>
+<pre class="output">555-0101
+2
+None
+unknown</pre>
+<p><code>phone["Cy"]</code> with a missing key is an error. <code>get</code> is the safe way: it gives <code>None</code>, or the default you give it, when the key is missing.</p>
+<pre><code class="language-python">phone = {"Ana": "555-0101"}
+print(phone["Cy"])</code></pre>
+<pre class="output">Traceback (most recent call last):
+  ...
+KeyError: 'Cy'</pre>
+
+<h4>Change</h4>
+<p>Assigning to a key changes its value if the key exists, or adds the pair if it does not.</p>
+<pre><code class="language-python">stock = {"apples": 10, "pears": 4}
+stock["pears"] = 6
+stock["plums"] = 12
+stock["apples"] -= 3
+del stock["pears"]
+print(stock)
+removed = stock.pop("plums")
+print(removed, stock)</code></pre>
+<pre class="output">{'apples': 7, 'plums': 12}
+12 {'apples': 7}</pre>
+<pre><code class="language-python">settings = {"theme": "light"}
+settings.update({"theme": "dark", "size": 14})
+print(settings)</code></pre>
+<pre class="output">{'theme': 'dark', 'size': 14}</pre>
+<p class="note">Keys must be values that cannot change, such as strings, numbers, or tuples of those. A list cannot be a key. Values can be anything.</p>
+
+<h4>Loop</h4>
+<p>A plain loop over a dict gives the <strong>keys</strong>. Use <code>items()</code> to get key and value together. Dicts keep the order in which keys were added.</p>
+<pre><code class="language-python">prices = {"tea": 2.5, "cake": 3.0}
+for item in prices:
+    print(item)
+for item, price in prices.items():
+    print(f"{item}: {price:.2f}")
+print(list(prices.keys()))
+print(list(prices.values()))</code></pre>
+<pre class="output">tea
+cake
+tea: 2.50
+cake: 3.00
+['tea', 'cake']
+[2.5, 3.0]</pre>
+<p>A classic pattern: counting things. <code>counts.get(ch, 0)</code> gives the count so far, or 0 the first time.</p>
+<pre><code class="language-python">counts = {}
+for ch in "banana":
+    counts[ch] = counts.get(ch, 0) + 1
+print(counts)</code></pre>
+<pre class="output">{'b': 1, 'a': 3, 'n': 2}</pre>
+
+<div class="table-wrap">
+<table>
+  <caption>Dict methods at a glance</caption>
+  <thead><tr><th scope="col">Method</th><th scope="col">What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>get(key, default)</code></td><td>the value, or <code>default</code> (or <code>None</code>) if the key is missing</td></tr>
+    <tr><td><code>keys()</code> / <code>values()</code> / <code>items()</code></td><td>all keys / all values / all (key, value) pairs</td></tr>
+    <tr><td><code>pop(key)</code></td><td>remove the pair and give back its value</td></tr>
+    <tr><td><code>update(other)</code></td><td>add or overwrite pairs from another dict</td></tr>
+    <tr><td><code>copy()</code></td><td>make a separate copy</td></tr>
+    <tr><td><code>clear()</code></td><td>remove everything</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ---- CHOOSING ---- -->
+<h3 id="choosing">Which one should I pick?</h3>
+<div class="widget" id="chooser">
+  <div class="widget-head">
+    <h4 class="widget-title">Try it: answer up to three questions</h4>
+  </div>
+  <div class="chooser-body" aria-live="polite"></div>
+  <noscript><p>This interactive part needs JavaScript. The list below gives the same advice.</p></noscript>
+</div>
+<ul class="pick">
+  <li><strong>dict</strong> when you look things up by a label: a name to a phone number, a product to its price.</li>
+  <li><strong>set</strong> when you only care whether something is in the group, and each thing counts once: the people who visited, the tags on a post.</li>
+  <li><strong>list</strong> when order matters and the contents will change: a to-do list, scores as they come in.</li>
+  <li><strong>tuple</strong> when a few values belong together and should not change: a date <code>(2025, 3, 14)</code>, a point <code>(3, 5)</code>.</li>
+</ul>
+<p>When unsure, start with a list. It is the most common choice.</p>
+
+<div class="remember">
+  <h4>Remember</h4>
+  <ul>
+    <li>list <code>[ ]</code> changes, tuple <code>( )</code> does not.</li>
+    <li>set <code>{ }</code> keeps each item once, in no fixed order. Empty set: <code>set()</code>.</li>
+    <li>dict <code>{key: value}</code>: <code>in</code> and loops use the keys.</li>
+  </ul>
+</div>
+</section>
+
+<!-- ============ 6. OOP ============ -->
+<section id="oop" aria-labelledby="oop-h">
+<h2 id="oop-h"><span class="num">6</span> Classes and objects, the easy way</h2>
+<p>So far you have used Python's own types: <code>str</code>, <code>list</code>, <code>dict</code>… A <strong>class</strong> lets you make your own type. It bundles some data together with the actions that belong to it.</p>
+<ul>
+  <li>A <strong>class</strong> is the blueprint, like a cookie cutter.</li>
+  <li>An <strong>object</strong> (also called an <strong>instance</strong>) is one thing made from it, like one cookie. You can make many objects from one class.</li>
+  <li><strong>Attributes</strong> are the object's data: a dog's name and age.</li>
+  <li><strong>Methods</strong> are its actions: functions written inside the class, such as <code>bark</code>.</li>
+</ul>
+
+<figure class="diagram">
+<svg viewBox="0 0 400 300" role="img" aria-labelledby="d-class-t">
+  <title id="d-class-t">The class Dog is a blueprint with __init__ and bark. Calling Dog("Rex", 3) makes one object with name "Rex" and age 3; the tag rex points to it. Calling Dog("Fido", 5) makes a second object with name "Fido" and age 5; the tag fido points to it.</title>
+  <defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="d-head"/></marker></defs>
+  <rect x="80" y="8" width="240" height="92" class="d-class"/>
+  <text x="200" y="32" class="d-title">class Dog</text>
+  <text x="200" y="58" class="d-small">__init__(self, name, age)</text>
+  <text x="200" y="80" class="d-small">bark(self)</text>
+  <line x1="170" y1="100" x2="104" y2="156" class="d-line" marker-end="url(#ar5)"/>
+  <line x1="230" y1="100" x2="296" y2="156" class="d-line" marker-end="url(#ar5)"/>
+  <text x="128" y="126" class="d-small" style="text-anchor:end">Dog("Rex", 3)</text>
+  <text x="272" y="126" class="d-small" style="text-anchor:start">Dog("Fido", 5)</text>
+  <rect x="20" y="160" width="160" height="74" class="d-box"/>
+  <text x="100" y="180" class="d-label">a Dog object</text>
+  <text x="100" y="204" class="d-small">name: "Rex"</text>
+  <text x="100" y="224" class="d-small">age: 3</text>
+  <rect x="220" y="160" width="160" height="74" class="d-box"/>
+  <text x="300" y="180" class="d-label">a Dog object</text>
+  <text x="300" y="204" class="d-small">name: "Fido"</text>
+  <text x="300" y="224" class="d-small">age: 5</text>
+  <g class="d-tag"><path d="M64 258H144V290H64L52 274Z"/><circle cx="66" cy="274" r="3"/><text x="104" y="279">rex</text></g>
+  <line x1="104" y1="258" x2="104" y2="238" class="d-line" marker-end="url(#ar5)"/>
+  <g class="d-tag"><path d="M264 258H344V290H264L252 274Z"/><circle cx="266" cy="274" r="3"/><text x="304" y="279">fido</text></g>
+  <line x1="304" y1="258" x2="304" y2="238" class="d-line" marker-end="url(#ar5)"/>
+</svg>
+<figcaption>One class, two objects. Each object has its own name and age.</figcaption>
+</figure>
+
+<h3><code>class</code>, <code>__init__</code> and <code>self</code></h3>
+<pre><code class="language-python">class Dog:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    def bark(self):
+        print(f"{self.name} says Woof!")
+
+rex = Dog("Rex", 3)
+fido = Dog("Fido", 5)
+rex.bark()
+fido.bark()
+print(rex.age)
+print(fido.name)</code></pre>
+<pre class="output">Rex says Woof!
+Fido says Woof!
+3
+Fido</pre>
+<p>Line by line:</p>
+<ul>
+  <li><code>class Dog:</code> starts the blueprint. Class names usually start with a capital letter.</li>
+  <li><code>def</code> defines a function. Inside a class it defines a method.</li>
+  <li><code>__init__</code> (two underscores on each side) is the <strong>set-up method</strong>. Python runs it automatically every time you make a new object with <code>Dog(...)</code>. Its job is to give the new object its starting attributes.</li>
+  <li><code>self</code> is <strong>the object itself</strong>. In <code>__init__</code> it is the new object being set up, so <code>self.name = name</code> means "store the name on this object".</li>
+  <li><code>Dog("Rex", 3)</code> makes a new object and runs <code>__init__</code> with <code>name="Rex"</code> and <code>age=3</code>. You do not pass <code>self</code>; Python does that for you.</li>
+  <li><code>rex.age</code> reads an attribute. <code>rex.bark()</code> calls a method.</li>
+</ul>
+
+<h4>Where does <code>self</code> come from?</h4>
+<p>When you write <code>rex.bark()</code>, Python turns it into <code>Dog.bark(rex)</code>: the object before the dot becomes <code>self</code>. Both lines below do the same thing:</p>
+<pre><code class="language-python">class Dog:
+    def __init__(self, name):
+        self.name = name
+
+    def bark(self):
+        print(f"{self.name} says Woof!")
+
+rex = Dog("Rex")
+rex.bark()
+Dog.bark(rex)</code></pre>
+<pre class="output">Rex says Woof!
+Rex says Woof!</pre>
+<p>That is why every method has <code>self</code> as its first parameter, and why <code>self.name</code> inside <code>bark</code> finds the right dog's name.</p>
+
+<h3>Attributes and methods working together</h3>
+<p>Methods can read and change the object's attributes. Here <code>if</code> / <code>else</code> picks one of two paths: if there is not enough money, print a message; otherwise take the money out.</p>
+<pre><code class="language-python">class Account:
+    def __init__(self, owner):
+        self.owner = owner
+        self.balance = 0
+
+    def deposit(self, amount):
+        self.balance += amount
+
+    def withdraw(self, amount):
+        if amount &gt; self.balance:
+            print("Not enough money")
+        else:
+            self.balance -= amount
+
+acc = Account("Mia")
+acc.deposit(50)
+acc.withdraw(80)
+acc.withdraw(20)
+print(acc.owner, acc.balance)</code></pre>
+<pre class="output">Not enough money
+Mia 30</pre>
+<p>Every attribute does not have to come from a parameter: <code>balance</code> always starts at 0.</p>
+
+<h3>Class attributes and instance attributes</h3>
+<p>An <strong>instance attribute</strong> belongs to one object and is set with <code>self.something = ...</code>, usually in <code>__init__</code>. A <strong>class attribute</strong> is written directly inside the class, and is <strong>shared</strong> by all objects of that class.</p>
+<figure class="diagram">
+<svg viewBox="0 0 400 210" role="img" aria-labelledby="d-lookup-t">
+  <title id="d-lookup-t">The objects rex and fido each hold their own name. Neither holds species. When you ask for rex.species or fido.species, Python does not find it on the object and looks in the class Dog, which holds species "Canis familiaris".</title>
+  <defs><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="d-head"/></marker></defs>
+  <rect x="5" y="10" width="150" height="60" class="d-box"/>
+  <text x="80" y="31" class="d-label">rex's object</text>
+  <text x="80" y="55" class="d-small">name: "Rex"</text>
+  <rect x="5" y="120" width="150" height="60" class="d-box"/>
+  <text x="80" y="141" class="d-label">fido's object</text>
+  <text x="80" y="165" class="d-small">name: "Fido"</text>
+  <rect x="225" y="50" width="170" height="90" class="d-class"/>
+  <text x="310" y="73" class="d-title">class Dog</text>
+  <text x="310" y="99" class="d-small">species:</text>
+  <text x="310" y="121" class="d-small">"Canis familiaris"</text>
+  <path d="M155 40C195 40 190 80 221 82" class="d-line d-old" marker-end="url(#ar6)"/>
+  <path d="M155 150C195 150 190 110 221 108" class="d-line d-old" marker-end="url(#ar6)"/>
+  <text x="200" y="204" class="d-label">species? Not on the object, so Python looks in the class.</text>
+</svg>
+</figure>
+<pre><code class="language-python">class Dog:
+    species = "Canis familiaris"
+
+    def __init__(self, name):
+        self.name = name
+
+rex = Dog("Rex")
+fido = Dog("Fido")
+print(rex.species)
+print(fido.species)
+print(Dog.species)
+print(rex.name, fido.name)</code></pre>
+<pre class="output">Canis familiaris
+Canis familiaris
+Canis familiaris
+Rex Fido</pre>
+<p>A class attribute is a good place for a counter that all objects share. Change it through the class name:</p>
+<pre><code class="language-python">class Dog:
+    count = 0
+
+    def __init__(self, name):
+        self.name = name
+        Dog.count += 1
+
+a = Dog("Rex")
+b = Dog("Fido")
+print(Dog.count)</code></pre>
+<pre class="output">2</pre>
+<p class="note warn"><strong>Trap 1: assigning through an object does not change the class attribute.</strong> It creates a new instance attribute on that one object, which hides the class one for that object only.</p>
+<pre><code class="language-python">class Dog:
+    sound = "Woof"
+
+rex = Dog()
+fido = Dog()
+rex.sound = "Grr"
+print(rex.sound)
+print(fido.sound)
+print(Dog.sound)</code></pre>
+<pre class="output">Grr
+Woof
+Woof</pre>
+<p class="note warn"><strong>Trap 2: a list as a class attribute is shared by everyone.</strong> Here every student would share one list of grades:</p>
+<pre><code class="language-python">class Student:
+    grades = []  # shared by ALL!
+
+    def __init__(self, name):
+        self.name = name
+
+ana = Student("Ana")
+ben = Student("Ben")
+ana.grades.append(90)
+print(ben.grades)</code></pre>
+<pre class="output">[90]</pre>
+<p>Ben got Ana's grade, because <code>ana.grades</code> and <code>ben.grades</code> both find the one list on the class. The fix: give each object its own list in <code>__init__</code>.</p>
+<pre><code class="language-python">class Student:
+    def __init__(self, name):
+        self.name = name
+        self.grades = []  # one each
+
+ana = Student("Ana")
+ben = Student("Ben")
+ana.grades.append(90)
+print(ana.grades)
+print(ben.grades)</code></pre>
+<pre class="output">[90]
+[]</pre>
+
+<h3>Inheritance</h3>
+<p>A class can be built on top of another class. The new class (the <strong>child</strong>) gets all the methods of the old one (the <strong>parent</strong>), and can add its own or replace some. Write the parent in brackets: <code>class Dog(Animal):</code>.</p>
+<figure class="diagram">
+<svg viewBox="0 0 400 222" role="img" aria-labelledby="d-inherit-t">
+  <title id="d-inherit-t">Animal is the parent class with __init__, speak and sleep. Dog and Cat are child classes of Animal. Each has its own speak.</title>
+  <defs><marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="d-head"/></marker></defs>
+  <rect x="95" y="6" width="210" height="100" class="d-class"/>
+  <text x="200" y="30" class="d-title">class Animal</text>
+  <text x="200" y="54" class="d-small">__init__(self, name)</text>
+  <text x="200" y="74" class="d-small">speak(self)</text>
+  <text x="200" y="94" class="d-small">sleep(self)</text>
+  <rect x="10" y="150" width="170" height="64" class="d-class"/>
+  <text x="95" y="174" class="d-title">class Dog(Animal)</text>
+  <text x="95" y="200" class="d-small">speak(self)</text>
+  <rect x="220" y="150" width="170" height="64" class="d-class"/>
+  <text x="305" y="174" class="d-title">class Cat(Animal)</text>
+  <text x="305" y="200" class="d-small">speak(self)</text>
+  <line x1="95" y1="150" x2="150" y2="110" class="d-line" marker-end="url(#ar7)"/>
+  <line x1="305" y1="150" x2="250" y2="110" class="d-line" marker-end="url(#ar7)"/>
+  <text x="200" y="134" class="d-label">inherits from</text>
+</svg>
+<figcaption>To find a method, Python looks in the object's own class first, then in the parent. For a Dog object, <code>speak()</code> is found in Dog. <code>sleep()</code> is not in Dog, so Python uses Animal's.</figcaption>
+</figure>
+<pre><code class="language-python">class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def speak(self):
+        print(f"{self.name} makes a sound")
+
+    def sleep(self):
+        print(f"{self.name} is sleeping")
+
+class Dog(Animal):
+    def speak(self):
+        print(f"{self.name} says Woof!")
+
+class Cat(Animal):
+    def speak(self):
+        print(f"{self.name} says Meow!")
+
+pets = [Dog("Rex"), Cat("Tom"),
+        Animal("Generic")]
+for pet in pets:
+    pet.speak()
+pets[0].sleep()
+print(isinstance(pets[0], Animal))
+print(isinstance(pets[2], Dog))</code></pre>
+<pre class="output">Rex says Woof!
+Tom says Meow!
+Generic makes a sound
+Rex is sleeping
+True
+False</pre>
+<ul>
+  <li><code>Dog</code> and <code>Cat</code> have no <code>__init__</code> of their own, so they use <code>Animal</code>'s.</li>
+  <li>The same line <code>pet.speak()</code> does different things depending on the object's class.</li>
+  <li><code>isinstance(x, Animal)</code> asks "is <code>x</code> an Animal, or a child of Animal?". A Dog <em>is</em> an Animal; a plain Animal is not a Dog.</li>
+</ul>
+
+<h3><code>super()</code>: use the parent's version too</h3>
+<p>When the child writes its own <code>__init__</code>, the parent's <code>__init__</code> no longer runs by itself. Call it with <code>super().__init__(...)</code> so the parent can do its part of the set-up, then add the child's extra attributes.</p>
+<pre><code class="language-python">class Animal:
+    def __init__(self, name):
+        self.name = name
+
+class Dog(Animal):
+    def __init__(self, name, breed):
+        super().__init__(name)
+        self.breed = breed
+
+    def describe(self):
+        print(f"{self.name} is a {self.breed}")
+
+rex = Dog("Rex", "beagle")
+rex.describe()</code></pre>
+<pre class="output">Rex is a beagle</pre>
+<p>Without the <code>super().__init__(name)</code> line, <code>self.name</code> would never be set and <code>describe</code> would stop with an <code>AttributeError</code>.</p>
+<p><code>super()</code> works in any method, not only <code>__init__</code>. Here the child adds to what the parent does:</p>
+<pre><code class="language-python">class Animal:
+    def speak(self):
+        print("Some generic sound")
+
+class Dog(Animal):
+    def speak(self):
+        super().speak()
+        print("Woof!")
+
+Dog().speak()</code></pre>
+<pre class="output">Some generic sound
+Woof!</pre>
+
+<h3><code>__str__</code>: how your object looks when printed</h3>
+<p>If you <code>print</code> an object from your own class, Python shows something like <code>&lt;__main__.Book object at 0x7f3a2c1b9e50&gt;</code>. The long number is a memory address and is different every time, so it is not shown as an output here. It is not very helpful either.</p>
+<p>Write a <code>__str__</code> method to choose the text yourself. It must <strong><code>return</code></strong> a string (give it back), not print it. <code>print()</code>, <code>str()</code> and f-strings all use it.</p>
+<pre><code class="language-python">class Book:
+    def __init__(self, title, author):
+        self.title = title
+        self.author = author
+
+    def __str__(self):
+        return f"{self.title} by {self.author}"
+
+b = Book("Dune", "Frank Herbert")
+print(b)
+print(f"I'm reading {b}")
+print(str(b))</code></pre>
+<pre class="output">Dune by Frank Herbert
+I'm reading Dune by Frank Herbert
+Dune by Frank Herbert</pre>
+<p class="note"><strong>Good to know:</strong> when you print a <em>list</em> of books, Python does not use <code>__str__</code> for the items inside it. It uses a related method, <code>__repr__</code>, which you can learn later. So <code>print([b])</code> still shows the <code>&lt;... object at 0x...&gt;</code> form.</p>
+
+<div class="remember">
+  <h4>Remember</h4>
+  <ul>
+    <li>A class is the blueprint; <code>Dog(...)</code> makes an object and runs <code>__init__</code>.</li>
+    <li><code>self</code> is the object the method was called on.</li>
+    <li><code>self.x = ...</code> makes an attribute for one object; <code>x = ...</code> in the class body makes one shared attribute.</li>
+    <li><code>class Dog(Animal):</code> inherits; <code>super()</code> reaches the parent's method.</li>
+    <li><code>__str__</code> returns the text that <code>print</code> shows.</li>
+  </ul>
+</div>
+</section>
+
+</main>
+</div>
+<script src="logic.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
