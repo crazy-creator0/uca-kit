@@ -4,6 +4,8 @@
 // Drafts PROJECT.md facts from the files in a repository.
 //
 // - Every fact names the file it came from: "(source: path)".
+// - Entry points come from the manifest first; examples and tests are counted, not listed as the app.
+// - The import map follows local imports from the entry files, within a fixed size.
 // - It reads files only. A command runs only when you pass --verify or --verify-scripts.
 // - It never reads .env files. For .env.example it keeps variable names and drops values.
 // - With --write it edits only the blocks it owns (<!-- uca:generated:NAME --> ... <!-- /uca:generated -->).
@@ -15,12 +17,28 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
-const SECTIONS = ["header", "stack", "entry-points", "commands", "routes", "data", "auth", "structure", "conventions", "unknowns"];
+const SECTIONS = ["header", "stack", "entry-points", "map", "commands", "routes", "data", "auth", "structure", "conventions", "unknowns"];
 const SKIP_DIRS = new Set(["node_modules", ".git", "dist", "build", "out", "coverage", ".next", ".nuxt", ".svelte-kit", "venv", ".venv", "env", "__pycache__", "vendor", "target", ".turbo", ".cache"]);
 const SOURCE_EXT = /\.(c|m)?(js|ts)x?$|\.py$|\.go$|\.rs$/;
 const MAX_FILES = 6000;
 const MAX_BYTES = 200_000;
 const MAX_LISTED = 40;
+const MAX_MAP_FILES = 25;
+const MAX_MAP_CHARS = 3000;
+const MAX_MAP_IMPORTS = 6;
+const MAX_MAP_LEAVES = 15;
+const MAX_MAP_VISITS = 2000;
+// Folders and file names that hold examples, tests, fixtures or benchmarks rather than the app itself.
+const SAMPLE_PATH = /(^|\/)(examples?|samples?|demos?|tests?|__tests__|__mocks__|specs?|e2e|cypress|benchmarks?|bench|fixtures?)\//;
+const SAMPLE_FILE = /\.(test|spec)\.[^/]+$|(^|\/)test_[^/]+\.py$|_test\.(go|py)$/;
+const isSample = (file) => SAMPLE_PATH.test(file) || SAMPLE_FILE.test(file);
+// The folder that makes a path a sample, e.g. "examples/" or "src/__tests__/"; for a file name match, its folder.
+const sampleGroup = (file) => {
+  const match = SAMPLE_PATH.exec(file);
+  if (match) return file.slice(0, match.index + match[0].length).replace(/^\//, "");
+  const dir = path.posix.dirname(file);
+  return dir === "." ? "./" : `${dir}/`;
+};
 
 function printHelp() {
   return `uca-project-discover — draft PROJECT.md facts from the repository
@@ -122,9 +140,167 @@ function lineOf(text, index) {
   return text.slice(0, index).split("\n").length;
 }
 
+// True when the match sits on a line comment or a block-comment line ("// ...", "# ...", " * ...").
+function inComment(text, index) {
+  const lineStart = text.lastIndexOf("\n", index - 1) + 1;
+  return /^\s*(\/\/|\*|\/\*|#)/.test(text.slice(lineStart, index));
+}
+
 const fact = (text, source) => `- ${text} (source: ${source})`;
 
 // ---------- discovery ----------
+
+// Paths named in package.json "exports": the "." entry, or the object itself when it has no subpaths.
+function exportTargets(exportsField) {
+  const found = [];
+  const walk = (value, depth) => {
+    if (found.length >= 3 || depth > 3) return;
+    if (typeof value === "string") found.push(value);
+    else if (Array.isArray(value)) value.forEach((item) => walk(item, depth + 1));
+    else if (value && typeof value === "object") {
+      const keys = Object.keys(value);
+      if (keys.some((key) => key.startsWith("."))) walk(value["."], depth + 1);
+      else for (const key of ["require", "import", "node", "default"]) if (key in value) walk(value[key], depth + 1);
+    }
+  };
+  walk(exportsField, 0);
+  return [...new Set(found)].filter((target) => !target.includes("*"));
+}
+
+const JS_EXT = [".js", ".cjs", ".mjs", ".ts", ".tsx", ".jsx", ".mts", ".cts"];
+
+// Turns an import from one file into a repository path, or null when it is a package or not found.
+// Removes // and /* */ comments outside strings, so tsconfig.json can be parsed.
+function stripJsonComments(text) {
+  let out = "";
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (char === '"') {
+      const end = /"(?:[^"\\\n]|\\.)*"/y;
+      end.lastIndex = index;
+      const match = end.exec(text);
+      if (!match) return out + text.slice(index);
+      out += match[0];
+      index += match[0].length - 1;
+    } else if (char === "/" && text[index + 1] === "/") {
+      while (index < text.length && text[index] !== "\n") index += 1;
+      out += "\n";
+    } else if (char === "/" && text[index + 1] === "*") {
+      const close = text.indexOf("*/", index + 2);
+      index = close === -1 ? text.length : close + 1;
+    } else out += char;
+  }
+  return out.replace(/,(\s*[}\]])/g, "$1");
+}
+
+// Path aliases from tsconfig.json or jsconfig.json "compilerOptions.paths", e.g. "@/*": ["./src/*"].
+function pathAliases(files, read) {
+  const aliases = [];
+  for (const file of files.filter((name) => /(^|\/)(tsconfig|jsconfig)\.json$/.test(name) && name.split("/").length <= 3)) {
+    let options;
+    try {
+      options = (JSON.parse(stripJsonComments(read(file) || "")) || {}).compilerOptions || {};
+    } catch {
+      continue;
+    }
+    if (!options.paths || typeof options.paths !== "object") continue;
+    const dir = path.posix.dirname(file) === "." ? "" : path.posix.dirname(file);
+    const base = path.posix.join(dir || ".", typeof options.baseUrl === "string" ? options.baseUrl : ".");
+    for (const [pattern, targets] of Object.entries(options.paths)) {
+      if (!Array.isArray(targets) || (pattern.match(/\*/g) || []).length > 1) continue;
+      aliases.push({ scope: dir, pattern, base, targets: targets.filter((target) => typeof target === "string"), source: file });
+    }
+  }
+  return aliases;
+}
+
+function makeResolver(fileSet, aliases = []) {
+  const tidy = (candidate) => {
+    const normal = path.posix.normalize(candidate);
+    return normal === "." ? "" : normal.replace(/^\.\//, "");
+  };
+  const firstExisting = (candidates) => candidates.map(tidy).find((candidate) => candidate && !candidate.startsWith("../") && fileSet.has(candidate)) || null;
+  const CODE = /\.((c|m)?(js|ts)x?|py)$/;
+  return {
+    js(fromFile, spec) {
+      if (!spec.startsWith(".")) {
+        for (const alias of aliases) {
+          if (alias.scope && !fromFile.startsWith(`${alias.scope}/`)) continue;
+          const star = alias.pattern.indexOf("*");
+          const prefix = star === -1 ? alias.pattern : alias.pattern.slice(0, star);
+          const suffix = star === -1 ? "" : alias.pattern.slice(star + 1);
+          const matches = star === -1 ? spec === alias.pattern : spec.startsWith(prefix) && spec.endsWith(suffix) && spec.length >= prefix.length + suffix.length;
+          if (!matches) continue;
+          const rest = star === -1 ? "" : spec.slice(prefix.length, spec.length - suffix.length);
+          for (const target of alias.targets) {
+            const hit = this.js("", `./${tidy(path.posix.join(alias.base, target.replace("*", rest)))}`);
+            if (hit) return hit;
+          }
+        }
+        return null;
+      }
+      const base = tidy(path.posix.join(path.posix.dirname(fromFile), spec));
+      if (base.startsWith("../")) return null;
+      const prefix = base ? `${base}/` : "";
+      const tsTwin = /\.(c|m)?jsx?$/.test(base) ? [base.replace(/\.(c|m)?js(x?)$/, ".$1ts$2"), base.replace(/\.jsx?$/, ".tsx")] : [];
+      const hit = firstExisting([base, ...tsTwin, ...JS_EXT.map((ext) => base + ext), ...JS_EXT.map((ext) => `${prefix}index${ext}`)]);
+      return hit && CODE.test(hit) ? hit : null;
+    },
+    py(fromFile, dots, module, names) {
+      if (dots === 0) {
+        // An absolute import may start at the repository root or at any folder above the file (backend/app/...).
+        const roots = [""];
+        for (let dir = path.posix.dirname(fromFile); dir !== "."; dir = path.posix.dirname(dir)) roots.push(`${dir}/`);
+        for (const root of roots.reverse()) {
+          const hits = this.pyFrom(root, module, names, true);
+          if (hits.length) return hits;
+        }
+        return [];
+      }
+      let dir;
+      if (dots > 0) {
+        dir = path.posix.dirname(fromFile);
+        for (let up = 1; up < dots; up += 1) dir = path.posix.dirname(dir);
+        dir = dir === "." ? "" : `${dir}/`;
+      } else dir = "";
+      return this.pyFrom(dir, module, names, false);
+    },
+    pyFrom(dir, module, names, absolute) {
+      const found = [];
+      if (module) {
+        const hit = firstExisting([`${dir}${module.replace(/\./g, "/")}.py`, `${dir}${module.replace(/\./g, "/")}/__init__.py`]);
+        if (hit) found.push(hit);
+        else if (absolute) return found;
+      }
+      const base = module ? `${dir}${module.replace(/\./g, "/")}/` : dir;
+      for (const name of names) {
+        const hit = firstExisting([`${base}${name}.py`, `${base}${name}/__init__.py`]);
+        if (hit && !(module && found.length && hit === found[0])) found.push(hit);
+      }
+      return found;
+    }
+  };
+}
+
+// Local files a source file imports, in the order they appear. Packages are skipped.
+function importsOf(file, text, resolver) {
+  const found = [];
+  if (/\.(c|m)?(js|ts)x?$/.test(file)) {
+    const pattern = /(?:\brequire\s*\(\s*|\bimport\s*\(\s*|\bfrom\s+|^\s*import\s+)(['"])([^'"\n]+)\1/gm;
+    for (const match of text.matchAll(pattern)) {
+      const hit = resolver.js(file, match[2]);
+      if (hit) found.push(hit);
+    }
+  } else if (/\.py$/.test(file)) {
+    for (const match of text.matchAll(/^[ \t]*from[ \t]+(\.*)([\w.]*)[ \t]+import[ \t]+(?:\(([^)]*)\)|([\w \t,*]+))/gm)) {
+      const names = (match[3] || match[4]).split(",").map((name) => name.trim().split(/\s+/)[0]).filter((name) => /^\w+$/.test(name));
+      found.push(...resolver.py(file, match[1].length, match[2], names));
+    }
+    for (const match of text.matchAll(/^[ \t]*import[ \t]+([\w.]+)/gm)) found.push(...resolver.py(file, 0, match[1], []));
+  }
+  return found;
+}
+
 
 const FRAMEWORKS = {
   react: "React", "react-dom": null, next: "Next.js", vue: "Vue", nuxt: "Nuxt", svelte: "Svelte", "@sveltejs/kit": "SvelteKit",
@@ -228,17 +404,123 @@ function discover(root) {
   }
 
   // ----- entry points -----
+  // Order: what the manifest declares (main, bin, exports, or Node's default index.js), then entry-like
+  // file names outside example and test folders. Entry-like files inside those folders are counted, not listed.
+  const declaredEntries = [];
+  const nameEntries = [];
+  const listedEntry = new Set();
+  const twinOf = makeResolver(fileSet);
+  const addEntry = (target, label, source) => {
+    const file = path.posix.normalize(target.replace(/^\.\//, ""));
+    const present = has(file);
+    listedEntry.add(file);
+    if (present) {
+      declaredEntries.push(file);
+      out["entry-points"].push(fact(`${label}: ${file}`, source));
+      return;
+    }
+    // A built path such as dist/source/index.js often has its source at source/index.ts.
+    const rest = file.replace(/^(dist|build|out|lib)\//, "");
+    const twin = rest === file ? null : twinOf.js("", `./${rest}`) || twinOf.js("", `./src/${rest}`);
+    if (twin) {
+      declaredEntries.push(twin);
+      listedEntry.add(twin);
+    }
+    out["entry-points"].push(fact(`${label}: ${file} (file not in the repository; probably built${twin ? `, source looks like ${twin}` : ""})`, source));
+  };
   for (const manifest of manifests) {
     const where = manifest.dir ? ` (${manifest.dir}/)` : "";
-    if (manifest.data.main) out["entry-points"].push(fact(`package main${where}: ${manifest.data.main}`, manifest.file));
-    const bin = manifest.data.bin;
-    if (typeof bin === "string") out["entry-points"].push(fact(`package bin${where}: ${bin}`, manifest.file));
-    else if (bin) for (const [name, target] of Object.entries(bin)) out["entry-points"].push(fact(`package bin${where} ${name}: ${target}`, manifest.file));
+    const prefix = manifest.dir ? `${manifest.dir}/` : "";
+    const data = manifest.data;
+    if (typeof data.main === "string") addEntry(prefix + data.main, `package main${where}`, manifest.file);
+    const bin = data.bin;
+    if (typeof bin === "string") addEntry(prefix + bin, `package bin${where}`, manifest.file);
+    else if (bin && typeof bin === "object") for (const [name, target] of Object.entries(bin)) if (typeof target === "string") addEntry(prefix + target, `package bin${where} ${name}`, manifest.file);
+    for (const target of exportTargets(data.exports)) if (!listedEntry.has(path.posix.normalize(prefix + target.replace(/^\.\//, "")))) addEntry(prefix + target, `package exports${where}`, manifest.file);
+    if (typeof data.main !== "string" && !data.exports && has(`${prefix}index.js`)) {
+      addEntry(`${prefix}index.js`, `package default entry${where}`, manifest.file);
+      out["entry-points"][out["entry-points"].length - 1] = fact(`package default entry${where}: ${prefix}index.js (no main field, so Node loads index.js)`, manifest.file);
+    }
   }
   const ENTRY_FILES = /(^|\/)(index\.html|src\/(main|index|app|server)\.(c|m)?(js|ts)x?|(server|app|index|main)\.(c|m)?(js|ts)|manage\.py|main\.py|app\.py|wsgi\.py|asgi\.py|cmd\/[^/]+\/main\.go|main\.go|src\/main\.rs|app\/layout\.(js|jsx|ts|tsx)|pages\/_app\.(js|jsx|ts|tsx))$/;
-  for (const file of files.filter((name) => ENTRY_FILES.test(name) && name.split("/").length <= 4).slice(0, MAX_LISTED)) {
-    out["entry-points"].push(fact(`file present: ${file}`, file));
+  const entryLike = files.filter((name) => ENTRY_FILES.test(name) && name.split("/").length <= 4);
+  const sampleEntries = entryLike.filter(isSample);
+  const namedFiles = entryLike.filter((name) => !isSample(name) && !listedEntry.has(name)).slice(0, MAX_LISTED);
+  for (const file of namedFiles) if (SOURCE_EXT.test(file)) nameEntries.push(file);
+  const sampleEntryLine = () => {
+    if (sampleEntries.length === 0) return;
+    const groups = [...new Set(sampleEntries.map(sampleGroup))];
+    out["entry-points"].push(fact(`Not app entry points: ${sampleEntries.length} entry-like file(s) under example or test folders: ${groups.slice(0, 6).join(", ")}${groups.length > 6 ? ", ..." : ""}`, groups[0].replace(/\/$/, "") || "."));
+  };
+
+  // ----- import map: breadth first from the entry files, relative imports only -----
+  // Declared entries are walked first; a file found by name becomes a start point only if nothing reached it.
+  const aliases = pathAliases(files, read);
+  const resolveImport = makeResolver(fileSet, aliases);
+  const depth = new Map();
+  const edges = new Map();
+  const seeds = [];
+  const walk = (start) => {
+    if (depth.has(start) || seeds.length >= 8) return;
+    seeds.push(start);
+    depth.set(start, 0);
+    const queue = [start];
+    while (queue.length > 0 && depth.size <= MAX_MAP_VISITS) {
+      const file = queue.shift();
+      const targets = [];
+      for (const target of importsOf(file, read(file) || "", resolveImport)) {
+        if (target === file || targets.includes(target) || isSample(target)) continue;
+        targets.push(target);
+        if (!depth.has(target)) {
+          depth.set(target, depth.get(file) + 1);
+          queue.push(target);
+        }
+      }
+      edges.set(file, targets);
+    }
+  };
+  // A named file that another named file imports (app.tsx imported by main.tsx) is walked after it.
+  const importedByNamed = new Set(nameEntries.flatMap((file) => importsOf(file, read(file) || "", resolveImport)));
+  const shallowFirst = [...nameEntries].sort((x, y) => x.split("/").length - y.split("/").length || importedByNamed.has(x) - importedByNamed.has(y) || x.localeCompare(y));
+  for (const file of [...declaredEntries, ...shallowFirst]) if (/\.((c|m)?(js|ts)x?|py)$/.test(file)) walk(file);
+  const walked = [...edges.keys()];
+  // Shallow files first, so every entry gets its first levels before the budget runs out.
+  const branches = walked.filter((file) => edges.get(file).length > 0 || depth.get(file) === 0).sort((x, y) => depth.get(x) - depth.get(y) || walked.indexOf(x) - walked.indexOf(y));
+  const leaves = walked.filter((file) => edges.get(file).length === 0 && depth.get(file) > 0);
+  // Imports under the importer's own folder are written relative to it ("./routes/items.py") to save space.
+  const short = (from, target) => {
+    const dir = path.posix.dirname(from);
+    return dir !== "." && target.startsWith(`${dir}/`) ? `./${target.slice(dir.length + 1)}` : target;
+  };
+  let used = 0;
+  let listed = 0;
+  for (const file of branches) {
+    if (listed >= MAX_MAP_FILES) break;
+    const level = depth.get(file) === 0 ? "entry" : `depth ${depth.get(file)}`;
+    const targets = edges.get(file);
+    const shown = targets.slice(0, MAX_MAP_IMPORTS).map((target) => short(file, target)).join(", ");
+    const more = targets.length > MAX_MAP_IMPORTS ? ` (+${targets.length - MAX_MAP_IMPORTS} more)` : "";
+    const line = fact(targets.length ? `${file} (${level}) imports: ${shown}${more}` : `${file} (${level}) imports nothing local`, file);
+    if (listed > 0 && used + line.length > MAX_MAP_CHARS) break;
+    out.map.push(line);
+    used += line.length;
+    listed += 1;
   }
+  if (branches.length > listed) out.map.push(`- ... and ${branches.length - listed} more importing file(s) not listed`);
+  if (leaves.length > 0) out.map.push(`- Leaf files (import nothing local): ${leaves.slice(0, MAX_MAP_LEAVES).join(", ")}${leaves.length > MAX_MAP_LEAVES ? ` (+${leaves.length - MAX_MAP_LEAVES} more)` : ""}`);
+  const reachable = new Set(depth.keys());
+  // Entry-like file names go after the declared entries; one reached from another entry is marked, not presented as a start.
+  for (const file of namedFiles) {
+    const from = depth.get(file) > 0 ? walked.find((other) => edges.get(other).includes(file)) : null;
+    out["entry-points"].push(fact(`file present: ${file}${from ? ` (imported by ${from}; not a separate start)` : ""}`, file));
+  }
+  sampleEntryLine();
+  if (aliases.length > 0) out.map.unshift(fact(`Path aliases followed: ${aliases.slice(0, 4).map((alias) => `${alias.pattern} -> ${alias.targets[0]}`).join(", ")}`, aliases[0].source));
+  if (seeds.length > 0) {
+    const unreached = files.filter((file) => SOURCE_EXT.test(file) && /\.((c|m)?(js|ts)x?|py)$/.test(file) && !isSample(file) && !reachable.has(file) && !/\.d\.ts$/.test(file) && !/(^|\/)(__init__\.py|setup\.py|conftest\.py|[^/]*\.config\.(c|m)?(js|ts))$/.test(file));
+    if (unreached.length > 0) out.map.push(`- ${unreached.length} source file(s) outside examples and tests are not reached from an entry, e.g. ${unreached.slice(0, 3).join(", ")} (scripts, config, or code loaded by name)`);
+  }
+  if (files.some((file) => /\.(go|rs)$/.test(file))) unknown.push("Go and Rust imports are not followed; the import map covers JavaScript, TypeScript and Python only.");
 
   // ----- commands (declared only) -----
   const SCRIPT_NAMES = /^(dev|start|serve|build|test|test:.*|lint|lint:.*|format|typecheck|check|preview|e2e|migrate.*|db:.*)$/;
@@ -290,6 +572,7 @@ function discover(root) {
     const text = read(file);
     if (!text) continue;
     for (const found of text.matchAll(/\b(?:app|router|server|api|routes)\.(get|post|put|patch|delete)\(\s*(['"`])(\/[^'"`]*)\2/g)) {
+      if (inComment(text, found.index) || text[found.index - 1] === "@") continue;
       apiRoutes.push({ text: `${found[1].toUpperCase()} ${found[3]}`, source: `${file}:${lineOf(text, found.index)}` });
     }
     for (const found of text.matchAll(/@\w+\.(get|post|put|patch|delete)\(\s*(['"])(\/[^'"]*)\2/g)) {
@@ -304,13 +587,26 @@ function discover(root) {
       for (const found of text.matchAll(/\bpath:\s*(['"`])(\/?[^'"`]*)\1/g)) pageRoutes.push({ text: found[2].startsWith("/") ? found[2] : `/${found[2]}`, source: `${file}:${lineOf(text, found.index)}` });
     }
   }
+  const sampleRoutes = [...apiRoutes, ...pageRoutes].filter((route) => isSample(route.source.replace(/:\d+$/, "")));
+  const appApi = apiRoutes.filter((route) => !sampleRoutes.includes(route));
+  const appPages = pageRoutes.filter((route) => !sampleRoutes.includes(route));
   const emit = (list, label) => {
     const unique = [...new Map(list.map((route) => [`${route.text}|${route.source}`, route])).values()].sort((a, b) => a.text.localeCompare(b.text) || a.source.localeCompare(b.source));
     unique.slice(0, MAX_LISTED).forEach((route) => out.routes.push(fact(`${label} ${route.text}`, route.source)));
     if (unique.length > MAX_LISTED) out.routes.push(`- ... and ${unique.length - MAX_LISTED} more ${label} entries`);
   };
-  emit(apiRoutes, "API");
-  emit(pageRoutes, "Page");
+  emit(appApi, "API");
+  emit(appPages, "Page");
+  if (sampleRoutes.length > 0) {
+    if (out.routes.length === 0) out.routes.push("- No app routes were detected.");
+    const counts = new Map();
+    for (const route of sampleRoutes) {
+      const group = sampleGroup(route.source.replace(/:\d+$/, ""));
+      counts.set(group, (counts.get(group) || 0) + 1);
+    }
+    const summary = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 6).map(([group, count]) => `${group}: ${count}`).join(", ");
+    out.routes.push(fact(`Not app routes: ${sampleRoutes.length} route definition(s) in example or test files (${summary})`, [...counts.keys()].sort()[0].replace(/\/$/, "") || "."));
+  }
 
   // ----- data layer -----
   for (const manifest of manifests) {
@@ -366,7 +662,7 @@ function discover(root) {
     }
   }
   const businessDirs = out.structure.filter((line) => /Source folder: .*(services|domain|models|controllers|lib)\//.test(line));
-  if (businessDirs.length > 0 || apiRoutes.length > 0) unknown.push("Important business rules: not discovered automatically. Read the service, domain or route files before assuming how the product behaves.");
+  if (businessDirs.length > 0 || appApi.length > 0) unknown.push("Important business rules: not discovered automatically. Read the service, domain or route files before assuming how the product behaves.");
 
   // ----- conventions -----
   const conventionFiles = [".editorconfig", ".prettierrc", ".prettierrc.json", ".eslintrc", ".eslintrc.json", ".eslintrc.js", ".eslintrc.cjs", "eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", "biome.json", ".flake8", "ruff.toml", "commitlint.config.js", "CONTRIBUTING.md", ".pre-commit-config.yaml"];
@@ -444,6 +740,7 @@ function buildBlocks(root, found, verification, now = headRef(root)) {
   blocks.header = ["Verified at: " + now, "Checked by: " + checkedBy];
   blocks.stack = ["## Stack", ...(found.out.stack.length ? found.out.stack : ["- No runtime or framework was detected from manifests or version files."])];
   blocks["entry-points"] = ["## Entry points", ...(found.out["entry-points"].length ? found.out["entry-points"] : ["- None detected."])];
+  blocks.map = ["## Import map (from the entry files)", ...(found.out.map.length ? found.out.map : ["- No JavaScript, TypeScript or Python entry file to start from; no map was built."])];
   const verified = verification.filter((item) => item.ok);
   const failed = verification.filter((item) => !item.ok);
   const commands = ["## Commands"];
@@ -470,7 +767,7 @@ const wrap = (name, lines) => `${open(name)}\n${lines.join("\n")}\n${CLOSE}`;
 
 function renderFresh(blocks) {
   const title = "# PROJECT.md\n\n> Project card for coding agents. Blocks between uca:generated markers are rewritten by `node scripts/uca-project-discover.cjs --write`. Text outside them is yours and is never changed.\n";
-  const order = ["header", "stack", "entry-points", "commands", "routes", "data", "auth", "structure", "conventions", "unknowns"];
+  const order = ["header", "stack", "entry-points", "map", "commands", "routes", "data", "auth", "structure", "conventions", "unknowns"];
   return `${title}\n${order.map((name) => wrap(name, blocks[name])).join("\n\n")}\n`;
 }
 
