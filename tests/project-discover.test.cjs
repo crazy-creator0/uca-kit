@@ -346,3 +346,147 @@ test("the file reader refuses every .env variant except the example templates", 
   for (const name of [".env", ".env.local", ".env.production", "config/.env"]) assert.equal(read(name), null, `${name} was read`);
   for (const name of [".env.example", ".env.sample", "src/env.js"]) assert.notEqual(read(name), null, `${name} should be readable`);
 });
+
+// A library laid out like Express: no "main" field, an index.js that re-exports lib/,
+// and many examples and tests that look like apps.
+const LIBRARY = () =>
+  repo({
+    "package.json": JSON.stringify({ name: "webkit", scripts: { test: "mocha" }, dependencies: {} }),
+    "index.js": "'use strict';\nmodule.exports = require('./lib/webkit');\n",
+    "lib/webkit.js": "var proto = require('./application');\nvar req = require('./request');\nvar Router = require('router');\nexports.x = 1;\n",
+    "lib/application.js": "var utils = require('./utils');\nmodule.exports = {};\n",
+    "lib/request.js": "module.exports = {};\n",
+    "lib/utils.js": "exports.y = 2;\n",
+    "lib/unused.js": "exports.z = 3;\n",
+    "examples/hello/index.js": "var app = require('../../')();\napp.get('/', function (q, r) { r.send('hi'); });\n",
+    "examples/auth/index.js": "var app = require('../../')();\napp.get('/login', function (q, r) {});\napp.post('/login', function (q, r) {});\n",
+    "test/app.js": "var app = require('..')();\napp.get('/user/:id', function () {});\n",
+    "test/app.router.js": "app.get('/foo', function () {});\n"
+  });
+
+test("entry points: the package entry comes first, and example or test files are not listed as app entry points", () => {
+  const out = card(LIBRARY());
+  const block = out.split("<!-- uca:generated:entry-points -->")[1].split("<!-- /uca:generated -->")[0];
+  const firstFact = lines(block).find((line) => line.startsWith("- "));
+  assert.equal(firstFact, "- package default entry: index.js (no main field, so Node loads index.js) (source: package.json)");
+  assert.doesNotMatch(block, /file present: examples\//);
+  assert.doesNotMatch(block, /file present: test\//);
+  assert.match(block, /- Not app entry points: 3 entry-like file\(s\) under example or test folders: examples\/, test\/ \(source: examples\)/);
+});
+
+test("routes: routes inside examples and tests are counted apart, not listed as the app's routes", () => {
+  const out = card(LIBRARY());
+  const block = out.split("<!-- uca:generated:routes -->")[1].split("<!-- /uca:generated -->")[0];
+  assert.doesNotMatch(block, /- API /);
+  assert.match(block, /- No app routes were detected\./);
+  assert.match(block, /- Not app routes: 5 route definition\(s\) in example or test files \(examples\/: 3, test\/: 2\)/);
+});
+
+test("import map: follows relative imports from the entry file, breadth first, and names what it skipped", () => {
+  const out = card(LIBRARY());
+  const block = out.split("<!-- uca:generated:map -->")[1].split("<!-- /uca:generated -->")[0];
+  const facts = lines(block).filter((line) => line.startsWith("- "));
+  assert.equal(facts[0], "- index.js (entry) imports: lib/webkit.js (source: index.js)");
+  assert.equal(facts[1], "- lib/webkit.js (depth 1) imports: ./application.js, ./request.js (source: lib/webkit.js)");
+  assert.ok(facts.includes("- lib/application.js (depth 2) imports: ./utils.js (source: lib/application.js)"));
+  assert.ok(facts.includes("- Leaf files (import nothing local): lib/request.js, lib/utils.js"));
+  assert.match(block, /- 1 source file\(s\) outside examples and tests are not reached from an entry, e\.g\. lib\/unused\.js/);
+  assert.doesNotMatch(block, /examples\//, "examples are not walked");
+  assert.doesNotMatch(block, /router/, "package imports are not files in this repo");
+});
+
+test("import map: TypeScript paths, index files, dynamic imports and Python relative imports resolve", () => {
+  const out = card(repo({
+    "package.json": JSON.stringify({ name: "ts-app", main: "dist/server.js", bin: { tool: "./src/cli.ts" } }),
+    "src/cli.ts": "import { run } from './commands';\nconst lazy = () => import('./lazy.js');\nexport * from \"./types\";\n",
+    "src/commands/index.ts": "export const run = 1;\n",
+    "src/lazy.ts": "export {};\n",
+    "src/types.ts": "export type A = 1;\n",
+    "py/app.py": "from .models import User\nfrom . import views\n",
+    "py/__init__.py": "",
+    "py/models.py": "class User: pass\n",
+    "py/views.py": "x = 1\n"
+  }));
+  const entry = out.split("<!-- uca:generated:entry-points -->")[1].split("<!-- /uca:generated -->")[0];
+  assert.match(entry, /- package main: dist\/server\.js \(file not in the repository; probably built\) \(source: package\.json\)/);
+  const block = out.split("<!-- uca:generated:map -->")[1].split("<!-- /uca:generated -->")[0];
+  assert.match(block, /- src\/cli\.ts \(entry\) imports: \.\/commands\/index\.ts, \.\/lazy\.ts, \.\/types\.ts \(source: src\/cli\.ts\)/);
+  assert.match(block, /- py\/app\.py \(entry\) imports: \.\/models\.py, \.\/views\.py \(source: py\/app\.py\)/);
+});
+
+test("import map: the listing has a fixed size on a large repository", () => {
+  const files = { "package.json": JSON.stringify({ name: "big", main: "index.js" }) };
+  files["index.js"] = Array.from({ length: 120 }, (_, i) => `require('./m${i}');`).join("\n");
+  for (let i = 0; i < 120; i += 1) files[`m${i}.js`] = "module.exports = 1;\n";
+  const out = card(repo(files));
+  const block = out.split("<!-- uca:generated:map -->")[1].split("<!-- /uca:generated -->")[0];
+  const facts = lines(block).filter((line) => line.startsWith("- "));
+  assert.ok(facts.length <= 30, `map has ${facts.length} lines`);
+  assert.match(facts[0], /^- index\.js \(entry\) imports: m0\.js, m1\.js, .* \(\+\d+ more\) \(source: index\.js\)$/);
+  assert.match(block, /- Leaf files \(import nothing local\): m0\.js, .* \(\+105 more\)/);
+});
+
+test("routes: examples written inside comments are not reported as routes", () => {
+  const out = card(repo({
+    "package.json": JSON.stringify({ name: "lib", main: "lib/res.js" }),
+    "lib/res.js": "/**\n * Example:\n *\n *     app.get('/user/:id/photo', fn)\n */\n// app.post('/old', fn)\napp.get('/real', fn);\n"
+  }));
+  assert.match(out, /- API GET \/real \(source: lib\/res\.js:7\)/);
+  assert.doesNotMatch(out, /\/user\/:id\/photo|\/old/);
+});
+
+test("import map: built paths point to their source, nested Python packages resolve, styles are skipped, and reached files are not restarted", () => {
+  const out = card(repo({
+    "package.json": JSON.stringify({ name: "lib", exports: "./dist/source/index.js" }),
+    "source/index.ts": "import './style.css';\nimport { core } from './core/index.js';\n",
+    "source/style.css": "a{}\n",
+    "source/core/index.ts": "export const core = 1;\n",
+    "backend/app/main.py": "from app.api.main import api_router\nimport fastapi\n",
+    "backend/app/api/main.py": "from app.api.routes import items\n",
+    "backend/app/api/routes/items.py": "x = 1\n",
+    "backend/app/api/routes/__init__.py": ""
+  }));
+  const entry = out.split("<!-- uca:generated:entry-points -->")[1].split("<!-- /uca:generated -->")[0];
+  assert.match(entry, /- package exports: dist\/source\/index\.js \(file not in the repository; probably built, source looks like source\/index\.ts\)/);
+  const block = out.split("<!-- uca:generated:map -->")[1].split("<!-- /uca:generated -->")[0];
+  assert.match(block, /- source\/index\.ts \(entry\) imports: \.\/core\/index\.ts \(source: source\/index\.ts\)/);
+  assert.doesNotMatch(block, /style\.css/);
+  assert.match(block, /- backend\/app\/main\.py \(entry\) imports: \.\/api\/main\.py/);
+  assert.match(block, /- backend\/app\/api\/main\.py \(depth 1\) imports: \.\/routes\/__init__\.py, \.\/routes\/items\.py/);
+  assert.doesNotMatch(block, /backend\/app\/api\/main\.py \(entry\)/, "a file reached from an entry is not a second start point");
+});
+
+test("import map: tsconfig path aliases are followed, and an entry-like file reached from the main entry is marked", () => {
+  const out = card(repo({
+    "web/package.json": JSON.stringify({ name: "web" }),
+    "web/tsconfig.json": '{\n  // aliases\n  "compilerOptions": { /* bundler */ "paths": { "@/*": ["./src/*"] }, },\n}\n',
+    "web/src/main.tsx": "import { Button } from '@/components/Button';\nimport App from './app';\n",
+    "web/src/app.tsx": "export default 1;\n",
+    "web/src/components/Button.tsx": "import { cn } from '@/lib/utils';\nexport const Button = 1;\n",
+    "web/src/lib/utils.ts": "export const cn = 1;\n"
+  }));
+  const block = out.split("<!-- uca:generated:map -->")[1].split("<!-- /uca:generated -->")[0];
+  assert.match(block, /- Path aliases followed: @\/\* -> \.\/src\/\* \(source: web\/tsconfig\.json\)/);
+  assert.match(block, /- web\/src\/main\.tsx \(entry\) imports: \.\/components\/Button\.tsx, \.\/app\.tsx/);
+  assert.match(block, /- web\/src\/components\/Button\.tsx \(depth 1\) imports: web\/src\/lib\/utils\.ts/);
+  const entry = out.split("<!-- uca:generated:entry-points -->")[1].split("<!-- /uca:generated -->")[0];
+  assert.match(entry, /- file present: web\/src\/app\.tsx \(imported by web\/src\/main\.tsx; not a separate start\)/);
+});
+
+test("routes: a FastAPI decorator is reported once, not also as a plain router call", () => {
+  const out = card(repo({ "app/main.py": "from fastapi import APIRouter\nrouter = APIRouter()\n@router.get(\"/items\")\ndef items(): pass\n" }));
+  assert.equal((out.match(/\/items/g) || []).length, 1, out);
+  assert.match(out, /- API GET \/items \(FastAPI-style decorator\) \(source: app\/main\.py:3\)/);
+});
+
+test("import map: the map stays within a fixed character budget", () => {
+  const files = { "package.json": JSON.stringify({ name: "wide", main: "index.js" }) };
+  files["index.js"] = Array.from({ length: 60 }, (_, i) => `require('./very/long/folder/name/for/module${i}');`).join("\n");
+  for (let i = 0; i < 60; i += 1) files[`very/long/folder/name/for/module${i}.js`] = `require('../../../../../shared/helpers/number${i}');\n`;
+  for (let i = 0; i < 60; i += 1) files[`shared/helpers/number${i}.js`] = "module.exports = 1;\n";
+  const out = card(repo(files));
+  const block = out.split("<!-- uca:generated:map -->")[1].split("<!-- /uca:generated -->")[0];
+  const branchLines = lines(block).filter((line) => / imports: /.test(line));
+  assert.ok(branchLines.join("\n").length <= 3100, `branch lines use ${branchLines.join("\n").length} chars`);
+  assert.match(block, /- \.\.\. and \d+ more importing file\(s\) not listed/);
+});

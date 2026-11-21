@@ -12,6 +12,9 @@ Checked by: <what was read or run to verify this card>
 ## Entry points
 - <what it starts> (source: <file>)
 
+## Import map (from the entry files)
+- <entry file> imports: <local files it imports> (source: <entry file>)
+
 ## Commands (run and seen to work)
 - Run: `<command>` (source: <file>)
 - Test: `<command>` (source: <file>)

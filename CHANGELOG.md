@@ -2,6 +2,15 @@
 
 All notable changes are listed here. The project is early-stage, and nothing below has been benchmarked against real models.
 
+## Unreleased
+
+Changed
+- Project scanner (`uca-project-discover.cjs`): the entry point the package declares now comes first (main, bin, exports, or Node's default `index.js`); a built path such as `dist/index.js` points to its source file when one exists. Entry-like files and routes inside example, test, fixture and benchmark folders are counted on one line instead of listed as the app's own. On Express this cut the entry list from 26 lines to 2 and the routes from 47 lines to 2.
+- Routes written inside comments are skipped, and a FastAPI decorator is no longer also reported as a plain router call.
+
+Added
+- An import map block: starting from the entry files, it follows local imports breadth first (JavaScript, TypeScript with tsconfig path aliases, and Python) and lists who imports what, within a fixed budget of about 3,000 characters. Leaf files share one line, and source files no entry reaches are counted. Tested on Express, Koa, Fastify, got, chalk and the FastAPI full-stack template.
+
 ## 0.1.1 (2026-11-15)
 
 Fixes from the first safety audit (playbook items P0.1 to P0.4). Each bug was first reproduced as a failing test, then fixed; the tests stay in the suite.
