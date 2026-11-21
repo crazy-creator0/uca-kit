@@ -87,6 +87,18 @@ test("missing .env.example fails when code reads env vars", () => {
   assert.equal(status(evaluate(project(files)), "config.env-example"), "fail");
 });
 
+// Passing the whole environment on to a child process is not reading a setting (found by sample 05).
+test("only reading a named environment variable asks for .env.example", () => {
+  const passOn = {
+    "check.py": "import os, subprocess\nenv = dict(os.environ, PYTHONHASHSEED='0')\nsubprocess.run(['python3', 'x.py'], env=env)\n",
+    "run.js": "const { spawnSync } = require('child_process');\nspawnSync('node', ['x.js'], { env: { ...process.env, CI: '1' } });\n"
+  };
+  assert.equal(status(evaluate(project(passOn)), "config.env-example"), "na");
+  for (const read of ["import os\nkey = os.environ['API_KEY']\n", "import os\nkey = os.environ.get('API_KEY')\n", "import os\nkey = os.getenv('API_KEY')\n", "const key = process.env.API_KEY;\n", "const key = process.env['API_KEY'];\n", "const url = import.meta.env.VITE_URL;\n"]) {
+    assert.equal(status(evaluate(project({ "app.js": read, "app.py": read })), "config.env-example"), "fail", read);
+  }
+});
+
 test("HTML checks: alt, lang, viewport", () => {
   const bad = evaluate(project({ "index.html": "<html><head></head><body><img src='a.png'></body></html>" }));
   assert.equal(status(bad, "a11y.img-alt"), "fail");

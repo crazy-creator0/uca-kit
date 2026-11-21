@@ -2,6 +2,14 @@
 
 All notable changes are listed here. The project is early-stage, and nothing below has been benchmarked against real models.
 
+## Unreleased
+
+Added (samples)
+- Sample 05, Python basics visualised: a long study page for beginners, built without and with the kit (v0.2.0). The maintainer re-ran every shown output in Python (132 of 132 and 82 of 82 right) and read both pages against a 20-point list of beginner traps (0 wrong statements on either). Without the kit the page is bigger and more visual; with the kit it is shorter and leaves a README, tests and a design brief. Full review in `demo/samples/python-basics/REVIEW.md`.
+
+Fixed
+- Senior Bar check: passing the whole environment to a child process (`dict(os.environ, ...)`, `{ ...process.env }`) no longer counts as reading settings, so it no longer asks for an `.env.example`. Reading a named value (`os.environ["X"]`, `os.getenv`, `process.env.X`, `import.meta.env.X`) still does. Sample 05 found this false alarm.
+
 ## 0.2.0 (2026-11-21)
 
 A minor release: a new license, sharper skills, a project scanner that finds the real entry file and maps imports, and a fourth sample. Nothing here has been benchmarked against real models.
