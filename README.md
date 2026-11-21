@@ -121,7 +121,7 @@ npx --yes github:crazy-creator0/uca-kit uninstall --yes
 
 Files you edited are kept. `update --force` overwrites them after saving your version under `.uca/backup/`; `update --prune` deletes files the kit no longer ships (only if you have not edited them); `uninstall` needs `--yes` and never removes an edited file. Use `--dry-run` to preview. A project installed before the manifest existed has none yet: run `init` again, which keeps your files and creates it. Commit `.uca/manifest.json` with the rest of the kit so teammates share it.
 
-> **npm registry note:** The source and MIT license are in this repository, but a public npm release is not yet confirmed. Verify the package name is available and the packed files are correct before publishing. Until then, use the GitHub-based commands above. After the public release is verified, the intended short command will be `npx create-universal-coding-agent-kit@latest init .`.
+> **npm registry note:** The source and license are in this repository, but a public npm release is not yet confirmed. Verify the package name is available and the packed files are correct before publishing. Until then, use the GitHub-based commands above. After the public release is verified, the intended short command will be `npx create-universal-coding-agent-kit@latest init .`.
 
 ### Handoff guard (several models, one task)
 
@@ -266,7 +266,12 @@ See the [measurable phased roadmap](docs/ROADMAP.md), [demo plan](docs/DEMO.md),
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE). The license applies to this repository's original project materials; check any third-party skills, assets, or dependencies for their own license terms before reuse.
+UCA Kit is licensed under the [Apache License, Version 2.0](LICENSE), starting with v0.2.0. Copyright 2026 Crazy Creators.
+
+- **Earlier releases stay MIT.** v0.1.0 and v0.1.1 were published under the MIT License, and copies obtained under those releases stay under MIT.
+- **Credit.** If you share UCA Kit or a work built on it, keep the attribution in [NOTICE](NOTICE) with it (Apache-2.0, section 4(d)). The installer copies `LICENSE` and `NOTICE` into `.agents/` in every project, so an installed kit already carries them.
+- **Citing.** [CITATION.cff](CITATION.cff) has the citation details; GitHub shows a "Cite this repository" button from it.
+- **Third-party material.** The license covers this repository's original materials. Check any third-party skills, assets or dependencies for their own terms before reuse.
 
 
 ## Contributing and support

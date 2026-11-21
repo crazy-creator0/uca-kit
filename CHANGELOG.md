@@ -4,6 +4,12 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 ## Unreleased
 
+License
+- UCA Kit is now licensed under the Apache License, Version 2.0, starting with v0.2.0. v0.1.0 and v0.1.1 were published under MIT, and copies obtained under those releases stay under MIT. Every commit so far is by Crazy Creators, and no third-party material is included, so the change needed no other permission.
+- New `NOTICE` (attribution, kept with copies under section 4(d)) and `CITATION.cff` (GitHub's "Cite this repository" button).
+- The installer copies `LICENSE` and `NOTICE` into `.agents/` in every tier, recorded in the manifest. The installed `AGENTS.md` ends with one credit line; the lite tier's worst case stays within its limit (1,599 of 1,600 estimated tokens).
+- Contributions are accepted under Apache-2.0 (CONTRIBUTING.md).
+
 Changed
 - Project scanner (`uca-project-discover.cjs`): the entry point the package declares now comes first (main, bin, exports, or Node's default `index.js`); a built path such as `dist/index.js` points to its source file when one exists. Entry-like files and routes inside example, test, fixture and benchmark folders are counted on one line instead of listed as the app's own. On Express this cut the entry list from 26 lines to 2 and the routes from 47 lines to 2.
 - Routes written inside comments are skipped, and a FastAPI decorator is no longer also reported as a plain router call.

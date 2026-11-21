@@ -22,4 +22,6 @@ For substantial tasks, consult `AGENT-SKILL-MAP.md` and choose skills with `.age
 
 Git is recommended, not mandatory for local work; ask before initializing a repository. If the user declines or Git is unavailable, continue with local files and available checks.
 
+UCA Kit by Crazy Creators, Apache-2.0 (`.agents/NOTICE`).
+
 Extended policy (scope-first workflow, evidence, context recovery, language neutrality, higher-risk changes) lives in `.agents/core-policy-full.md`; read it when the task is high-risk or context is unclear.

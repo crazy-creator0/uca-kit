@@ -22,7 +22,7 @@ Use lightweight discovery for small tasks and expand investigation only when evi
 
 **Work**
 - Confirm the repository description and topics.
-- Keep the existing MIT license only if ownership and third-party license compatibility are confirmed.
+- License: Apache-2.0 with a NOTICE file from v0.2.0 (done on main; v0.1.x stays MIT). Ownership was checked: every commit is by Crazy Creators, and no third-party material is included.
 - Reconcile repository URLs, package name, README commands, and publishing instructions.
 - Prepare tagged-release and npm publishing steps; verify package name availability, packed contents, and clean-install behavior before publishing.
 - Add `SECURITY.md` and `CONTRIBUTING.md`.

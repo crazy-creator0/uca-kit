@@ -21,6 +21,12 @@ const CORE_ENTRIES = [
   { source: "scripts/uca-usage.cjs", destination: "scripts/uca-usage.cjs" },
 ];
 
+// The license and attribution travel with every install (Apache-2.0, section 4).
+const LICENSE_ENTRIES = [
+  { source: "LICENSE", destination: ".agents/LICENSE" },
+  { source: "NOTICE", destination: ".agents/NOTICE" },
+];
+
 const SKILLS_ROOT = ".agents/skills";
 const SKILL_NAME_PATTERN = /^[a-z0-9-]+$/;
 
@@ -186,7 +192,7 @@ const PLATFORM_ENTRIES = {
 // Files to install for a platform, profile, and optional tier. A null tier keeps the pre-tier behavior.
 function buildEntries({ platform, profile = null, tier = null }) {
   if (!tier) {
-    return resolveEntries([...CORE_ENTRIES, ...PLATFORM_ENTRIES[platform]], profileSkillNames(profile));
+    return resolveEntries([...CORE_ENTRIES, ...LICENSE_ENTRIES, ...PLATFORM_ENTRIES[platform]], profileSkillNames(profile));
   }
   assertTierName(tier);
   const definition = loadTiers()[tier];
@@ -199,7 +205,7 @@ function buildEntries({ platform, profile = null, tier = null }) {
     : [{ source: SKILLS_ROOT, destination: SKILLS_ROOT }];
   const included = (definition.include || []).map((file) => ({ source: file, destination: file }));
   return resolveEntries(
-    [...tierRoot, ...shared, ...included, ...PLATFORM_ENTRIES[platform]],
+    [...tierRoot, ...LICENSE_ENTRIES, ...shared, ...included, ...PLATFORM_ENTRIES[platform]],
     tierSkillNames(tier, profile),
     definition.skillsRoot
   );

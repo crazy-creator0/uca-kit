@@ -11,6 +11,7 @@ Thanks for helping improve UCA Kit. The goal is focused, reversible, evidence-ba
 5. For compatibility changes, record the exact tool/version, date, test setup, observed behavior, and limitations.
 6. For skill changes, explain what behavior changes and include a representative task or test.
 7. Never add secrets, private project data, or unlicensed third-party content.
+8. Contributions are accepted under the project's license, Apache-2.0 (section 5 of the license), unless you state otherwise in the pull request.
 
 ## Local checks
 
