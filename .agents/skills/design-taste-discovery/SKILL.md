@@ -11,8 +11,13 @@ metadata:
 
 # Design Taste Discovery — Ask Before Choosing
 
-## When to use this skill
-Use for new websites, landing pages, UI redesigns, component styling, interactive visuals, animation, canvas effects, or 3D scenes, where visual taste materially affects the result. Not for backend-only or non-visual tasks.
+## Read first
+Use when: a new site, page, redesign, styling, animation, canvas or 3D where looks matter.
+Not when: backend or non-visual work; a small fix inside an existing design system.
+Must do: learn the domain and real data; at most one taste question; a written brief with real fonts, hex colors and a signature; avoid Step 5 patterns.
+Done when: the build follows the brief and was looked at and marked pass or fail with evidence.
+Stop here if: the user only asked which direction to take.
+Read on only for: Step 3 before building, Step 5 before finishing; `directions.md` or `motion.md` when a step points there.
 
 ## Principle
 The user's taste comes before the tool list. Do not pick a design library because the kit lists it. Understand the look the user wants, commit to a specific design, then suggest only tools that fit.
@@ -28,7 +33,6 @@ Then read any images, screenshots, URLs or existing UI they shared (describe onl
 ## Step 2 — ask one concise taste question when needed
 If the direction is still unclear, ask one conversational question before designing. Invite a reference and offer a few examples, not a questionnaire:
 > What visual feel do you like: clean and minimal, editorial and type-led, dark and dense like a tool, playful, or immersive 3D? A site you like is enough.
-
 
 ## Step 3 — commit to a design brief
 Before any code, write these down in a few lines. Every line must be a concrete choice, not an adjective ("modern" and "clean" are not choices):

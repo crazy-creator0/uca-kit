@@ -11,6 +11,14 @@ metadata:
 
 # Application Security
 
+## Read first
+Use when: secrets, login, sessions, permissions, user input, file uploads, outbound requests or personal data are involved.
+Not when: a purely visual change that touches no input, data or boundary.
+Must do: find trust boundaries and entry points first; authorize on the server; parameterized queries; never commit or log secrets; ask before intrusive testing.
+Done when: each issue has severity, evidence, impact, fix and how it was verified, and residual risks are listed.
+Stop here if: the change touches no boundary, secret or user data.
+Read on only for: "Review areas" during a review, "Non-negotiable controls" before writing auth or data code.
+
 Treat security as part of design and implementation, not a final cosmetic pass.
 
 ## Threat-model workflow

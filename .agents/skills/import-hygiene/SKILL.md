@@ -11,6 +11,14 @@ metadata:
 
 # Import Hygiene
 
+## Read first
+Use when: an import error, a circular import, or moving code between modules.
+Not when: adding a package from a registry (ask first, and see anti-ai-slop).
+Must do: check whether the target already imports this module; keep the project's import direction; never fix an import error by adding another import; stop after the same error twice.
+Done when: a cycle check or the project's checks ran and passed, and the report names which.
+Stop here if: you are adding one import that cannot create a cycle.
+Read on only for: "Cycle check" to choose a tool, "Fixing an import error" when one occurs.
+
 Use when an import fails, a circular dependency appears, or a change adds or moves imports between modules.
 
 ## Before adding an import

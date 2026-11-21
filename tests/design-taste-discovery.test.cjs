@@ -10,7 +10,8 @@ const skill = fs.readFileSync(skillPath, "utf8");
 
 test("design taste skill has valid metadata and relevant activation scope", () => {
   assert.match(skill, /^---\nname: design-taste-discovery\ndescription: .+\n(?:metadata:\n(?:  .+\n)+)?---/);
-  assert.match(skill, /## When to use this skill/);
+  assert.match(skill, /## Read first/); // the old "When to use this skill" section now lives in this block
+  assert.match(skill, /Not when: backend or non-visual work/);
 });
 
 test("skill warns against generic AI-generated UI patterns without banning styles blindly", () => {

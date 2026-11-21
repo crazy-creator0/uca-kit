@@ -11,6 +11,14 @@ metadata:
 
 # Cloudflare Operations
 
+## Read first
+Use when: DNS, TLS, proxying, caching, WAF, rate limits or Workers on Cloudflare are involved.
+Not when: the fault is plainly in application code and Cloudflare is not in the path.
+Must do: identify the real setup first; triage layer by layer; never disable security, purge everything or change TLS as a first move; confirm before production changes.
+Done when: the cause is tied to a layer with evidence, the change and rollback are stated, and live flows were checked.
+Stop here if: the user only needs to know which layer to look at.
+Read on only for: "Caching" for stale or personal data, "Workers and deployment" before deploying.
+
 ## Start with the actual architecture
 Identify the domain, DNS records, proxy mode, TLS mode, origin, Worker/routes, cache rules, WAF/rate limits, bindings, and deployment method that actually exist. Ask for sanitized outputs and never request credentials.
 

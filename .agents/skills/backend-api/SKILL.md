@@ -11,6 +11,14 @@ metadata:
 
 # Backend API Engineering
 
+## Read first
+Use when: designing or changing an API, routes, middleware, validation or business logic, in any backend stack.
+Not when: there is no server or API layer; schema or migration work (database-engineering).
+Must do: find the stack from its manifest and follow its framework; validate input at the boundary; authorize on the server; test success, invalid input, auth failure and missing resource.
+Done when: the targeted API tests ran and their result is reported, with error shapes defined.
+Stop here if: the user only wants an endpoint contract (methods, shapes, status codes).
+Read on only for: "Implementation rules" before writing handlers, "Reliability" for calls to other services.
+
 ## Framework choice
 Find the stack first from its manifest (`package.json`, `pyproject.toml` or `requirements.txt`, `go.mod`, `pom.xml` or `build.gradle`, `Gemfile`, `composer.json`, `*.csproj`) and follow the framework the project already uses. Do not switch frameworks unless a migration is justified (`stack-migration` workflow).
 For a new service, pick by fit, not habit: a small, widely used option for a small API, a batteries-included one when an ORM, auth and admin are needed. Examples: Node.js (Express, Fastify, NestJS), Python (FastAPI, Django, Flask), Go (net/http, chi), Java (Spring Boot), Ruby (Rails), PHP (Laravel), .NET (ASP.NET Core).
