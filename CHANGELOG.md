@@ -9,6 +9,7 @@ Added (samples)
 
 Fixed
 - Senior Bar check: passing the whole environment to a child process (`dict(os.environ, ...)`, `{ ...process.env }`) no longer counts as reading settings, so it no longer asks for an `.env.example`. Reading a named value (`os.environ["X"]`, `os.getenv`, `process.env.X`, `import.meta.env.X`) still does. Sample 05 found this false alarm.
+- Project scanner (`uca-project-discover.cjs`): four wrong facts it reported when run on this repository. A route-like `path:` in a file that only mentions react-router (or one built from a template) was listed as a page route; now only files that import react-router are read, and template paths are skipped. `node:sqlite` was reported as the app's database from a benchmark file, and would have been from any string containing the name; now only an import in app code counts. Auth-named files under examples, tests or benchmarks were listed as the app's authentication; now they are set apart like other sample files. TODO/FIXME/HACK words inside strings and regular expressions were counted, and the same line counted several times; now only comments count, once per line (on this repository: 14 reported before, 0 real ones). Each fix has a test that fails on the old code.
 
 ## 0.2.0 (2026-11-21)
 
