@@ -17,7 +17,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
-const SECTIONS = ["header", "stack", "entry-points", "map", "commands", "routes", "data", "auth", "structure", "conventions", "unknowns"];
+const SECTIONS = ["header", "stack", "entry-points", "map", "commands", "routes", "data", "auth", "structure", "conventions", "key-files", "unknowns"];
+const MAX_KEY_FILES = 8;
 const SKIP_DIRS = new Set(["node_modules", ".git", "dist", "build", "out", "coverage", ".next", ".nuxt", ".svelte-kit", "venv", ".venv", "env", "__pycache__", "vendor", "target", ".turbo", ".cache"]);
 const SOURCE_EXT = /\.(c|m)?(js|ts)x?$|\.py$|\.go$|\.rs$/;
 const MAX_FILES = 6000;
@@ -1110,6 +1111,52 @@ function discover(root) {
   for (const entry of fs.readdirSync(root)) if (/^\.env(\..+)?$/.test(entry) && !/\.(example|sample|template)$/.test(entry) && !files.includes(entry)) avoid.push(`${entry} (may hold secrets; never read or paste it)`);
   avoid.sort().forEach((item) => out.structure.push(`- Avoid: ${item}`));
 
+  // ----- key files: where behaviour lives, for Key file notes -----
+  // One of each kind first (entry, auth, config, data model, routes), then the next of each, up to MAX_KEY_FILES.
+  // Chosen from names, entries and route counts only; the files are not read for this.
+  const keyable = (file) => has(file) && !isSample(file) && !/\.gen\.|\.min\.|\.d\.ts$/.test(file) && SOURCE_EXT.test(file) || /(^|\/)schema\.prisma$/.test(file) && !isSample(file);
+  const routeCounts = new Map();
+  for (const route of appApi) routeCounts.set(route.file, (routeCounts.get(route.file) || 0) + 1);
+  // Name parts of a file: "token.utils.ts" -> token, utils; "useAuth.ts" -> use, auth. "author" is its own word.
+  const words = (file) => path.posix.basename(file).replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  const rank = (table) => (file) => {
+    const found = words(file).map((word) => table[word]).filter((value) => value !== undefined);
+    return found.length ? Math.min(...found) + (/\.(tsx|jsx)$/.test(file) ? 10 : 0) : null;
+  };
+  const byRank = (score) => files.map((file) => [file, score(file)]).filter(([, value]) => value !== null).sort((a, b) => a[1] - b[1] || a[0].split("/").length - b[0].split("/").length || a[0].localeCompare(b[0])).map(([file]) => file);
+  const authRank = rank({ jwt: 0, token: 0, tokens: 0, security: 0, password: 0, passwords: 0, crypto: 0, auth: 1, authn: 1, authz: 1, authentication: 1, authorization: 1, oauth: 1, passport: 1, login: 2, logout: 2, session: 2, sessions: 2, permission: 2, permissions: 2 });
+  const configRank = (file) => (/(^|\/)(migrations?|alembic|versions)\//.test(file) || /(^|\/)(vite|vitest|jest|eslint|tailwind|postcss|next|webpack|babel|playwright|tsconfig)[^/]*$/i.test(file) || !/^(config|settings|configuration|env)\.\w+$/i.test(path.posix.basename(file)) || /\.(tsx|jsx)$/.test(file) ? null : rank({ config: 0, settings: 0, configuration: 0, env: 1 })(file));
+  const dataRank = (file) => (/(^|\/)schema\.prisma$/.test(file) ? 0 : /(^|\/)(models\.py|schema\.(ts|js)|[^/]+\.entity\.ts)$/.test(file) ? 1 : /(^|\/)models\/[^/]+\.(py|js|ts)$/.test(file) ? 2 : null);
+  const entryFiles = seeds.map(nodeSource).filter((file) => !file.endsWith("/"));
+  const kinds = [
+    ["entry", entryFiles],
+    ["auth (by name)", byRank(authRank)],
+    ["config (by name)", byRank(configRank)],
+    ["data model", byRank(dataRank)],
+    ["routes", [...routeCounts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([file]) => file)]
+  ].map(([label, list]) => [label, [...new Set(list)].filter(keyable)]);
+  const picked = new Map();
+  for (let round = 0; picked.size < MAX_KEY_FILES && kinds.some(([, list]) => list.length > round); round += 1) {
+    for (const [label, list] of kinds) {
+      const file = list[round];
+      if (!file || picked.size >= MAX_KEY_FILES) continue;
+      if (picked.has(file)) picked.get(file).push(label);
+      else picked.set(file, [label]);
+    }
+  }
+  // Slots left: the files an entry imports directly, in import order.
+  for (const entry of entryFiles) {
+    for (const file of edges.get(entry) || []) {
+      if (picked.size >= MAX_KEY_FILES) break;
+      if (keyable(file) && !picked.has(file)) picked.set(file, [`imported by ${entry}`]);
+    }
+  }
+  for (const [file, labels] of picked) {
+    const count = routeCounts.get(file);
+    out["key-files"].push(fact(`${file}: ${labels.map((label) => (label === "routes" ? `routes (${count})` : label)).join(", ")}`, file));
+  }
+  if (picked.size === 0) out["key-files"].push("- No key files were picked: no entry, auth, config, data model or route file was found.");
+
   // ----- always unknown -----
   if (compose.length > 0) {
     for (const { file, services } of compose) out.structure.push(fact(`Docker Compose file${services.length ? `, services: ${services.map((service) => service.name).slice(0, 12).join(", ")}` : ""}`, file));
@@ -1169,6 +1216,7 @@ function buildBlocks(root, found, verification, now = headRef(root)) {
   blocks.auth = ["## Authentication", ...(found.out.auth.length ? found.out.auth : ["- No authentication dependency or file name was detected."])];
   blocks.structure = ["## Structure and boundaries", ...(found.out.structure.length ? found.out.structure : ["- Nothing detected."])];
   blocks.conventions = ["## Conventions and constraints", ...(found.out.conventions.length ? found.out.conventions : ["- None detected."])];
+  blocks["key-files"] = ["## Key files (where behaviour lives)", "Picked from names, entries and route counts, without reading them. Read these first when writing Key file notes; on a small model, only the first 3.", ...found.out["key-files"]];
   blocks.unknowns = ["## Assumed or unknown (not verified)", ...found.out.unknowns];
   return blocks;
 }
@@ -1179,7 +1227,7 @@ const wrap = (name, lines) => `${open(name)}\n${lines.join("\n")}\n${CLOSE}`;
 
 function renderFresh(blocks) {
   const title = "# PROJECT.md\n\n> Project card for coding agents. Blocks between uca:generated markers are rewritten by `node scripts/uca-project-discover.cjs --write`. Text outside them is yours and is never changed.\n";
-  const order = ["header", "stack", "entry-points", "map", "commands", "routes", "data", "auth", "structure", "conventions", "unknowns"];
+  const order = SECTIONS;
   return `${title}\n${order.map((name) => wrap(name, blocks[name])).join("\n\n")}\n`;
 }
 
