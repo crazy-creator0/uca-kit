@@ -1,0 +1,588 @@
+{
+  "note": "Answer keys were read from the code at the pinned commit. Each evidence entry names a file and a fragment of one line in it; `score.cjs verify` checks that the line is still there. An answer passes a question when every group in `need` has at least one pattern that matches it (case-insensitive regular expressions).",
+  "repos": [
+    {
+      "id": "fastapi-template",
+      "url": "https://github.com/fastapi/full-stack-fastapi-template",
+      "commit": "77e550a73bb4",
+      "license": "MIT",
+      "size": "252 tracked files, 152 of them Python or TypeScript source",
+      "questions": [
+        {
+          "id": "F01",
+          "ask": "Which file creates the backend's FastAPI application object?",
+          "need": [
+            [
+              "backend/app/main\\.py"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "backend/app/main.py",
+              "has": "app = FastAPI("
+            }
+          ]
+        },
+        {
+          "id": "F02",
+          "ask": "What is the full URL path a client posts to, to log in and get an access token?",
+          "need": [
+            [
+              "/api/v1/login/access-token"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "backend/app/api/routes/login.py",
+              "has": "@router.post(\"/login/access-token\")"
+            },
+            {
+              "file": "backend/app/core/config.py",
+              "has": "API_V1_STR: str = \"/api/v1\""
+            }
+          ]
+        },
+        {
+          "id": "F03",
+          "ask": "How is the access token made, and in which function is it checked on each request?",
+          "need": [
+            [
+              "jwt",
+              "json web token"
+            ],
+            [
+              "HS256"
+            ],
+            [
+              "get_current_user"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "backend/app/core/security.py",
+              "has": "ALGORITHM = \"HS256\""
+            },
+            {
+              "file": "backend/app/api/deps.py",
+              "has": "def get_current_user("
+            }
+          ]
+        },
+        {
+          "id": "F04",
+          "ask": "Which database and which ORM library does the backend use?",
+          "need": [
+            [
+              "postgres"
+            ],
+            [
+              "sqlmodel"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "backend/pyproject.toml",
+              "has": "\"sqlmodel>="
+            },
+            {
+              "file": "compose.yml",
+              "has": "image: postgres"
+            }
+          ]
+        },
+        {
+          "id": "F05",
+          "ask": "In which file are the database tables defined, and what are they?",
+          "need": [
+            [
+              "backend/app/models\\.py",
+              "app/models\\.py"
+            ],
+            [
+              "\\bUser\\b"
+            ],
+            [
+              "\\bItem\\b"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "backend/app/models.py",
+              "has": "class User(UserBase, table=True):"
+            },
+            {
+              "file": "backend/app/models.py",
+              "has": "class Item(ItemBase, table=True):"
+            }
+          ]
+        },
+        {
+          "id": "F06",
+          "ask": "How are the backend tests run?",
+          "need": [
+            [
+              "pytest"
+            ],
+            [
+              "scripts/test\\.sh",
+              "coverage"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "backend/scripts/test.sh",
+              "has": "coverage run -m pytest tests/"
+            }
+          ]
+        },
+        {
+          "id": "F07",
+          "ask": "Who is allowed to update an existing item?",
+          "need": [
+            [
+              "owner"
+            ],
+            [
+              "superuser"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "backend/app/api/routes/items.py",
+              "has": "if not current_user.is_superuser and (item.owner_id != current_user.id):"
+            }
+          ]
+        },
+        {
+          "id": "F08",
+          "ask": "Where does the frontend keep the access token after login?",
+          "need": [
+            [
+              "localStorage",
+              "local storage"
+            ],
+            [
+              "access_token"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "frontend/src/hooks/useAuth.ts",
+              "has": "localStorage.getItem(\"access_token\")"
+            }
+          ]
+        },
+        {
+          "id": "F09",
+          "ask": "Which algorithm hashes new passwords?",
+          "need": [
+            [
+              "argon2"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "backend/app/core/security.py",
+              "has": "Argon2Hasher(),"
+            }
+          ]
+        },
+        {
+          "id": "F10",
+          "ask": "How is the whole stack started for local development?",
+          "need": [
+            [
+              "docker compose",
+              "docker-compose",
+              "compose\\.ya?ml"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "compose.yml",
+              "has": "db:"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "realworld-express",
+      "url": "https://github.com/gothinkster/node-express-realworld-example-app",
+      "commit": "30b68e1",
+      "license": "MIT (package.json)",
+      "size": "67 tracked files, 39 of them TypeScript or JavaScript source",
+      "questions": [
+        {
+          "id": "R01",
+          "ask": "Which file starts the server?",
+          "need": [
+            [
+              "src/main\\.ts"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "src/main.ts",
+              "has": "app.listen(PORT"
+            },
+            {
+              "file": "project.json",
+              "has": "\"main\": \"src/main.ts\""
+            }
+          ]
+        },
+        {
+          "id": "R02",
+          "ask": "Under which path prefix are all API routes mounted?",
+          "need": [
+            [
+              "/api\\b"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "src/app/routes/routes.ts",
+              "has": "Router().use('/api', api)"
+            }
+          ]
+        },
+        {
+          "id": "R03",
+          "ask": "Does GET /api/articles require a logged-in user?",
+          "need": [
+            [
+              "optional"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "src/app/routes/article/article.controller.ts",
+              "has": "router.get('/articles', auth.optional"
+            }
+          ]
+        },
+        {
+          "id": "R04",
+          "ask": "How must a client send the token, and in which header?",
+          "need": [
+            [
+              "authorization"
+            ],
+            [
+              "\\bToken\\b"
+            ],
+            [
+              "\\bBearer\\b"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "src/app/routes/auth/auth.ts",
+              "has": "split(' ')[0] === 'Bearer'"
+            }
+          ]
+        },
+        {
+          "id": "R05",
+          "ask": "How long is a login token valid?",
+          "need": [
+            [
+              "60 ?d",
+              "60 days",
+              "sixty days"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "src/app/routes/auth/token.utils.ts",
+              "has": "expiresIn: '60d'"
+            }
+          ]
+        },
+        {
+          "id": "R06",
+          "ask": "What secret signs the tokens if JWT_SECRET is not set?",
+          "need": [
+            [
+              "superSecret"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "src/app/routes/auth/token.utils.ts",
+              "has": "process.env.JWT_SECRET || 'superSecret'"
+            }
+          ]
+        },
+        {
+          "id": "R07",
+          "ask": "Which database and which ORM does it use?",
+          "need": [
+            [
+              "postgres"
+            ],
+            [
+              "prisma"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "src/prisma/schema.prisma",
+              "has": "provider = \"postgresql\""
+            }
+          ]
+        },
+        {
+          "id": "R08",
+          "ask": "Which data models does the schema define?",
+          "need": [
+            [
+              "\\bArticle\\b"
+            ],
+            [
+              "\\bComment\\b"
+            ],
+            [
+              "\\bTag\\b"
+            ],
+            [
+              "\\bUser\\b"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "src/prisma/schema.prisma",
+              "has": "model Comment {"
+            }
+          ]
+        },
+        {
+          "id": "R09",
+          "ask": "How are passwords hashed, and with how many salt rounds?",
+          "need": [
+            [
+              "bcrypt"
+            ],
+            [
+              "\\b10\\b"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "src/app/routes/auth/auth.service.ts",
+              "has": "bcrypt.hash(password, 10)"
+            }
+          ]
+        },
+        {
+          "id": "R10",
+          "ask": "Which port does the server listen on when PORT is not set?",
+          "need": [
+            [
+              "\\b3000\\b"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "src/main.ts",
+              "has": "process.env.PORT || 3000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "koa",
+      "url": "https://github.com/koajs/koa",
+      "commit": "a0702b9",
+      "license": "MIT",
+      "size": "112 tracked files, 83 of them JavaScript source",
+      "questions": [
+        {
+          "id": "K01",
+          "ask": "Which file is the package's main entry?",
+          "need": [
+            [
+              "lib/application\\.js"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "package.json",
+              "has": "\"main\": \"lib/application.js\""
+            }
+          ]
+        },
+        {
+          "id": "K02",
+          "ask": "What does app.listen() do?",
+          "need": [
+            [
+              "createServer"
+            ],
+            [
+              "callback"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "lib/application.js",
+              "has": "const server = http.createServer(this.callback())"
+            }
+          ]
+        },
+        {
+          "id": "K03",
+          "ask": "Which function combines the middleware into one, and can it be replaced?",
+          "need": [
+            [
+              "koa-compose"
+            ],
+            [
+              "options\\.compose",
+              "compose option",
+              "`compose`"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "lib/application.js",
+              "has": "this.compose = options.compose || compose"
+            }
+          ]
+        },
+        {
+          "id": "K04",
+          "ask": "What status code does a response get if no middleware sets a body or status?",
+          "need": [
+            [
+              "\\b404\\b"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "lib/application.js",
+              "has": "res.statusCode = 404"
+            }
+          ]
+        },
+        {
+          "id": "K05",
+          "ask": "Setting ctx.body without setting a status: what status results, and what if the body is null?",
+          "need": [
+            [
+              "\\b200\\b"
+            ],
+            [
+              "\\b204\\b"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "lib/response.js",
+              "has": "if (!this._explicitStatus) this.status = 200"
+            },
+            {
+              "file": "lib/response.js",
+              "has": "this.status = 204"
+            }
+          ]
+        },
+        {
+          "id": "K06",
+          "ask": "Which errors does the default error handler not log?",
+          "need": [
+            [
+              "\\b404\\b"
+            ],
+            [
+              "expose"
+            ],
+            [
+              "silent"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "lib/application.js",
+              "has": "if (err.status === 404 || err.expose) return"
+            },
+            {
+              "file": "lib/application.js",
+              "has": "if (this.silent) return"
+            }
+          ]
+        },
+        {
+          "id": "K07",
+          "ask": "What does the proxy option change?",
+          "need": [
+            [
+              "proxy"
+            ],
+            [
+              "header",
+              "x-forwarded"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "lib/application.js",
+              "has": "When `true`, proxy header fields will be trusted."
+            }
+          ]
+        },
+        {
+          "id": "K08",
+          "ask": "What command runs the tests, and which test runner is it?",
+          "need": [
+            [
+              "node --test",
+              "node:test",
+              "node test runner"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "package.json",
+              "has": "\"test\": \"node --test\""
+            }
+          ]
+        },
+        {
+          "id": "K09",
+          "ask": "What is the minimum Node.js version?",
+          "need": [
+            [
+              "node[^\\n]{0,30}\\b18\\b",
+              "\\b18\\b[^\\n]{0,30}node"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "package.json",
+              "has": "\"node\": \">= 18\""
+            }
+          ]
+        },
+        {
+          "id": "K10",
+          "ask": "What is the default subdomainOffset?",
+          "need": [
+            [
+              "subdomainOffset[^\\n]{0,40}\\b2\\b",
+              "\\b2\\b[^\\n]{0,40}subdomainOffset"
+            ]
+          ],
+          "evidence": [
+            {
+              "file": "lib/application.js",
+              "has": "subdomainOffset || 2"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

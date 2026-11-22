@@ -11,6 +11,7 @@ Protocol and metrics: see `../EVALUATION.md`. The runs themselves have not been 
 - `reference/` one known-good fix per task, used only to prove the checks can pass.
 - `score-run.cjs` records pass/fail, test counts, files changed, new import cycles and banned wording for one run.
 - `banned-wording.json`, `results-template.csv`, `handoff-test.md`.
+- `project-questions/` 30 fixed questions about three real repositories, with answer keys proven against pinned commits; measures what the project scanner's card answers alone, and scores a model's answers for the token test.
 
 ## Running one task
 

@@ -4,6 +4,9 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 ## Unreleased
 
+Added (benchmarks)
+- Project questions (`benchmarks/project-questions/`): 30 fixed questions about three real repositories pinned to one commit each (the FastAPI full-stack template at 252 files, the Express RealWorld example, Koa), with answer keys read from the code. `score.cjs verify` proves every key against its file (37 of 37 evidence lines found); `score.cjs map` counts what the project scanner's card answers alone (7 of 30 today, the baseline for the v0.3.0 project view); `score.cjs answers` scores a model's answers for the token test, which has not been run yet.
+
 Added (samples)
 - Sample 05, Python basics visualised: a long study page for beginners, built without and with the kit (v0.2.0). The maintainer re-ran every shown output in Python (132 of 132 and 82 of 82 right) and read both pages against a 20-point list of beginner traps (0 wrong statements on either). Without the kit the page is bigger and more visual; with the kit it is shorter and leaves a README, tests and a design brief. Full review in `demo/samples/python-basics/REVIEW.md`.
 
