@@ -744,3 +744,30 @@ test("key files: a library with only an entry gets the files the entry imports",
   assert.match(keys, /- lib\/response\.js: imported by lib\/index\.js/);
   assert.match(keys, /on a small model, only the first 3\./);
 });
+
+test("Key file notes outside the markers survive --write, and a code change flags only that file's note", { skip: !gitAvailable }, () => {
+  const root = repo({
+    "package.json": JSON.stringify({ name: "lib", main: "lib/app.js" }),
+    "lib/app.js": "const response = require('./response');\nfunction listen() {\n  res.statusCode = 404;\n}\nmodule.exports = { listen, response };\n",
+    "lib/response.js": "function setBody() {\n  if (!explicit) status = 200;\n}\nmodule.exports = setBody;\n"
+  });
+  const git = (...args) => spawnSync("git", args, { cwd: root, encoding: "utf8" });
+  git("init", "-q");
+  git("add", ".");
+  git("-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-qm", "init");
+  const cardPath = path.join(root, "PROJECT.md");
+  assert.equal(discover(root, ["--write", cardPath]).status, 0);
+  fs.appendFileSync(cardPath, '\n## Key file notes\n- No body means 404 (source: lib/app.js:3 "res.statusCode = 404")\n- A body without a status gives 200 (source: lib/response.js:2 "if (!explicit) status = 200")\n');
+  const check = () => spawnSync(process.execPath, [CHECKER, cardPath, "--root", root], { encoding: "utf8" });
+  let result = check();
+  assert.equal(result.status, 0, result.stdout);
+  assert.match(result.stdout, /2 of 2 quoted note\(s\) found/);
+  assert.equal(discover(root, ["--write", cardPath]).status, 0);
+  assert.match(fs.readFileSync(cardPath, "utf8"), /## Key file notes\n- No body means 404/);
+  fs.writeFileSync(path.join(root, "lib", "app.js"), "const response = require('./response');\nfunction listen() {\n  res.statusCode = 200;\n}\nmodule.exports = { listen, response };\n");
+  result = check();
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /CHANGED: lib\/app\.js differs/);
+  assert.match(result.stdout, /WRONG: lib\/app\.js:3 does not contain "res\.statusCode = 404"/);
+  assert.doesNotMatch(result.stdout, /response\.js/);
+});
