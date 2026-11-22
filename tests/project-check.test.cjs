@@ -208,3 +208,70 @@ test("the checker never edits the card or the cited files", { skip: !gitAvailabl
     assert.equal(fs.readFileSync(cardPath, "utf8"), before);
   });
 });
+
+// Quoted notes: (source: path:line "exact text"). A dated card far in the future keeps the change check quiet.
+const AUTH = "import * as jwt from 'jsonwebtoken';\n\nconst generateToken = (id) =>\n  jwt.sign({ user: { id } }, process.env.JWT_SECRET || 'superSecret', {\n    expiresIn: '60d',\n  });\n";
+const notesCard = (notes) => card("2999-01-01", `- Entry (source: src/main.js)\n\n## Key file notes\n${notes}`);
+
+test("extractQuotes reads path, line and quote, and quotes may hold commas, parentheses and double quotes", () => {
+  const { extractQuotes } = require(SCRIPT);
+  const notes = extractQuotes('- a (source: src/auth.js:5 "expiresIn: \'60d\',") - b (source: src/db.js "bcrypt.hash(password, 10)") - c (source: cfg.py:2 "API_V1_STR: str = "/api/v1"")');
+  assert.deepEqual(notes, [
+    { file: "src/auth.js", line: 5, quote: "expiresIn: '60d'," },
+    { file: "src/db.js", line: null, quote: "bcrypt.hash(password, 10)" },
+    { file: "cfg.py", line: 2, quote: 'API_V1_STR: str = "/api/v1"' }
+  ]);
+  assert.deepEqual(extractSources('x (source: src/db.js "bcrypt.hash(password, 10)")').sources, ["src/db.js"]);
+});
+
+test("a quoted note whose quote is on the cited line passes and is counted", () => {
+  withRepo(({ root }) => {
+    fs.writeFileSync(path.join(root, "src", "auth.js"), AUTH);
+    fs.writeFileSync(path.join(root, "PROJECT.md"), notesCard("- Tokens last 60 days (source: src/auth.js:5 \"expiresIn: '60d'\")\n- Default secret superSecret (source: src/auth.js \"process.env.JWT_SECRET || 'superSecret'\")\n"));
+    const result = run(["PROJECT.md"], { cwd: root });
+    assert.equal(result.status, 0, result.stdout);
+    assert.match(result.stdout, /2 of 2 quoted note\(s\) found on their cited lines\./);
+  }, { initGit: false });
+});
+
+test("a quote that is not in the file is WRONG, and a made-up note fails the check", () => {
+  withRepo(({ root }) => {
+    fs.writeFileSync(path.join(root, "src", "auth.js"), AUTH);
+    fs.writeFileSync(path.join(root, "PROJECT.md"), notesCard("- Tokens last 7 days (source: src/auth.js:5 \"expiresIn: '7d'\")\n"));
+    const result = run(["PROJECT.md"], { cwd: root });
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, /WRONG: src\/auth\.js:5 does not contain "expiresIn: '7d'"/);
+  }, { initGit: false });
+});
+
+test("a quote found on another line than cited is MOVED, with the line it is on now", () => {
+  withRepo(({ root }) => {
+    fs.writeFileSync(path.join(root, "src", "auth.js"), AUTH);
+    fs.writeFileSync(path.join(root, "PROJECT.md"), notesCard("- Tokens last 60 days (source: src/auth.js:2 \"expiresIn: '60d'\")\n"));
+    const result = run(["PROJECT.md"], { cwd: root });
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, /MOVED: "expiresIn: '60d'" is on line 5 of src\/auth\.js, not line 2\./);
+  }, { initGit: false });
+});
+
+test("indentation and spacing inside the quote may differ from the file; a too-short quote is refused", () => {
+  withRepo(({ root }) => {
+    fs.writeFileSync(path.join(root, "src", "auth.js"), AUTH);
+    fs.writeFileSync(path.join(root, "PROJECT.md"), notesCard("- Signs with jwt (source: src/auth.js:4 \"jwt.sign({ user:   { id } },\")\n- Uses id (source: src/auth.js \"id\")\n"));
+    const result = run(["PROJECT.md"], { cwd: root });
+    assert.equal(result.status, 1);
+    assert.doesNotMatch(result.stdout, /WRONG|MOVED/);
+    assert.match(result.stdout, /SHORT: the quote "id" for src\/auth\.js is under 6 characters/);
+  }, { initGit: false });
+});
+
+test("a quoted note on a missing file or a path outside the project is reported once, not searched", () => {
+  withRepo(({ root }) => {
+    fs.writeFileSync(path.join(root, "PROJECT.md"), notesCard("- a (source: src/gone.js:1 \"const value = 1\")\n- b (source: ../secret.txt \"password=hunter2\")\n"));
+    const result = run(["PROJECT.md"], { cwd: root });
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, /MISSING: src\/gone\.js no longer exists\./);
+    assert.match(result.stdout, /UNSAFE: source path is outside the project: \.\.\/secret\.txt/);
+    assert.doesNotMatch(result.stdout, /WRONG/);
+  }, { initGit: false });
+});

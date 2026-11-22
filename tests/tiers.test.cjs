@@ -160,6 +160,7 @@ test("the PROJECT.md template has the planned sections and the staleness fields"
     "Commands (run and seen to work)",
     "Architecture and boundaries",
     "Conventions",
+    "Key file notes",
     "Known issues and constraints",
     "Paths to avoid",
     "Assumed or unknown (not verified)"

@@ -27,6 +27,9 @@ Checked by: <what was read or run to verify this card>
 ## Conventions
 - <naming, structure, or style rule the project follows> (source: <file>)
 
+## Key file notes
+- <what the code does, read from one line> (source: <file>:<line> "<exact text from that line>")
+
 ## Known issues and constraints
 - <issue, limit, or operational constraint> (source: <file or issue link>)
 
