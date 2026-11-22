@@ -10,7 +10,7 @@ const LITE_ROOT = path.join(__dirname, "..", ".agents", "lite");
 // Token figures are estimates (characters / 4), not tokenizer measurements.
 const estimateTokens = (text) => Math.ceil(text.length / 4);
 
-const CORE_BUDGET = 740; // was 600, then 670 for R-NEW (new-product trigger, about 60 tokens); 710 for the handoff-guard sentence in R-HANDOFF (about 40); 740 for R-SCRATCH (about 30)
+const CORE_BUDGET = 760; // was 600, then 670 for R-NEW (new-product trigger, about 60 tokens); 710 for the handoff-guard sentence in R-HANDOFF (about 40); 740 for R-SCRATCH (about 30); 760 for "uca-notes" in R-PROJECT (about 20; the worst case stays under 1,600)
 const SKILL_BUDGET = 250;
 const TOTAL_BUDGET = 1600;
 const RULE_IDS = [
