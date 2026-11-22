@@ -12,6 +12,10 @@ const HASH_PATTERN = /^[0-9a-f]{7,40}$/i;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 // A path may hold one level of parentheses, as in Next.js route groups: app/(auth)/login/page.tsx
 const SOURCE_PATTERN = /\(source:\s*((?:[^()]|\([^()]*\))*)\)/g;
+// A quoted note: (source: path:line "exact text from that line"). The quote ends at the first `")`.
+const QUOTED_PATTERN = /\(source:\s*([^\s"()]+?)(?::(\d+))?\s+"(.+?)"\)/g;
+const MIN_QUOTE = 6;
+const MAX_FILE_BYTES = 2_000_000;
 
 function printHelp() {
   return `uca-project-check — report PROJECT.md facts that may be stale
@@ -22,6 +26,11 @@ Usage:
 The card needs a "Verified at:" line holding a git commit hash or a YYYY-MM-DD date,
 and facts that cite files as "(source: path)". The check reports cited files that are
 missing or changed since the card was verified. It does not edit anything.
+
+A note can quote the line it came from: (source: src/auth.ts:4 "expiresIn: '60d'").
+The quote must be at least ${MIN_QUOTE} characters, sit on one line of that file (spaces may
+differ), and end before the first \`")\`. A quote that is not in the file is reported as WRONG;
+one found on another line than cited is reported as MOVED, with the line it is on now.
 
 Exit codes: 0 current, 1 stale or could not be verified, 2 usage error or card not found.
 `;
@@ -57,11 +66,20 @@ function git(cwd, args) {
   return { ok: result.status === 0, unavailable: false, stdout: result.stdout || "", stderr: result.stderr || "" };
 }
 
+// Quoted notes, in card order: { file, line (number or null), quote }.
+function extractQuotes(text) {
+  return [...text.matchAll(QUOTED_PATTERN)].map((match) => ({ file: match[1], line: match[2] ? Number(match[2]) : null, quote: match[3] }));
+}
+
 // Pulls cited file paths out of "(source: a, b:12)" notes. URLs and template placeholders are skipped.
 function extractSources(text) {
   const sources = new Set();
   let placeholders = 0;
-  for (const match of text.matchAll(SOURCE_PATTERN)) {
+  for (const quoted of extractQuotes(text)) {
+    if (quoted.file.includes("<")) placeholders += 1;
+    else sources.add(quoted.file);
+  }
+  for (const match of text.replace(QUOTED_PATTERN, "").matchAll(SOURCE_PATTERN)) {
     for (const raw of match[1].split(",")) {
       const entry = raw.trim();
       if (!entry) continue;
@@ -137,7 +155,40 @@ function checkCard({ cardPath, root }) {
     }
   }
 
-  return { problems, sourceCount: sources.length, verifiedAt };
+  // Quoted notes: the quote must be on a line of its file. Paths outside the project were refused above.
+  const squash = (value) => value.replace(/\s+/g, " ").trim();
+  const files = new Map();
+  let quotesFound = 0;
+  const quotes = extractQuotes(text);
+  for (const { file, line, quote } of quotes) {
+    if (file.includes("<")) continue; // template placeholder, reported above
+    const resolved = path.resolve(root, file);
+    const relative = path.relative(root, resolved);
+    if (path.isAbsolute(file) || relative === ".." || relative.startsWith(`..${path.sep}`)) continue;
+    const where = `${file}${line ? `:${line}` : ""}`;
+    if (squash(quote).length < MIN_QUOTE) {
+      problems.push(`SHORT: the quote "${quote}" for ${where} is under ${MIN_QUOTE} characters, too short to prove anything.`);
+      continue;
+    }
+    if (!files.has(file)) {
+      let lines = null;
+      try {
+        if (fs.statSync(resolved).size <= MAX_FILE_BYTES) lines = fs.readFileSync(resolved, "utf8").split(/\r?\n/).map(squash);
+      } catch {
+        lines = null;
+      }
+      files.set(file, lines);
+    }
+    const lines = files.get(file);
+    if (!lines) continue; // missing files are reported above; very large files are not searched
+    const target = squash(quote);
+    const hits = lines.map((text, index) => (text.includes(target) ? index + 1 : 0)).filter(Boolean);
+    if (hits.length === 0) problems.push(`WRONG: ${where} does not contain "${quote}". Re-read the file and fix or remove the note.`);
+    else if (line && !hits.includes(line)) problems.push(`MOVED: "${quote}" is on line ${hits.join(", ")} of ${file}, not line ${line}.`);
+    else quotesFound += 1;
+  }
+
+  return { problems, sourceCount: sources.length, verifiedAt, quoteCount: quotes.length, quotesFound };
 }
 
 function main(argv = process.argv.slice(2)) {
@@ -160,9 +211,10 @@ function main(argv = process.argv.slice(2)) {
     return 2;
   }
 
-  const { problems, sourceCount, verifiedAt } = checkCard({ cardPath, root });
+  const { problems, sourceCount, verifiedAt, quoteCount, quotesFound } = checkCard({ cardPath, root });
   if (problems.length === 0) {
     console.log(`No staleness found: ${sourceCount} cited file(s) unchanged since ${verifiedAt}.`);
+    if (quoteCount > 0) console.log(`${quotesFound} of ${quoteCount} quoted note(s) found on their cited lines.`);
     console.log("This is not proof every line is correct; it only means the cited files have not changed.");
     return 0;
   }
@@ -175,4 +227,4 @@ if (require.main === module) {
   process.exitCode = main();
 }
 
-module.exports = { checkCard, extractSources, main, parseArgs, readVerifiedAt };
+module.exports = { checkCard, extractQuotes, extractSources, main, parseArgs, readVerifiedAt };
