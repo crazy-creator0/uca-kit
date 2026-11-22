@@ -582,3 +582,53 @@ test("fuzz harnesses and test_files folders are set apart like tests", () => {
   assert.match(entry, /- Cargo bin tool: src\/main\.rs \(source: Cargo\.toml\)/);
   assert.doesNotMatch(entry, /fuzz_parse|- file present: extra\/test_files/);
 });
+
+const section = (out, name) => out.split(`<!-- uca:generated:${name} -->`)[1].split("<!-- /uca:generated -->")[0];
+
+test("a route-like path in a file that does not import react-router is not a route", () => {
+  const out = card(repo({
+    "package.json": JSON.stringify({ name: "tool", bin: { tool: "cli.js" } }),
+    "cli.js": "// mentions react-router in a comment only\nconst cfg = { path: `/${dir}src/main.rs` };\nconst other = { path: \"/settings\" };\n",
+    "src/App.jsx": 'import { Route } from "react-router-dom";\nconst routes = [{ path: "/cart" }, { path: `/${id}` }];\n'
+  }));
+  const routes = section(out, "routes");
+  assert.match(routes, /Page in src\/App\.jsx: \/cart \(source: src\/App\.jsx:2\)/);
+  assert.doesNotMatch(routes, /cli\.js|\/settings|\$\{/);
+});
+
+test("node:sqlite counts only when app code imports it, not in benchmarks or in a string", () => {
+  const sample = card(repo({
+    "package.json": JSON.stringify({ name: "tool" }),
+    "src/scan.js": "const pattern = /node:sqlite/;\nmodule.exports = pattern;\n",
+    "benchmarks/lib.cjs": 'const { DatabaseSync } = require("node:sqlite");\n'
+  }));
+  assert.doesNotMatch(section(sample, "data"), /node:sqlite/);
+  const real = card(repo({
+    "package.json": JSON.stringify({ name: "app" }),
+    "src/db.js": 'import { DatabaseSync } from "node:sqlite";\n'
+  }));
+  assert.match(section(real, "data"), /- Uses the built-in node:sqlite module \(source: src\/db\.js\)/);
+});
+
+test("auth-named files in examples, tests or benchmarks are not listed as the app's auth", () => {
+  const out = card(repo({
+    "package.json": JSON.stringify({ name: "kit" }),
+    "benchmarks/sample-app/src/auth.cjs": "module.exports = {};\n",
+    "examples/login.js": "module.exports = {};\n",
+    "src/auth.js": "module.exports = {};\n"
+  }));
+  const auth = section(out, "auth");
+  assert.match(auth, /File name suggests authentication code: src\/auth\.js/);
+  assert.doesNotMatch(auth, /benchmarks|examples/);
+  assert.doesNotMatch(section(out, "unknowns"), /benchmarks|examples\/login/);
+});
+
+test("TODO markers count only in comments and once per line", () => {
+  const out = card(repo({
+    "package.json": JSON.stringify({ name: "tool" }),
+    "src/scan.js": "const marker = /\\b(TODO|FIXME|HACK)\\b/g; // TODO tidy, FIXME later\nconst label = \"TODO list\";\n",
+    "src/tap.js": "const skip = /# TODO/;\n",
+    "src/job.py": "x = 1  # FIXME: retry\ny = \"# TODO in a string\"\n"
+  }));
+  assert.match(section(out, "conventions"), /2 TODO\/FIXME\/HACK comment\(s\); first: src\/job\.py:1, src\/scan\.js:1 \(source: src\/job\.py\)/);
+});

@@ -814,9 +814,13 @@ function discover(root) {
       const methods = found[3] ? found[3].replace(/['"\s]/g, "").replace(/,/g, "/") : "GET";
       apiRoutes.push({ text: `${methods} ${found[2]}`, file, line: at(found.index), group: file, style: "Flask" });
     }
-    if (/react-router/.test(text)) {
-      for (const found of text.matchAll(/<Route\b[^>]*\bpath=(['"{`]+)(\/?[^'"`}]*)/g)) pageRoutes.push({ text: found[2].startsWith("/") ? found[2] : `/${found[2]}`, file, line: at(found.index), group: file, style: "" });
-      for (const found of text.matchAll(/\bpath:\s*(['"`])(\/?[^'"`]*)\1/g)) pageRoutes.push({ text: found[2].startsWith("/") ? found[2] : `/${found[2]}`, file, line: at(found.index), group: file, style: "" });
+    // Only files that import react-router; a path built from a template (`${...}`) is not a route.
+    if (/(?:\bfrom\s*|\brequire\(\s*|\bimport\(\s*)['"]react-router(?:-dom)?['"]/.test(text)) {
+      const page = (found, value) => {
+        if (!value.includes("${")) pageRoutes.push({ text: value.startsWith("/") ? value : `/${value}`, file, line: at(found.index), group: file, style: "" });
+      };
+      for (const found of text.matchAll(/<Route\b[^>]*\bpath=(['"{`]+)(\/?[^'"`}]*)/g)) page(found, found[2]);
+      for (const found of text.matchAll(/\bpath:\s*(['"`])(\/?[^'"`]*)\1/g)) page(found, found[2]);
     }
   }
   const prefixOf = fastapiPrefixes(files, read, makeResolver(fileSet));
@@ -877,8 +881,9 @@ function discover(root) {
     const models = [...(read(file) || "").matchAll(/^model\s+(\w+)/gm)].map((match) => match[1]);
     out.data.push(fact(`Prisma schema${provider ? `, provider ${provider[1]}` : ""}${models.length ? `, models: ${models.slice(0, 15).join(", ")}` : ""}`, file));
   }
+  // An import of node:sqlite in app code; examples, tests and benchmarks do not count, nor does the name in a string.
   for (const file of files) {
-    if (SOURCE_EXT.test(file) && /node:sqlite/.test(read(file) || "")) {
+    if (SOURCE_EXT.test(file) && !isSample(file) && /(?:\bfrom\s*|\brequire\(\s*|\bimport\(\s*)['"]node:sqlite['"]/.test(read(file) || "")) {
       out.data.push(fact("Uses the built-in node:sqlite module", file));
       break;
     }
@@ -901,7 +906,7 @@ function discover(root) {
   for (const file of files) {
     if (/django\.contrib\.auth/.test(/(^|\/)settings\.py$/.test(file) ? read(file) || "" : "")) out.auth.push(fact("django.contrib.auth is in INSTALLED_APPS", file));
   }
-  const authFiles = files.filter((file) => /(^|\/)[^/]*(auth|login|session|jwt)[^/]*\.(c|m)?(js|ts)x?$|(^|\/)[^/]*(auth|login|session)[^/]*\.py$/i.test(file) && !/\.(test|spec)\./.test(file)).slice(0, 8);
+  const authFiles = files.filter((file) => /(^|\/)[^/]*(auth|login|session|jwt)[^/]*\.(c|m)?(js|ts)x?$|(^|\/)[^/]*(auth|login|session)[^/]*\.py$/i.test(file) && !isSample(file)).slice(0, 8);
   for (const file of authFiles) out.auth.push(fact(`File name suggests authentication code: ${file}`, file));
   if (out.auth.length > 0) unknown.push(`How authentication works end to end (${authFiles.length ? authFiles.slice(0, 3).join(", ") : "dependencies above"}): listed from names only; read the code before relying on it.`);
 
@@ -935,12 +940,20 @@ function discover(root) {
     if (style) out.conventions.push(fact(`Indent: ${style[1]}${size ? ` ${size[1]}` : ""}`, ".editorconfig"));
   }
   if (files.some((file) => file.startsWith(".github/workflows/"))) out.conventions.push(fact("CI workflows exist", ".github/workflows"));
+  // A marker counts only inside a comment, once per line: on a comment line, or after " //" (or " #" in Python).
+  // The same word inside a string or a regular expression does not count.
   const todoHits = [];
   for (const file of files) {
     if (!SOURCE_EXT.test(file)) continue;
     const text = read(file);
     if (!text) continue;
-    for (const hit of text.matchAll(/\b(TODO|FIXME|HACK)\b/g)) todoHits.push(`${file}:${lineOf(text, hit.index)}`);
+    const lines = new Set();
+    for (const hit of text.matchAll(/\b(TODO|FIXME|HACK)\b/g)) {
+      const before = text.slice(text.lastIndexOf("\n", hit.index - 1) + 1, hit.index);
+      const comment = inComment(text, hit.index) || /(^|\s)\/\//.test(before) || (/\.py$/.test(file) && /(^|\s)#/.test(before));
+      if (comment) lines.add(lineOf(text, hit.index));
+    }
+    for (const line of lines) todoHits.push(`${file}:${line}`);
   }
   if (todoHits.length > 0) out.conventions.push(fact(`${todoHits.length} TODO/FIXME/HACK comment(s); first: ${todoHits.slice(0, 5).join(", ")}`, todoHits[0].split(":")[0]));
 
