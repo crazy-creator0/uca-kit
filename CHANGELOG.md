@@ -10,6 +10,12 @@ Added (benchmarks)
 Added (samples)
 - Sample 05, Python basics visualised: a long study page for beginners, built without and with the kit (v0.2.0). The maintainer re-ran every shown output in Python (132 of 132 and 82 of 82 right) and read both pages against a 20-point list of beginner traps (0 wrong statements on either). Without the kit the page is bigger and more visual; with the kit it is shorter and leaves a README, tests and a design brief. Full review in `demo/samples/python-basics/REVIEW.md`.
 
+Changed (project scanner)
+- FastAPI routes are listed with their full path (`POST /api/v1/login/access-token`) instead of a prefix and a short path side by side.
+- Docker Compose files (root or one folder down, not examples or tests): their services are listed under Structure, services running a database image (PostgreSQL, MySQL, MariaDB, MongoDB, Redis, Valkey) are listed under Data, and Deployment says Compose files exist instead of "not discovered".
+- Python dependencies: SQLModel, asyncpg, PyMySQL and PyMongo are listed under Data; passlib, pwdlib, bcrypt and argon2-cffi under Authentication; the psycopg drivers are labelled as PostgreSQL drivers.
+- On the project questions benchmark, the scanner's card alone now answers 10 of 30 questions (7 before).
+
 Fixed
 - Senior Bar check: passing the whole environment to a child process (`dict(os.environ, ...)`, `{ ...process.env }`) no longer counts as reading settings, so it no longer asks for an `.env.example`. Reading a named value (`os.environ["X"]`, `os.getenv`, `process.env.X`, `import.meta.env.X`) still does. Sample 05 found this false alarm.
 - Project scanner (`uca-project-discover.cjs`): four wrong facts it reported when run on this repository. A route-like `path:` in a file that only mentions react-router (or one built from a template) was listed as a page route; now only files that import react-router are read, and template paths are skipped. `node:sqlite` was reported as the app's database from a benchmark file, and would have been from any string containing the name; now only an import in app code counts. Auth-named files under examples, tests or benchmarks were listed as the app's authentication; now they are set apart like other sample files. TODO/FIXME/HACK words inside strings and regular expressions were counted, and the same line counted several times; now only comments count, once per line (on this repository: 14 reported before, 0 real ones). Each fix has a test that fails on the old code.

@@ -32,6 +32,15 @@ node benchmarks/project-questions/score.cjs map koa /tmp/koa
 
 What the card misses is the target for v0.3.0. Some gaps are facts the scanner already half-has: it shows `/api/v1` and `POST /login/access-token` but never joins them into the full path, and it lists PyJWT but not where the token is checked. Others need it to read deeper: the database behind SQLModel, Docker Compose, password hashing, the token's lifetime, an unsafe default secret.
 
+### Progress of the card
+
+| Scanner | fastapi-template | realworld-express | koa | All |
+| --- | --- | --- | --- | --- |
+| main `6fde3b0` (baseline) | 1 | 3 | 3 | 7 of 30 |
+| Full FastAPI paths, Python database and hashing dependencies, Docker Compose services | 4 (F02, F04, F10 added) | 3 | 3 | 10 of 30 |
+
+Every change to the scanner is general (tested on its own fixtures first) and is never written for one of these repositories. A question answered here by a fact built only for that question would make the count useless.
+
 The card count is a floor, not the score that matters. An agent with the card still opens files; the question is how many fewer.
 
 ## The token test (needs a model, not yet run)
