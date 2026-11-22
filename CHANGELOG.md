@@ -14,7 +14,8 @@ Changed (project scanner)
 - FastAPI routes are listed with their full path (`POST /api/v1/login/access-token`) instead of a prefix and a short path side by side.
 - Docker Compose files (root or one folder down, not examples or tests): their services are listed under Structure, services running a database image (PostgreSQL, MySQL, MariaDB, MongoDB, Redis, Valkey) are listed under Data, and Deployment says Compose files exist instead of "not discovered".
 - Python dependencies: SQLModel, asyncpg, PyMySQL and PyMongo are listed under Data; passlib, pwdlib, bcrypt and argon2-cffi under Authentication; the psycopg drivers are labelled as PostgreSQL drivers.
-- On the project questions benchmark, the scanner's card alone now answers 10 of 30 questions (7 before).
+- Express routes are listed with the prefix they are mounted under (`GET /api/articles`). The scanner follows `app.use("/api", router)`, `Router().use("/api", api)` and `router.use("/admin", require("./admin"))` through imports and local routers, nested mounts included. A router mounted at two different prefixes keeps its own paths and the line names both prefixes; nothing is guessed. A file that exports several routers is treated as one.
+- On the project questions benchmark, the scanner's card alone now answers 11 of 30 questions (7 before this release).
 
 Fixed
 - Senior Bar check: passing the whole environment to a child process (`dict(os.environ, ...)`, `{ ...process.env }`) no longer counts as reading settings, so it no longer asks for an `.env.example`. Reading a named value (`os.environ["X"]`, `os.getenv`, `process.env.X`, `import.meta.env.X`) still does. Sample 05 found this false alarm.
