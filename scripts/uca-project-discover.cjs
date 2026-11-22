@@ -519,7 +519,41 @@ const AUTH_DEPS = {
   bcryptjs: "bcryptjs", argon2: "argon2", "@clerk/nextjs": "Clerk", "@clerk/clerk-react": "Clerk", "firebase-admin": "Firebase Admin", auth0: "Auth0", "express-session": "express-session"
 };
 const INTEGRATIONS = { stripe: "Stripe", "@sendgrid/mail": "SendGrid", twilio: "Twilio", openai: "OpenAI", "aws-sdk": "AWS SDK", "@aws-sdk/client-s3": "AWS S3 client", nodemailer: "Nodemailer", axios: "axios" };
-const PY_FRAMEWORKS = { django: "Django", flask: "Flask", fastapi: "FastAPI", sqlalchemy: "SQLAlchemy", alembic: "Alembic", pytest: "pytest", pyjwt: "PyJWT", "flask-login": "Flask-Login", authlib: "Authlib", psycopg2: "psycopg2", psycopg: "psycopg", celery: "Celery" };
+const PY_FRAMEWORKS = {
+  django: "Django", flask: "Flask", fastapi: "FastAPI", sqlalchemy: "SQLAlchemy", sqlmodel: "SQLModel", alembic: "Alembic", pytest: "pytest",
+  pyjwt: "PyJWT", "flask-login": "Flask-Login", authlib: "Authlib", passlib: "passlib (password hashing)", pwdlib: "pwdlib (password hashing)",
+  bcrypt: "bcrypt", "argon2-cffi": "argon2-cffi", psycopg2: "psycopg2 (PostgreSQL driver)", psycopg: "psycopg (PostgreSQL driver)",
+  asyncpg: "asyncpg (PostgreSQL driver)", pymysql: "PyMySQL (MySQL driver)", pymongo: "PyMongo (MongoDB driver)", celery: "Celery"
+};
+const PY_DATA = ["sqlalchemy", "sqlmodel", "alembic", "psycopg2", "psycopg", "asyncpg", "pymysql", "pymongo"];
+const PY_AUTH = ["pyjwt", "flask-login", "authlib", "passlib", "pwdlib", "bcrypt", "argon2-cffi"];
+// Database images a Docker Compose service may run.
+const DB_IMAGES = { postgres: "PostgreSQL", postgis: "PostgreSQL (PostGIS)", mysql: "MySQL", mariadb: "MariaDB", mongo: "MongoDB", redis: "Redis", valkey: "Valkey" };
+
+// Top-level services of a Compose file and their images. A small reader for the common layout
+// (services: at column 0, two-space service keys, "image:" inside); anything else yields fewer facts, not wrong ones.
+function composeServices(text) {
+  const services = [];
+  let inServices = false;
+  let current = null;
+  for (const line of text.split(/\r?\n/)) {
+    if (/^\S/.test(line)) {
+      inServices = /^services:\s*(#.*)?$/.test(line);
+      current = null;
+      continue;
+    }
+    if (!inServices) continue;
+    const key = /^ {2}([\w.-]+):\s*(#.*)?$/.exec(line);
+    if (key) {
+      current = { name: key[1], image: null };
+      services.push(current);
+      continue;
+    }
+    const image = /^ {4}image:\s*['"]?([^'"\s#]+)/.exec(line);
+    if (image && current && !current.image) current.image = image[1];
+  }
+  return services;
+}
 
 function manifestsOf(files, read) {
   // package.json at the root and one level down (client/, server/, apps/x, packages/x).
@@ -598,7 +632,7 @@ function discover(root) {
     if (requires) out.stack.push(fact(`Python: ${requires[1]}`, "pyproject.toml"));
   }
   for (const [name, source] of python) {
-    if (["sqlalchemy", "alembic", "psycopg2", "psycopg", "pyjwt", "flask-login", "authlib"].includes(name)) continue;
+    if (PY_DATA.includes(name) || PY_AUTH.includes(name)) continue;
     out.stack.push(fact(`${PY_FRAMEWORKS[name]} (Python dependency)`, source));
   }
 
@@ -824,7 +858,15 @@ function discover(root) {
     }
   }
   const prefixOf = fastapiPrefixes(files, read, makeResolver(fileSet));
-  for (const route of apiRoutes) if (route.style === "FastAPI") route.prefix = prefixOf(route.file, route.router);
+  // FastAPI routes are shown with their full path: the joined router prefixes, then the decorator's path.
+  for (const route of apiRoutes) {
+    if (route.style !== "FastAPI") continue;
+    route.prefix = prefixOf(route.file, route.router);
+    if (route.prefix) {
+      const [method, ...rest] = route.text.split(" ");
+      route.text = `${method} ${route.prefix}${rest.join(" ")}`.replace(/(?<=\S)\/\/+/g, "/");
+    }
+  }
 
   const sampleRoutes = [...apiRoutes, ...pageRoutes].filter((route) => isSample(route.file));
   const appApi = apiRoutes.filter((route) => !sampleRoutes.includes(route));
@@ -844,10 +886,9 @@ function discover(root) {
       else routes.sort((a, b) => a.line - b.line);
       const head = routes[0];
       const style = head.style ? ` (${head.style})` : "";
-      const under = head.prefix ? `, under ${head.prefix}` : "";
       const shown = routes.slice(0, MAX_ROUTES_PER_LINE).map((route) => route.text).join(", ");
       const more = routes.length > MAX_ROUTES_PER_LINE ? ` (+${routes.length - MAX_ROUTES_PER_LINE} more)` : "";
-      const line = fact(`${label} in ${head.group}${style}${under}: ${shown}${more}`, head.line ? `${head.file}:${head.line}` : head.file);
+      const line = fact(`${label} in ${head.group}${style}: ${shown}${more}`, head.line ? `${head.file}:${head.line}` : head.file);
       if (routeChars > 0 && routeChars + line.length > MAX_ROUTE_CHARS) {
         routeGroupsLeft += 1;
         continue;
@@ -875,7 +916,7 @@ function discover(root) {
     const deps = depsOf(manifest);
     for (const [name, label] of Object.entries(DATABASES)) if (deps[name]) out.data.push(fact(`Dependency declared: ${label}${manifest.dir ? ` (in ${manifest.dir}/)` : ""}`, manifest.file));
   }
-  for (const [name, source] of python) if (["sqlalchemy", "alembic", "psycopg2", "psycopg"].includes(name)) out.data.push(fact(`Python dependency: ${PY_FRAMEWORKS[name]}`, source));
+  for (const [name, source] of python) if (PY_DATA.includes(name)) out.data.push(fact(`Python dependency: ${PY_FRAMEWORKS[name]}`, source));
   for (const file of files.filter((name) => /(^|\/)schema\.prisma$/.test(name))) {
     const provider = /datasource\s+\w+\s*\{[^}]*provider\s*=\s*"([^"]+)"/s.exec(read(file) || "");
     const models = [...(read(file) || "").matchAll(/^model\s+(\w+)/gm)].map((match) => match[1]);
@@ -897,12 +938,22 @@ function discover(root) {
     if (engine) out.data.push(fact(`Django database engine: ${engine[1]}`, file));
   }
 
+  // ----- Docker Compose: services, and the database images they run -----
+  const composeFiles = files.filter((file) => /(^|\/)(docker-)?compose(\.[\w-]+)?\.ya?ml$/.test(file) && file.split("/").length <= 2 && !isSample(file));
+  const compose = composeFiles.map((file) => ({ file, services: composeServices(read(file) || "") }));
+  for (const { file, services } of compose) {
+    for (const service of services) {
+      const repo = (service.image || "").split("/").pop().split(":")[0].replace(/\$\{[^}]*\}/g, "");
+      if (DB_IMAGES[repo]) out.data.push(fact(`Docker Compose service "${service.name}" runs ${DB_IMAGES[repo]} (image ${service.image})`, file));
+    }
+  }
+
   // ----- authentication (dependencies and file names only) -----
   for (const manifest of manifests) {
     const deps = depsOf(manifest);
     for (const [name, label] of Object.entries(AUTH_DEPS)) if (deps[name]) out.auth.push(fact(`Dependency declared: ${label}${manifest.dir ? ` (in ${manifest.dir}/)` : ""}`, manifest.file));
   }
-  for (const [name, source] of python) if (["pyjwt", "flask-login", "authlib"].includes(name)) out.auth.push(fact(`Python dependency: ${PY_FRAMEWORKS[name]}`, source));
+  for (const [name, source] of python) if (PY_AUTH.includes(name)) out.auth.push(fact(`Python dependency: ${PY_FRAMEWORKS[name]}`, source));
   for (const file of files) {
     if (/django\.contrib\.auth/.test(/(^|\/)settings\.py$/.test(file) ? read(file) || "" : "")) out.auth.push(fact("django.contrib.auth is in INSTALLED_APPS", file));
   }
@@ -973,7 +1024,10 @@ function discover(root) {
   avoid.sort().forEach((item) => out.structure.push(`- Avoid: ${item}`));
 
   // ----- always unknown -----
-  unknown.push("Deployment and hosting: not discovered.");
+  if (compose.length > 0) {
+    for (const { file, services } of compose) out.structure.push(fact(`Docker Compose file${services.length ? `, services: ${services.map((service) => service.name).slice(0, 12).join(", ")}` : ""}`, file));
+    unknown.push(`Deployment and hosting: Docker Compose files exist (${composeFiles.slice(0, 4).join(", ")}); where and how it is hosted is not discovered.`);
+  } else unknown.push("Deployment and hosting: not discovered.");
   unknown.push("Known issues and limits: only TODO/FIXME comments are listed above; check the issue tracker.");
   unknown.push(...declared.length ? ["Whether each declared command works: not run, see Commands."] : ["Run, test, lint and build commands: none were found in a manifest or Makefile."]);
   out.unknowns = unknown.map((line) => `- ${line}`);

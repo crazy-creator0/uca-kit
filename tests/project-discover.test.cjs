@@ -494,8 +494,8 @@ test("routes: FastAPI prefixes from APIRouter and include_router are joined into
     "backend/app/api/routes/items.py": "from fastapi import APIRouter\nrouter = APIRouter()\n@router.get(\"/\")\ndef a(): pass\n@router.post(\"/{id}\")\ndef b(): pass\n",
     "backend/app/api/routes/__init__.py": ""
   }));
-  assert.match(out, /- API in backend\/app\/api\/routes\/users\.py \(FastAPI\), under \/api\/v1\/users: GET \/, GET \/me, DELETE \/\{user_id\} \(source: backend\/app\/api\/routes\/users\.py:3\)/);
-  assert.match(out, /- API in backend\/app\/api\/routes\/items\.py \(FastAPI\), under \/api\/v1\/items: GET \/, POST \/\{id\} \(source: backend\/app\/api\/routes\/items\.py:3\)/);
+  assert.match(out, /- API in backend\/app\/api\/routes\/users\.py \(FastAPI\): GET \/api\/v1\/users\/, GET \/api\/v1\/users\/me, DELETE \/api\/v1\/users\/\{user_id\} \(source: backend\/app\/api\/routes\/users\.py:3\)/);
+  assert.match(out, /- API in backend\/app\/api\/routes\/items\.py \(FastAPI\): GET \/api\/v1\/items\/, POST \/api\/v1\/items\/\{id\} \(source: backend\/app\/api\/routes\/items\.py:3\)/);
 });
 
 test("routes: a prefix that cannot be read from a literal is shown as unknown, not guessed", () => {
@@ -503,7 +503,7 @@ test("routes: a prefix that cannot be read from a literal is shown as unknown, n
     "main.py": "from fastapi import FastAPI\nimport os\nfrom routes import router\napp = FastAPI()\napp.include_router(router, prefix=os.environ[\"BASE\"])\n",
     "routes.py": "from fastapi import APIRouter\nrouter = APIRouter()\n@router.get(\"/ping\")\ndef p(): pass\n"
   }));
-  assert.match(out, /- API in routes\.py \(FastAPI\), under \{unread prefix\}: GET \/ping \(source: routes\.py:3\)/);
+  assert.match(out, /- API in routes\.py \(FastAPI\): GET \{unread prefix\}\/ping \(source: routes\.py:3\)/);
 });
 
 test("routes: the block stays within a character budget and long files are cut with a count", () => {
@@ -631,4 +631,34 @@ test("TODO markers count only in comments and once per line", () => {
     "src/job.py": "x = 1  # FIXME: retry\ny = \"# TODO in a string\"\n"
   }));
   assert.match(section(out, "conventions"), /2 TODO\/FIXME\/HACK comment\(s\); first: src\/job\.py:1, src\/scan\.js:1 \(source: src\/job\.py\)/);
+});
+
+test("Docker Compose: services are listed, database images become data facts, and deployment is no longer 'not discovered'", () => {
+  const out = card(repo({
+    "package.json": JSON.stringify({ name: "app" }),
+    "compose.yml": "# local stack\nservices:\n  db:\n    image: postgres:18\n    restart: always\n  cache:\n    image: \"redis:7-alpine\"\n  web:\n    build: .\n    ports:\n      - \"3000:3000\"\nvolumes:\n  data:\n",
+    "examples/docker-compose.yml": "services:\n  demo:\n    image: mysql:8\n"
+  }));
+  const data = section(out, "data");
+  assert.match(data, /- Docker Compose service "db" runs PostgreSQL \(image postgres:18\) \(source: compose\.yml\)/);
+  assert.match(data, /- Docker Compose service "cache" runs Redis \(image redis:7-alpine\) \(source: compose\.yml\)/);
+  assert.doesNotMatch(data, /MySQL|demo/);
+  assert.match(section(out, "structure"), /- Docker Compose file, services: db, cache, web \(source: compose\.yml\)/);
+  assert.doesNotMatch(section(out, "structure"), /data/);
+  assert.match(section(out, "unknowns"), /Deployment and hosting: Docker Compose files exist \(compose\.yml\); where and how it is hosted is not discovered\./);
+});
+
+test("without a Compose file, deployment stays not discovered", () => {
+  const out = card(repo({ "package.json": JSON.stringify({ name: "app" }) }));
+  assert.match(section(out, "unknowns"), /- Deployment and hosting: not discovered\./);
+});
+
+test("Python database and password-hashing dependencies land in the data and auth blocks, not the stack", () => {
+  const out = card(repo({
+    "pyproject.toml": "[project]\ndependencies = [\n  \"fastapi>=0.1\",\n  \"sqlmodel>=0.0.1\",\n  \"psycopg[binary]>=3\",\n  \"pwdlib[argon2]>=0.2\",\n]\n"
+  }));
+  assert.match(section(out, "data"), /- Python dependency: SQLModel \(source: pyproject\.toml\)/);
+  assert.match(section(out, "data"), /- Python dependency: psycopg \(PostgreSQL driver\) \(source: pyproject\.toml\)/);
+  assert.match(section(out, "auth"), /- Python dependency: pwdlib \(password hashing\) \(source: pyproject\.toml\)/);
+  assert.doesNotMatch(section(out, "stack"), /SQLModel|psycopg|pwdlib/);
 });
