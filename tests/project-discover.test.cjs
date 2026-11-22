@@ -699,3 +699,48 @@ test("Express mounts: a router mounted at two different prefixes keeps its own p
   }));
   assert.match(section(out, "routes"), /- API in health\.js, mounted at \/v1, \/v2: GET \/health /);
 });
+
+test("key files: one of each kind first (entry, auth, config, data model, routes), ranked by name parts", () => {
+  const out = card(repo({
+    "package.json": JSON.stringify({ name: "api", main: "src/main.ts", dependencies: { express: "^4.18.0" } }),
+    "src/main.ts": "import routes from './routes';\nconst app = require('express')();\napp.use(routes);\n",
+    "src/routes.ts": "import { Router } from 'express';\nconst router = Router();\nrouter.get('/a', f);\nrouter.get('/b', f);\nexport default router;\n",
+    "src/article/author.mapper.ts": "export {};\n",
+    "src/auth/auth.controller.ts": "export {};\n",
+    "src/auth/token.utils.ts": "export {};\n",
+    "src/hooks/useAuth.tsx": "export {};\n",
+    "src/config.ts": "export const port = 3000;\n",
+    "vite.config.ts": "export default {};\n",
+    "openapi-ts.config.ts": "export default {};\n",
+    "src/pages/settings.tsx": "export {};\n",
+    "src/models/http-error.model.ts": "export {};\n",
+    "prisma/schema.prisma": "model User {\n  id Int @id\n}\n",
+    "migrations/env.ts": "export {};\n",
+    "tests/auth.test.ts": "export {};\n"
+  }));
+  const keys = section(out, "key-files").split("\n").filter((line) => line.startsWith("- ")).map((line) => line.replace(/ \(source: .*\)$/, ""));
+  assert.deepEqual(keys.slice(0, 5), [
+    "- src/main.ts: entry",
+    "- src/auth/token.utils.ts: auth (by name)",
+    "- src/config.ts: config (by name)",
+    "- prisma/schema.prisma: data model",
+    "- src/routes.ts: routes (2)"
+  ]);
+  const all = keys.join("\n");
+  assert.doesNotMatch(all, /author\.mapper|vite\.config|openapi-ts|settings\.tsx|migrations|tests\//);
+  assert.ok(keys.length <= 8);
+});
+
+test("key files: a library with only an entry gets the files the entry imports", () => {
+  const out = card(repo({
+    "package.json": JSON.stringify({ name: "lib", main: "lib/index.js" }),
+    "lib/index.js": "const request = require('./request');\nconst response = require('./response');\nmodule.exports = { request, response };\n",
+    "lib/request.js": "module.exports = {};\n",
+    "lib/response.js": "module.exports = {};\n"
+  }));
+  const keys = section(out, "key-files");
+  assert.match(keys, /- lib\/index\.js: entry/);
+  assert.match(keys, /- lib\/request\.js: imported by lib\/index\.js/);
+  assert.match(keys, /- lib\/response\.js: imported by lib\/index\.js/);
+  assert.match(keys, /on a small model, only the first 3\./);
+});
