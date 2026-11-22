@@ -38,6 +38,7 @@ What the card misses is the target for v0.3.0. Some gaps are facts the scanner a
 | --- | --- | --- | --- | --- |
 | main `6fde3b0` (baseline) | 1 | 3 | 3 | 7 of 30 |
 | Full FastAPI paths, Python database and hashing dependencies, Docker Compose services | 4 (F02, F04, F10 added) | 3 | 3 | 10 of 30 |
+| Express mount prefixes (`app.use('/api', router)`, through imports and local routers) | 4 | 4 (R02 added) | 3 | 11 of 30 |
 
 Every change to the scanner is general (tested on its own fixtures first) and is never written for one of these repositories. A question answered here by a fact built only for that question would make the count useless.
 

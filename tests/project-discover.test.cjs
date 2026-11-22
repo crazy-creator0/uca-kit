@@ -662,3 +662,40 @@ test("Python database and password-hashing dependencies land in the data and aut
   assert.match(section(out, "auth"), /- Python dependency: pwdlib \(password hashing\) \(source: pyproject\.toml\)/);
   assert.doesNotMatch(section(out, "stack"), /SQLModel|psycopg|pwdlib/);
 });
+
+test("Express mounts: a prefix on Router().use, through a local router, is added to the routes it holds", () => {
+  const out = card(repo({
+    "package.json": JSON.stringify({ name: "api", main: "src/main.ts", dependencies: { express: "^4.18.0" } }),
+    "src/main.ts": "import * as express from 'express';\nimport routes from './routes/routes';\nconst app = express();\napp.use(express.json());\napp.use(routes);\napp.get('/', (q, r) => r.json({}));\napp.listen(3000);\n",
+    "src/routes/routes.ts": "import { Router } from 'express';\nimport tags from './tag.controller';\nimport users from './user.controller';\n\nconst api = Router()\n  .use(tags)\n  .use(users);\n\nexport default Router().use('/api', api);\n",
+    "src/routes/tag.controller.ts": "import { Router } from 'express';\nconst router = Router();\nrouter.get('/tags', (q, r) => r.json([]));\nexport default router;\n",
+    "src/routes/user.controller.ts": "import { Router } from 'express';\nconst router = Router();\nrouter.post('/users/login', (q, r) => r.end());\nrouter.use('/admin', require('./admin'));\nexport default router;\n",
+    "src/routes/admin.ts": "const { Router } = require('express');\nconst router = Router();\nrouter.delete('/users/:id', (q, r) => r.end());\nmodule.exports = router;\n"
+  }));
+  const routes = section(out, "routes");
+  assert.match(routes, /- API in src\/routes\/tag\.controller\.ts: GET \/api\/tags \(source: src\/routes\/tag\.controller\.ts:3\)/);
+  assert.match(routes, /- API in src\/routes\/user\.controller\.ts: POST \/api\/users\/login /);
+  assert.match(routes, /- API in src\/routes\/admin\.ts: DELETE \/api\/admin\/users\/:id /);
+  assert.match(routes, /- API in src\/main\.ts: GET \/ \(source: src\/main\.ts:6\)/);
+});
+
+test("Express mounts: CommonJS app.use('/v1', router) and app.use('/v1', require(...)) prefix the routes", () => {
+  const out = card(repo({
+    "package.json": JSON.stringify({ name: "api", main: "server.js", dependencies: { express: "^4.18.0" } }),
+    "server.js": "const express = require('express');\nconst orders = require('./routes/orders');\nconst app = express();\napp.use(express.static('public'));\napp.use('/shop', orders);\napp.use('/v1', require('./routes/users'));\napp.listen(3000);\n",
+    "routes/orders.js": "const router = require('express').Router();\nrouter.get('/orders/:id', (q, r) => r.end());\nmodule.exports = router;\n",
+    "routes/users.js": "const router = require('express').Router();\nrouter.get('/', (q, r) => r.end());\nrouter.post('/me', (q, r) => r.end());\nmodule.exports = router;\n"
+  }));
+  const routes = section(out, "routes");
+  assert.match(routes, /- API in routes\/orders\.js: GET \/shop\/orders\/:id /);
+  assert.match(routes, /- API in routes\/users\.js: GET \/v1, POST \/v1\/me /);
+});
+
+test("Express mounts: a router mounted at two different prefixes keeps its own paths and names both prefixes", () => {
+  const out = card(repo({
+    "package.json": JSON.stringify({ name: "api", main: "app.js", dependencies: { express: "^4.18.0" } }),
+    "app.js": "const express = require('express');\nconst health = require('./health');\nconst app = express();\napp.use('/v1', health);\napp.use('/v2', health);\n",
+    "health.js": "const router = require('express').Router();\nrouter.get('/health', (q, r) => r.end());\nmodule.exports = router;\n"
+  }));
+  assert.match(section(out, "routes"), /- API in health\.js, mounted at \/v1, \/v2: GET \/health /);
+});

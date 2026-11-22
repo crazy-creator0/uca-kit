@@ -353,6 +353,82 @@ function fastapiPrefixes(files, read, resolver) {
   return (file, variable) => full(file, variable);
 }
 
+// Express-style mounts: app.use("/api", router), Router().use("/api", api), router.use(require("./x")).
+// Returns (file, receiver) => the set of path prefixes the routes in that file sit under.
+// A node is a router inside a file: (file, local name), or (file, "*") for what the file exports.
+// An imported router is the whole file it comes from; a file that exports several routers is treated as one.
+function expressPrefixes(files, read, resolver) {
+  const js = files.filter((file) => /\.(c|m)?(js|ts)x?$/.test(file) && !isSample(file));
+  const incoming = new Map(); // node key -> [{ from: node key, prefix }]
+  const key = (file, name) => `${file}|${name}`;
+  const add = (to, from, prefix) => {
+    if (!incoming.has(to)) incoming.set(to, []);
+    incoming.get(to).push({ from, prefix });
+  };
+  for (const file of js) {
+    const text = read(file) || "";
+    if (!/\.use\(/.test(text)) continue;
+    const bindings = new Map();
+    for (const found of text.matchAll(/\bimport\s+([\w$]+)?\s*,?\s*(?:\*\s+as\s+([\w$]+)|\{([^}]*)\})?\s*from\s*(['"])([^'"\n]+)\4/g)) {
+      const target = resolver.js(file, found[5]);
+      if (!target) continue;
+      const names = [found[1], found[2], ...(found[3] || "").split(",").map((part) => part.trim().split(/\s+as\s+/).pop())].filter(Boolean);
+      for (const name of names) bindings.set(name, target);
+    }
+    for (const found of text.matchAll(/\b(?:const|let|var)\s+(?:([\w$]+)|\{([^}]*)\})\s*=\s*require\(\s*(['"])([^'"\n]+)\3\s*\)/g)) {
+      const target = resolver.js(file, found[4]);
+      if (!target) continue;
+      const names = found[1] ? [found[1]] : found[2].split(",").map((part) => part.trim().split(/\s*:\s*/).pop());
+      for (const name of names.filter(Boolean)) bindings.set(name, target);
+    }
+    const definitions = [...text.matchAll(/\b(?:const|let|var)\s+([\w$]+)\s*=/g)].map((found) => ({ name: found[1], at: found.index }));
+    const owner = (index) => {
+      let back = index - 1;
+      while (back >= 0 && /\s/.test(text[back])) back -= 1;
+      const ident = /([\w$]+)$/.exec(text.slice(Math.max(0, back - 60), back + 1));
+      if (ident && text[back - ident[1].length] !== ".") return ident[1];
+      // A chain such as "const api = Router()\n  .use(a)": the variable whose definition the call sits in.
+      const def = definitions.filter((item) => item.at < index && !text.slice(item.at, index).includes(";")).pop();
+      const exported = text.lastIndexOf("export default", index);
+      if (def && !(exported > def.at && !text.slice(exported, index).includes(";"))) return def.name;
+      return "*";
+    };
+    for (const found of text.matchAll(/\.use\(\s*(?:(['"`])(\/[^'"`\n]*)\1\s*,)?([^;]*?)\)\s*(?=[;.\n)]|$)/g)) {
+      if (inComment(text, found.index)) continue;
+      const prefix = found[2] || "";
+      const from = owner(found.index);
+      const fromKey = key(file, from);
+      for (const arg of found[3].split(",").map((part) => part.trim()).filter(Boolean)) {
+        const required = /^require\(\s*(['"])([^'"\n]+)\1\s*\)?$/.exec(arg);
+        if (required) {
+          const target = resolver.js(file, required[2]);
+          if (target) add(key(target, "*"), fromKey, prefix);
+          continue;
+        }
+        const name = /^([\w$]+)(?:\.[\w$]+)*$/.exec(arg);
+        if (!name) continue;
+        if (bindings.has(name[1])) add(key(bindings.get(name[1]), "*"), fromKey, prefix);
+        else if (definitions.some((item) => item.name === name[1])) add(key(file, name[1]), fromKey, prefix);
+      }
+    }
+  }
+  const memo = new Map();
+  const prefixes = (node, seen = new Set()) => {
+    if (memo.has(node)) return memo.get(node);
+    if (seen.has(node) || seen.size > 40) return new Set([""]);
+    seen.add(node);
+    let parents = incoming.get(node) || [];
+    // A router with no mount inside its own file inherits the file's prefixes (it is what the file exports or serves).
+    if (parents.length === 0 && !node.endsWith("|*")) parents = (incoming.get(`${node.slice(0, node.lastIndexOf("|"))}|*`) || []);
+    const out = new Set();
+    if (parents.length === 0) out.add("");
+    for (const parent of parents) for (const above of prefixes(parent.from, new Set(seen))) out.add(`${above}${parent.prefix}`.replace(/\/\/+/g, "/"));
+    memo.set(node, out);
+    return out;
+  };
+  return (file, receiver) => [...new Set([...prefixes(key(file, receiver))].map((value) => value.replace(/\/$/, "")))];
+}
+
 // Cargo.toml files: package name, [lib] and [[bin]] targets (with Cargo's default paths).
 function cargoCrates(files, read, fileSet) {
   const crates = [];
@@ -837,9 +913,9 @@ function discover(root) {
     const text = read(file);
     if (!text) continue;
     const at = (index) => lineOf(text, index);
-    for (const found of text.matchAll(/\b(?:app|router|server|api|routes)\.(get|post|put|patch|delete)\(\s*(['"`])(\/[^'"`]*)\2/g)) {
+    for (const found of text.matchAll(/\b(app|router|server|api|routes)\.(get|post|put|patch|delete)\(\s*(['"`])(\/[^'"`]*)\3/g)) {
       if (inComment(text, found.index) || text[found.index - 1] === "@") continue;
-      apiRoutes.push({ text: `${found[1].toUpperCase()} ${found[3]}`, file, line: at(found.index), group: file, style: "" });
+      apiRoutes.push({ text: `${found[2].toUpperCase()} ${found[4]}`, file, line: at(found.index), group: file, style: "", receiver: found[1] });
     }
     for (const found of text.matchAll(/@(\w+)\.(get|post|put|patch|delete)\(\s*(['"])(\/[^'"]*)\3/g)) {
       apiRoutes.push({ text: `${found[2].toUpperCase()} ${found[4]}`, file, line: at(found.index), group: file, style: "FastAPI", router: found[1] });
@@ -858,6 +934,16 @@ function discover(root) {
     }
   }
   const prefixOf = fastapiPrefixes(files, read, makeResolver(fileSet));
+  // Express-style routes are shown with the prefix they are mounted under, when every mount path agrees.
+  const mountedAt = expressPrefixes(files, read, resolveImport);
+  for (const route of apiRoutes) {
+    if (!route.receiver) continue;
+    const found = mountedAt(route.file, route.receiver).filter(Boolean);
+    if (found.length === 1) {
+      const [method, ...rest] = route.text.split(" ");
+      route.text = `${method} ${found[0]}${rest.join(" ")}`.replace(/(?<=\S)\/\/+/g, "/").replace(/(?<=\S)\/$/, "");
+    } else if (found.length > 1) route.prefix = `mounted at ${found.slice(0, 4).join(", ")}`;
+  }
   // FastAPI routes are shown with their full path: the joined router prefixes, then the decorator's path.
   for (const route of apiRoutes) {
     if (route.style !== "FastAPI") continue;
@@ -888,7 +974,8 @@ function discover(root) {
       const style = head.style ? ` (${head.style})` : "";
       const shown = routes.slice(0, MAX_ROUTES_PER_LINE).map((route) => route.text).join(", ");
       const more = routes.length > MAX_ROUTES_PER_LINE ? ` (+${routes.length - MAX_ROUTES_PER_LINE} more)` : "";
-      const line = fact(`${label} in ${head.group}${style}: ${shown}${more}`, head.line ? `${head.file}:${head.line}` : head.file);
+      const several = head.prefix && head.prefix.startsWith("mounted at ") ? `, ${head.prefix}` : "";
+      const line = fact(`${label} in ${head.group}${style}${several}: ${shown}${more}`, head.line ? `${head.file}:${head.line}` : head.file);
       if (routeChars > 0 && routeChars + line.length > MAX_ROUTE_CHARS) {
         routeGroupsLeft += 1;
         continue;
