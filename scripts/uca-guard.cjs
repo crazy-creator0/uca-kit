@@ -91,7 +91,7 @@ const REDACTIONS = [
   [/(authorization\s*[:=]\s*["']?)(?:(?:bearer|basic|token)\s+)?[^\s"',;]+/gi, `$1${REDACTED}`],
   [/\bBearer\s+[A-Za-z0-9._~+/=-]{8,}/gi, `Bearer ${REDACTED}`],
   [/((?:set-)?cookie\s*:\s*)[^\n]+/gi, `$1${REDACTED}`],
-  [/\b(?:sk-[A-Za-z0-9_-]{16,}|ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{30,}|eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,})/g, REDACTED],
+  [/\b(?:sk-[A-Za-z0-9_-]{16,}|(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}|whsec_[A-Za-z0-9]{16,}|ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{30,}|eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,})/g, REDACTED],
   [/(\b[a-z][a-z0-9+.-]*:\/\/[^\s:@/]+:)[^\s@/]+(@)/gi, `$1${REDACTED}$2`],
   [new RegExp(`(\\b[\\w.-]*(?:${SENSITIVE_WORDS})[\\w.-]*\\s*["']?\\s*[:=]\\s*["']?)([^\\s"',;&]+)`, "gi"), `$1${REDACTED}`],
   // The shape of a .env file: NAME=value at the start of a line. Values are always masked.
@@ -444,9 +444,28 @@ function loadState(root) {
 function saveState(root, state) {
   const file = path.join(root, STATE_PATH);
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  const temporary = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(temporary, `${JSON.stringify(state, null, 2)}\n`, "utf8");
-  fs.renameSync(temporary, file);
+  writeReplacing(file, `${JSON.stringify(state, null, 2)}\n`);
+}
+
+// Writes a file by creating a new temporary file next to it ("wx": never an existing file or link) and renaming it into
+// place. A rename replaces a link at the destination instead of following it, so a HANDOFF.md or state file that a
+// cloned repository ships as a link to somewhere else cannot make the guard write there.
+function writeReplacing(file, text) {
+  let existing = null;
+  try {
+    existing = fs.lstatSync(file);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  if (existing && existing.isDirectory()) throw new Error(`${path.basename(file)} is a folder, not a file`);
+  const temporary = `${file}.uca-${process.pid}-${crypto.randomBytes(4).toString("hex")}.tmp`;
+  fs.writeFileSync(temporary, text, { encoding: "utf8", flag: "wx" });
+  try {
+    fs.renameSync(temporary, file);
+  } catch (error) {
+    fs.rmSync(temporary, { force: true });
+    throw error;
+  }
 }
 
 // ---------- running the check ----------
@@ -666,7 +685,7 @@ function runLocked(root, options, tokens, log, config, timeoutMs) {
   const from = modelAt(config, state.modelIndex);
   const to = modelAt(config, state.modelIndex + 1);
   const stopped = !to;
-  fs.writeFileSync(path.join(root, HANDOFF_FILE), buildHandoff({ state, reasons, backup, restore, from, to, stopped, change }), "utf8");
+  writeReplacing(path.join(root, HANDOFF_FILE), buildHandoff({ state, reasons, backup, restore, from, to, stopped, change }));
   log("Wrote HANDOFF.md (tool output only, secrets redacted).");
 
   state.handoffs.push({ at: stamp, reasons, fromModel: from ? from.name : null, toModel: to ? to.name : null, backup: backup.dir });

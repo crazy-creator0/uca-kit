@@ -30,6 +30,7 @@ const DISCLAIMER = "This is a static checklist. A high score does not prove seni
 const SECRET_PATTERNS = [
   ["private key", /-----BEGIN [A-Z ]*PRIVATE KEY-----/],
   ["OpenAI-style key", /\bsk-[A-Za-z0-9_-]{16,}/],
+  ["Stripe secret key", /\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}|\bwhsec_[A-Za-z0-9]{16,}/],
   ["GitHub token", /\b(?:ghp|gho|ghs|ghu)_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}/],
   ["AWS access key", /\bAKIA[0-9A-Z]{16}\b/],
   ["Google API key", /\bAIza[0-9A-Za-z_-]{30,}/],
