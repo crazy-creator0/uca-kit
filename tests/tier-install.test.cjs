@@ -284,7 +284,7 @@ test("every skill and workflow the router can choose exists in a standard instal
     assert.equal(install(root, { tier: "standard" }).errors, 0);
     const missing = ALL_SKILLS.filter((name) => !exists(root, `.agents/skills/${name}/SKILL.md`));
     assert.deepEqual(missing, []);
-    for (const workflow of ["new-project", "feature-development", "bug-investigation", "production-deployment", "stack-migration", "project-notes"]) {
+    for (const workflow of ["new-project", "feature-development", "bug-investigation", "production-deployment", "stack-migration", "project-notes", "audit"]) {
       assert.ok(exists(root, `.agents/workflows/${workflow}.md`), workflow);
     }
   });

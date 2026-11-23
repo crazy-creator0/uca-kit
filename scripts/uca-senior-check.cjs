@@ -127,7 +127,9 @@ function context(root) {
   }
   const sourceText = source.map((file) => ({ file, text: read(file.rel) })).filter((item) => item.text !== null);
   // Reading a named setting counts; passing the whole environment on (dict(os.environ, ...), { ...process.env }) does not.
-  const usesEnv = sourceText.some((item) => /process\.env(?:\.\w|\[)|os\.environ(?:\[|\.get\(|\.setdefault\()|os\.getenv\(|import\.meta\.env\.\w|\bgetenv\(|\bENV\[/.test(item.text));
+  // NODE_ENV and Vite's built-in MODE/DEV/PROD/SSR/BASE_URL say which mode the code runs in; they are not settings
+  // a .env file would hold, so reading only those does not count.
+  const usesEnv = sourceText.some((item) => /process\.env(?:\.(?!NODE_ENV\b)\w|\[(?!\s*["']NODE_ENV["']))|os\.environ(?:\[|\.get\(|\.setdefault\()|os\.getenv\(|import\.meta\.env\.(?!(?:MODE|DEV|PROD|SSR|BASE_URL)\b)\w|\bgetenv\(|\bENV\[/.test(item.text));
   return { root, files, names, rootNames, read, source, scanned, manifests, hasUI, hasHtml, pkg, sourceText, usesEnv, truncated, hasSource: source.length > 0, staticSite: manifests.length === 0 && hasHtml };
 }
 
@@ -238,8 +240,10 @@ const CHECKS = [
     if (ctx.rootNames.has("package.json")) wanted.push("node_modules");
     if (ctx.rootNames.has("requirements.txt") || ctx.rootNames.has("pyproject.toml") || ctx.rootNames.has("Pipfile")) wanted.push("__pycache__|\\.venv|venv");
     if (!wanted.length) return na("no dependency folder expected");
-    if (!ctx.rootNames.has(".gitignore")) return fail([".gitignore is missing"]);
-    const text = ctx.read(".gitignore") || "";
+    // A .gitignore in a subfolder (backend/.gitignore) covers that folder, where the dependencies usually live.
+    const ignores = ctx.files.filter((file) => file.rel === ".gitignore" || file.rel.endsWith("/.gitignore"));
+    if (!ignores.length) return fail([".gitignore is missing"]);
+    const text = ignores.map((file) => ctx.read(file.rel) || "").join("\n");
     const missing = wanted.filter((item) => !new RegExp(`^\\s*/?(?:${item})/?\\s*$`, "m").test(text));
     return missing.length ? fail([`.gitignore does not list ${missing.map((item) => item.split("|")[0].replace("\\.", ".")).join(", ")}`]) : pass();
   } },

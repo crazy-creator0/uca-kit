@@ -129,3 +129,30 @@ test("usage errors exit 2", () => {
   assert.equal(spawnSync(process.execPath, [SCRIPT, "--nope"], { encoding: "utf8" }).status, 2);
   assert.equal(spawnSync(process.execPath, [SCRIPT, path.join(os.tmpdir(), "no-such-folder-uca")], { encoding: "utf8" }).status, 2);
 });
+
+test("the attacker mindset is written only in the audit workflow, and the workflow keeps its limits", () => {
+  const root = path.join(__dirname, "..");
+  const words = /think like an attacker|attacker mindset|hacker mindset|red[- ]team/i;
+  const files = [];
+  const visit = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) visit(full);
+      else if (/\.(md|mdc|json|toml|mjs|cjs)$/.test(entry.name)) files.push(full);
+    }
+  };
+  for (const dir of [".agents", ".opencode", ".claude", ".cursor", ".github", "adapters"]) if (fs.existsSync(path.join(root, dir))) visit(path.join(root, dir));
+  for (const file of ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "AGENT-SKILL-MAP.md", "HOST-CAPABILITY-FALLBACK.md"]) if (fs.existsSync(path.join(root, file))) files.push(path.join(root, file));
+  const holders = files.filter((file) => words.test(fs.readFileSync(file, "utf8"))).map((file) => path.relative(root, file).split(path.sep).join("/"));
+  assert.deepEqual(holders, [".agents/workflows/audit.md"]);
+  const workflow = fs.readFileSync(path.join(root, ".agents", "workflows", "audit.md"), "utf8");
+  for (const limit of [/\*\*Read-only\.\*\*/, /Only the user's own project/, /Never probe, scan or send requests to a live site/, /\*\*Never write working exploits\.\*\*/, /Never print secret values/, /This file is the only place in the kit where the attacker mindset below applies/]) assert.match(workflow, limit);
+  const mindset = workflow.indexOf("## Mindset");
+  assert.ok(workflow.indexOf("## Limits") < mindset, "the limits come before the mindset");
+});
+
+test("standard and full install the audit check, the readiness check and the audit workflow", () => {
+  const tiers = JSON.parse(fs.readFileSync(path.join(__dirname, "..", ".agents", "tiers.json"), "utf8"));
+  for (const tier of ["standard", "full"]) for (const file of ["scripts/uca-audit-check.cjs", "scripts/uca-readiness.cjs", "scripts/uca-senior-check.cjs"]) assert.ok(tiers[tier].include.includes(file), `${tier}: ${file}`);
+  for (const tier of ["standard", "full"]) assert.match(fs.readFileSync(path.join(__dirname, "..", ".agents", tier, "CORE.md"), "utf8"), /"uca-audit", follow `\.agents\/workflows\/audit\.md`/);
+});
