@@ -4,6 +4,12 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 ## Unreleased
 
+Nothing yet.
+
+## 0.2.1 (2026-11-23)
+
+Patch release after the Sample 05 review: false facts fixed in the project scanner and the Senior Bar check, plus the first project-view pieces for v0.3.0, each tested. Not yet measured with a model: whether Key file notes save tokens (the token test in `benchmarks/project-questions/` is designed, not run).
+
 Added (benchmarks)
 - Project questions (`benchmarks/project-questions/`): 30 fixed questions about three real repositories pinned to one commit each (the FastAPI full-stack template at 252 files, the Express RealWorld example, Koa), with answer keys read from the code. `score.cjs verify` proves every key against its file (37 of 37 evidence lines found); `score.cjs map` counts what the project scanner's card answers alone (7 of 30 today, the baseline for the v0.3.0 project view); `score.cjs answers` scores a model's answers for the token test, which has not been run yet.
 
