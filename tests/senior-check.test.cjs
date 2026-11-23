@@ -188,3 +188,17 @@ test("the kit's own installed scripts do not count as the project's code", () =>
   assert.equal(status(report, "hint.risky-patterns"), "pass");
   assert.equal(status(report, "config.env-ignored"), "fail", "the user's own script that reads env is still seen");
 });
+
+test("reading only NODE_ENV or Vite's mode flags does not count as using settings", () => {
+  const status = (files) => {
+    const report = evaluate(project(files));
+    return ["config.env-ignored", "config.env-example"].map((id) => report.checks.find((item) => item.id === id).status);
+  };
+  assert.deepEqual(status({ "package.json": "{}", "lib/app.js": "const env = process.env.NODE_ENV || 'development';\nconst dev = import.meta.env.DEV;\n" }), ["na", "na"]);
+  assert.deepEqual(status({ "package.json": "{}", "lib/app.js": "const port = process.env.PORT;\n" }), ["fail", "fail"]);
+});
+
+test("a .gitignore in a subfolder counts for the dependency folders", () => {
+  const report = evaluate(project({ "pyproject.toml": "[project]\nname='x'\n", ".gitignore": "node_modules/\n", "backend/.gitignore": "__pycache__\n", "backend/app.py": "print(1)\n" }));
+  assert.equal(report.checks.find((item) => item.id === "git.ignores-dependencies").status, "pass");
+});

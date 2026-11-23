@@ -4,8 +4,15 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 ## Unreleased
 
+Fixed (Senior Bar, found by the readiness levels on real repositories)
+- Reading only `NODE_ENV` or Vite's `import.meta.env.MODE/DEV/PROD/SSR/BASE_URL` no longer counts as reading settings, so a library such as Koa is no longer told to ignore `.env` and ship an `.env.example`.
+- A `.gitignore` in a subfolder now counts for dependency folders (`backend/.gitignore` listing `__pycache__`, as in the FastAPI template).
+
 Added (audit)
-- Audit check (`scripts/uca-audit-check.cjs`): reads JavaScript, TypeScript and Python and reports ten kinds of problem with file, line, risk, fix and a confidence ("certain" or "needs a human"); never runs code, never reads `.env`, never prints a secret value; skips tests, examples and benchmarks. Not installed into projects yet.
+- "uca-audit": `.agents/workflows/audit.md`, a read-only review of the user's own project: run the checks, confirm or reject each "needs a human" finding, then read for what static checks cannot see (object-level permissions, input edges, cost per request, secrets in logs, concurrency, problems one function away). Limits come first in the file: read-only, own project only, no requests to live systems, no working exploits, no secret values. The attacker mindset is written only in this file; a test fails if it appears anywhere else in the kit's instructions. Standard and full point to it; lite is unchanged (its instruction budget is full).
+- Audit check (`scripts/uca-audit-check.cjs`): reads JavaScript, TypeScript and Python and reports ten kinds of problem with file, line, risk, fix and a confidence ("certain" or "needs a human"); never runs code, never reads `.env`, never prints a secret value; skips tests, examples and benchmarks.
+- Readiness levels (`scripts/uca-readiness.cjs`): Bronze (safe to share), Silver (safe to show users), Gold (ready for production traffic), from 16 Senior Bar checks and the 10 audit kinds. "Needs a human" findings are listed to confirm, not failed; checks that do not apply are left out; the percentage is checks passed and is labelled as a to-do list. `--min` for CI. On the three real repositories: Koa reaches Gold (21 of 21); the FastAPI template reaches no level, because its `.env` file is committed and not ignored (true), 21 of 25; the Express RealWorld example reaches no level because of the `superSecret` fallback (true), 18 of 23.
+- Standard and full install the audit check, the readiness check and the Senior Bar check.
 - Results. Audit benchmark: 13 of 13 found, 0 false alarms, 0 decoys hit (the benchmark was written before the check, but by the same author, so this score alone proves little). On three real repositories it was not written for, every finding was checked by hand: the FastAPI full-stack template, 3 findings, all real (no rate limit on the two login routes, `Item.owner_id` used in lookups with no index); the Express RealWorld example, 5 findings, 4 real (the `superSecret` fallback in 3 places, no rate limit on login) and 1 false alarm (`POST /users` is sign-up, public by design); Koa, 0 findings, right for a library. A first version also reported two queries in loops in RealWorld that were not; the loop-body bug behind them is fixed and tested.
 
 Added (benchmarks)

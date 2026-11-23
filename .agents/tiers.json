@@ -36,7 +36,9 @@
       "scripts/uca-design-check.cjs",
       "UI-EFFECTS-GUIDE.md",
       "scripts/uca-guard.cjs",
-      "scripts/uca-senior-check.cjs"
+      "scripts/uca-senior-check.cjs",
+      "scripts/uca-audit-check.cjs",
+      "scripts/uca-readiness.cjs"
     ]
   },
   "full": {
@@ -57,7 +59,9 @@
       "UI-EFFECTS-GUIDE.md",
       "scripts/uca-design-check.cjs",
       "scripts/uca-guard.cjs",
-      "scripts/uca-senior-check.cjs"
+      "scripts/uca-senior-check.cjs",
+      "scripts/uca-audit-check.cjs",
+      "scripts/uca-readiness.cjs"
     ]
   }
 }

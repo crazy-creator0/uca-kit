@@ -21,7 +21,7 @@ const ALL_SKILLS = [
   "data-engineering-analytics", "debugging", "design-taste-discovery", "frontend-engineering", "frontend-visuals-and-3d", "import-hygiene",
   "language-engineering", "performance-engineering", "skill-gap-router", "testing-and-code-review"
 ];
-const WORKFLOWS = ["new-project", "feature-development", "bug-investigation", "production-deployment", "stack-migration", "project-notes"];
+const WORKFLOWS = ["new-project", "feature-development", "bug-investigation", "production-deployment", "stack-migration", "project-notes", "audit"];
 
 // Each rule: pattern, weight. A pattern is evidence of intent, not a command to load.
 // "Create a cafe management file", "make me a todo app": asking for something new. Scripts, APIs, services, pipelines and

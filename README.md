@@ -167,13 +167,18 @@ node scripts/uca-senior-check.cjs [project folder] [--json] [--list] [--min 70]
 
 A read-only checklist of what a carefully built project usually has: a README that says how to run it, tests and a test command, `.env` kept out of Git with an `.env.example`, no secret written into the source, a lockfile, a declared runtime, and basic accessibility on HTML pages. Risky patterns (`eval`, `innerHTML`, TLS checks turned off) are listed as hints with file and line, not scored. It never runs your code, never writes, never reads `.env` or key files, and never prints a secret value. A high score does not prove senior-grade quality; a low one is a to-do list. Standard and full tiers install it.
 
-## Audit check (in progress for v0.4.0)
+## Audit and readiness
+
+Say **"uca-audit"** (standard and full tiers) and the agent follows `.agents/workflows/audit.md`: a read-only review of your own project that runs the checks below, confirms or rejects each "needs a human" finding by reading the code, then looks for what a static check cannot see (who may read or change whose data, input edges, cost per request, secrets in logs, concurrency). The report lists severity, file and line, what could happen, the fix and how it was checked. The audit never edits your files, never sends requests to a live site, never writes working exploits and never prints a secret. Its attacker mindset is written only in that workflow file, and a test keeps it there.
 
 ```
 node scripts/uca-audit-check.cjs [project folder] [--json]
+node scripts/uca-readiness.cjs [project folder] [--json] [--min bronze|silver|gold]
 ```
 
-A read-only look at what the code does, where the Senior Bar looks at what a project has: secrets that fall back to a value in the code, SQL built from strings, write routes without the auth the other routes use, reads with no filter or limit, database queries inside loops, stack traces sent to clients, login routes with no rate limiter, debug mode, wildcard CORS with credentials, and looked-up columns with no index, in JavaScript, TypeScript and Python. Each finding gives the file, the line, the risk, the fix and a confidence: "certain" (the line is the problem as written) or "needs a human". It never runs your code, never reads `.env` or key files and never prints a secret value. Tests, examples and benchmarks are skipped. It cannot see problems reached through helper functions or visible only at run time, so no finding is not proof of safety. It is not installed into projects yet; that comes with the audit pack.
+The **audit check** reads JavaScript, TypeScript and Python for ten kinds of problem: secrets that fall back to a value in the code, SQL built from strings, write routes without the auth the other routes use, reads with no filter or limit, database queries inside loops, stack traces sent to clients, login routes with no rate limiter, debug mode, wildcard CORS with credentials, and looked-up columns with no index. Each finding has a confidence: "certain" (the line is the problem as written) or "needs a human". Tests, examples and benchmarks are skipped.
+
+**Readiness** groups the Senior Bar checks and the audit into three levels: **Bronze** (safe to share), **Silver** (safe to show users), **Gold** (ready for production traffic). A level is reached when none of its checks, or those below it, fail. "Needs a human" findings are listed to confirm, not counted as failures, and checks that do not apply are left out. The percentage is checks passed out of checks that apply: a to-do list, not a measure of how ready a product is. Neither check can see problems reached through helper functions or visible only at run time, so no finding is not proof of safety. `--min` exits 1 below a level, for CI.
 
 ## Scope-first workflow
 
