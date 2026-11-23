@@ -1,0 +1,33 @@
+{
+  "note": "Planted problems and decoys for the audit. A reported finding matches a planted one when it names the same kind and file and a line within 1 of the evidence line (the loop line or the query line, for example). Decoys are correct code that looks like a problem; flagging one is a false alarm. Kinds are fixed: see `kinds`.",
+  "kinds": ["hardcoded-secret", "sql-injection", "missing-auth", "unbounded-read", "query-in-loop", "error-detail-leak", "no-rate-limit", "debug-mode", "cors-credentials-wildcard", "missing-index"],
+  "planted": [
+    { "id": "E01", "kind": "hardcoded-secret", "file": "express-shop/src/auth.js", "has": "process.env.JWT_SECRET || \"dev-secret-change-me\"", "abuse": "If JWT_SECRET is unset in production, anyone who reads this repository can sign their own admin token.", "fix": "Fail at startup when JWT_SECRET is missing; never fall back to a value written in code." },
+    { "id": "E02", "kind": "sql-injection", "file": "express-shop/src/routes/users.js", "has": "LIKE '%${req.query.q}%'", "abuse": "The search text is pasted into SQL, so a crafted q can read or change any table.", "fix": "Pass the value as a parameter: LIKE $1 with ['%' + q + '%']." },
+    { "id": "E03", "kind": "missing-auth", "file": "express-shop/src/routes/users.js", "has": "router.delete(\"/users/:id\", async", "abuse": "Anyone, logged in or not, can delete any user; every other user route requires a login.", "fix": "Add auth.required and auth.admin, as the role route does." },
+    { "id": "E04", "kind": "unbounded-read", "file": "express-shop/src/routes/orders.js", "has": "\"SELECT * FROM orders\"", "abuse": "Returns every order of every customer, unpaged: a data leak and a slow, memory-heavy response as the table grows.", "fix": "Filter by req.user.id and add LIMIT with paging." },
+    { "id": "E05", "kind": "query-in-loop", "file": "express-shop/src/routes/orders.js", "has": "SELECT sku, qty FROM order_items WHERE order_id = $1", "abuse": "One query per order (up to 51 round trips per request); slow under load.", "fix": "Fetch all items once with order_id = ANY($1), as /orders/summary does." },
+    { "id": "E06", "kind": "error-detail-leak", "file": "express-shop/src/server.js", "has": "stack: err.stack", "abuse": "Every server error sends the stack trace to the client, showing file paths, libraries and code structure.", "fix": "Log the error on the server and send a generic message." },
+    { "id": "E07", "kind": "no-rate-limit", "file": "express-shop/src/routes/users.js", "has": "router.post(\"/login\"", "abuse": "Unlimited login attempts allow password guessing; no rate limiter exists anywhere in the app.", "fix": "Limit attempts per IP and per account (for example express-rate-limit) on /login." },
+    { "id": "F01", "kind": "debug-mode", "file": "fastapi-notes/app/main.py", "has": "app = FastAPI(debug=True)", "abuse": "Debug mode returns full tracebacks to clients on errors.", "fix": "Leave debug off, or read it from a setting that is off in production." },
+    { "id": "F02", "kind": "cors-credentials-wildcard", "file": "fastapi-notes/app/main.py", "has": "allow_origins=[\"*\"],", "abuse": "Any website may call the API from a visitor's browser, and credentials are allowed too.", "fix": "List the real front-end origins; keep allow_credentials only for those." },
+    { "id": "F03", "kind": "sql-injection", "file": "fastapi-notes/app/main.py", "has": "text(f\"SELECT id, name FROM user WHERE name = '{name}'\")", "abuse": "The name is pasted into SQL with an f-string; a crafted name can read or change any table.", "fix": "Use a bound parameter, as /users/by-name-safe does." },
+    { "id": "F04", "kind": "query-in-loop", "file": "fastapi-notes/app/main.py", "has": "session.exec(select(Note).where(Note.owner_id == user.id)).all()", "abuse": "One query per user (up to 101 per request).", "fix": "Fetch notes for all user ids at once (Note.owner_id.in_(ids)) and group them." },
+    { "id": "F05", "kind": "missing-index", "file": "fastapi-notes/app/models.py", "has": "    email: str", "abuse": "Users are looked up by email (main.py) but the column has no index, so each lookup scans the whole table.", "fix": "Field(index=True, unique=True) on email, with a migration." },
+    { "id": "F06", "kind": "unbounded-read", "file": "fastapi-notes/app/main.py", "has": "return session.exec(select(Note)).all()", "abuse": "Returns every note of every user, unpaged.", "fix": "Filter to the caller's notes and add limit and offset." }
+  ],
+  "decoys": [
+    { "id": "D01", "file": "express-shop/src/routes/users.js", "has": "WHERE email = $1\", [email]", "why": "parameterised query" },
+    { "id": "D02", "file": "express-shop/src/routes/users.js", "has": "router.patch(\"/users/:id/role\", auth.required, auth.admin", "why": "write route with login and admin checks" },
+    { "id": "D03", "file": "express-shop/src/routes/orders.js", "has": "ORDER BY created_at DESC LIMIT 20", "why": "bounded read" },
+    { "id": "D04", "file": "express-shop/src/routes/orders.js", "has": "for (const order of orders) labels.push", "why": "a loop with no query in it" },
+    { "id": "D05", "file": "express-shop/src/routes/orders.js", "has": "WHERE order_id = ANY($1)", "why": "the batched form of the query-in-loop fix" },
+    { "id": "D06", "file": "express-shop/src/db.js", "has": "connectionString: process.env.DATABASE_URL", "why": "a setting read from the environment with no fallback" },
+    { "id": "D07", "file": "fastapi-notes/app/main.py", "has": "WHERE name = :name\"), {\"name\": name}", "why": "bound parameter" },
+    { "id": "D08", "file": "fastapi-notes/app/main.py", "has": "titles.append(note.title.strip())", "why": "a loop with no query in it" },
+    { "id": "D09", "file": "fastapi-notes/app/main.py", "has": "select(User).limit(100)", "why": "bounded read" },
+    { "id": "D10", "file": "fastapi-notes/app/models.py", "has": "owner_id: int = Field(foreign_key=\"user.id\", index=True)", "why": "indexed lookup column" },
+    { "id": "D11", "file": "fastapi-notes/app/db.py", "has": "os.environ[\"DATABASE_URL\"]", "why": "required setting, no fallback" },
+    { "id": "D12", "file": "express-shop/src/routes/orders.js", "has": "\"SELECT id, total FROM orders WHERE user_id = $1 LIMIT 50\"", "why": "bounded read before the query-in-loop" }
+  ]
+}

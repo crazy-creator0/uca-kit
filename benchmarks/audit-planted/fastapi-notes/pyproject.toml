@@ -1,0 +1,5 @@
+[project]
+name = "fastapi-notes"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["fastapi>=0.110", "sqlmodel>=0.0.16", "uvicorn>=0.29"]
