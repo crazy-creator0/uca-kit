@@ -13,7 +13,7 @@ Think like an attacker and like an unhappy operations engineer at 3 a.m.: what w
 
 ## Steps
 1. Say what you will audit (folders, stack) and that it is read-only.
-2. Run `node scripts/uca-readiness.cjs .` (it runs the Senior Bar and the audit check). For the finding list, `node scripts/uca-audit-check.cjs . --json`.
+2. Run `node scripts/uca-readiness.cjs .` (it runs the Senior Bar, the audit check and the wiring check). For the finding lists, `node scripts/uca-audit-check.cjs . --json` and `node scripts/uca-wiring-check.cjs . --json` (links and routes that lead nowhere, pages with no way in or out).
 3. For every finding marked "needs a human", open the file and decide: real, not real (say why), or cannot tell. Do the same for any "certain" finding that looks wrong in context.
 4. Read for what a static check cannot see, starting with the files under "Key files" in PROJECT.md:
    - **Who may do what:** for each route that takes an id, can user A read or change user B's data? Is the check on the server?
@@ -23,6 +23,7 @@ Think like an attacker and like an unhappy operations engineer at 3 a.m.: what w
    - **Outbound and files:** user-supplied URLs fetched by the server, uploaded file names and types, paths built from input.
    - **Concurrency:** two requests at once on the same balance, stock or counter.
    - **Problems through helper functions:** a query in a loop or an unsafe call one function away from the route.
+   - **Wiring the check cannot follow:** links built at run time, buttons that navigate in code, the way back from each step of a flow (A to B and back to A), and pages that are slow to open. Say plainly that lag was not measured unless you ran the page in a browser.
 5. Report, sorted by severity:
 
    | Severity | Where (file:line) | What could happen | Fix | How checked |

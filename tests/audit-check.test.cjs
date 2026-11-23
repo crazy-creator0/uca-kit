@@ -153,7 +153,7 @@ test("the attacker mindset is written only in the audit workflow, and the workfl
 
 test("standard and full install the audit check, the readiness check and the audit workflow", () => {
   const tiers = JSON.parse(fs.readFileSync(path.join(__dirname, "..", ".agents", "tiers.json"), "utf8"));
-  for (const tier of ["standard", "full"]) for (const file of ["scripts/uca-audit-check.cjs", "scripts/uca-readiness.cjs", "scripts/uca-senior-check.cjs"]) assert.ok(tiers[tier].include.includes(file), `${tier}: ${file}`);
+  for (const tier of ["standard", "full"]) for (const file of ["scripts/uca-audit-check.cjs", "scripts/uca-readiness.cjs", "scripts/uca-senior-check.cjs", "scripts/uca-wiring-check.cjs"]) assert.ok(tiers[tier].include.includes(file), `${tier}: ${file}`);
   for (const tier of ["standard", "full"]) assert.match(fs.readFileSync(path.join(__dirname, "..", ".agents", tier, "CORE.md"), "utf8"), /"uca-audit", follow `\.agents\/workflows\/audit\.md`/);
 });
 

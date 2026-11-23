@@ -18,6 +18,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const senior = require("./uca-senior-check.cjs");
 const auditCheck = require("./uca-audit-check.cjs");
+const wiringCheck = require("./uca-wiring-check.cjs");
 
 const LEVELS = [
   {
@@ -28,7 +29,7 @@ const LEVELS = [
   {
     name: "Silver",
     meaning: "safe to show users",
-    checks: ["tests.exist", "tests.command-declared", "deploy.lockfile", "config.env-example", "git.ignores-dependencies", "audit:missing-auth", "audit:error-detail-leak", "audit:debug-mode", "audit:cors-credentials-wildcard", "a11y.html-lang", "a11y.viewport", "a11y.img-alt"]
+    checks: ["tests.exist", "tests.command-declared", "deploy.lockfile", "config.env-example", "git.ignores-dependencies", "audit:missing-auth", "audit:error-detail-leak", "audit:debug-mode", "audit:cors-credentials-wildcard", "wiring:links", "wiring:ways", "a11y.html-lang", "a11y.viewport", "a11y.img-alt"]
   },
   {
     name: "Gold",
@@ -50,14 +51,30 @@ const AUDIT_TITLES = {
   "missing-index": "Looked-up columns have an index"
 };
 
+const WIRING = {
+  links: { title: "Links and routes lead somewhere", kinds: ["broken-link", "broken-anchor", "broken-route"] },
+  ways: { title: "Every page has a way in and a way out", kinds: ["dead-end", "orphan"] }
+};
+
 class UsageError extends Error {}
 
 function readiness(root) {
   const bar = senior.evaluate(root);
   const found = auditCheck.audit(root);
+  const wired = wiringCheck.wiring(root);
   const hasServerCode = found.scanned > 0 && found.findings !== undefined && hasCode(root);
   const byId = new Map(bar.checks.filter((item) => item.scored).map((item) => [item.id, item]));
   const result = (id) => {
+    if (id.startsWith("wiring:")) {
+      const { title, kinds } = WIRING[id.slice(7)];
+      if (wired.pages === 0 && !wired.router) return { id, title, status: "na", evidence: ["no HTML pages and no React Router or Next.js routes"] };
+      const hits = wired.findings.filter((finding) => kinds.includes(finding.kind));
+      const certain = hits.filter((finding) => finding.confidence === "certain");
+      const where = (list) => list.slice(0, 5).map((finding) => `${finding.file}:${finding.line} ${finding.what}`);
+      if (certain.length) return { id, title, status: "fail", evidence: where(certain) };
+      if (hits.length) return { id, title, status: "confirm", evidence: where(hits) };
+      return { id, title, status: "pass", evidence: [] };
+    }
     if (id.startsWith("audit:")) {
       const kind = id.slice(6);
       const hits = found.findings.filter((finding) => finding.kind === kind);

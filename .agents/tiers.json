@@ -38,7 +38,8 @@
       "scripts/uca-guard.cjs",
       "scripts/uca-senior-check.cjs",
       "scripts/uca-audit-check.cjs",
-      "scripts/uca-readiness.cjs"
+      "scripts/uca-readiness.cjs",
+      "scripts/uca-wiring-check.cjs"
     ]
   },
   "full": {
@@ -61,7 +62,8 @@
       "scripts/uca-guard.cjs",
       "scripts/uca-senior-check.cjs",
       "scripts/uca-audit-check.cjs",
-      "scripts/uca-readiness.cjs"
+      "scripts/uca-readiness.cjs",
+      "scripts/uca-wiring-check.cjs"
     ]
   }
 }
