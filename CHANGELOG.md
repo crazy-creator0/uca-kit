@@ -4,7 +4,8 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 ## Unreleased
 
-Nothing yet.
+Added (benchmarks)
+- Audit benchmark (`benchmarks/audit-planted/`): two small apps, Express and FastAPI, with 13 planted problems (hard-coded fallback secret, SQL injection twice, a delete route with no login, unbounded reads, queries in loops, stack traces sent to clients, no login rate limit, debug mode, wildcard CORS with credentials, a looked-up column with no index) and 12 decoys that look similar but are correct. `score.cjs` counts found, missed, false alarms and decoy hits. Baseline: the Senior Bar check finds 0 of 13. This is the ruler for the v0.4.0 audit, written before the audit.
 
 ## 0.2.1 (2026-11-23)
 
