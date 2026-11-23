@@ -7,7 +7,7 @@ The CLI source is maintained in [uca-kit](https://github.com/crazy-creator0/uca-
 ## Package details
 
 - Package name: `create-universal-coding-agent-kit`
-- Version in `package.json`: `0.2.0`
+- Version in `package.json`: `0.2.1`
 - License: Apache-2.0, with `NOTICE` (v0.1.0 and v0.1.1 were MIT)
 - Binary command: `create-universal-coding-agent-kit`
 - Runtime dependencies: none
@@ -64,7 +64,7 @@ Do not advertise the package-name command as available until these checks confir
 4. Publish the release, then check the pinned command from a clean folder:
 
    ```bash
-   npx --yes github:crazy-creator0/uca-kit#v0.2.0 init /tmp/uca-check --platform generic --dry-run
+   npx --yes github:crazy-creator0/uca-kit#v0.2.1 init /tmp/uca-check --platform generic --dry-run
    ```
 
 Old tags are never deleted or moved.
