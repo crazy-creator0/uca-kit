@@ -536,3 +536,26 @@ test("every tier's core tells the agent to run checks through the guard", () => 
     assert.match(core, /never edit the model list or run reset/, `${tier} core does not protect the model list`);
   }
 });
+
+test("a HANDOFF.md that a repository ships as a link is replaced, never written through", () => {
+  const outside = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "uca-outside-")), "victim.txt");
+  fs.writeFileSync(outside, "keep me\n");
+  withProject((root) => {
+    fs.symlinkSync(outside, path.join(root, "HANDOFF.md"));
+    assert.equal(check(root, OK).status, 0);
+    fs.writeFileSync(path.join(root, "a.txt"), "broken\n");
+    assert.equal(check(root, OTHER).status, 3);
+    assert.equal(fs.readFileSync(outside, "utf8"), "keep me\n", "the file outside the project was written");
+    assert.ok(fs.lstatSync(path.join(root, "HANDOFF.md")).isFile(), "HANDOFF.md is now a plain file in the project");
+    assert.match(read(root, "HANDOFF.md"), /^# HANDOFF/);
+  });
+});
+
+test("Stripe secret and webhook keys are redacted", () => {
+  // Built from pieces so no key-shaped text is committed (GitHub push protection blocks it, rightly).
+  const fake = (...parts) => parts.join("_");
+  for (const secret of [fake("sk", "live", "51HabcdefghijklmnopqrstuvWXYZ"), fake("sk", "test", "abcdefghijklmnop12345678"), fake("rk", "live", "abcdefghijklmnop1234"), fake("whsec", "abcdefghijklmnop1234567890")]) {
+    const out = guard.redact(`request failed with key ${secret}`);
+    assert.ok(!out.includes(secret), `${secret} was not redacted: ${out}`);
+  }
+});

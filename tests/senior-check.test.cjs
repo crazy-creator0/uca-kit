@@ -231,3 +231,11 @@ test("settings with a default, or checked before use, do not need an .env.exampl
   assert.equal(status({ "a.py": "import os\nurl = os.environ['DATABASE_URL']\n" }), "fail");
   assert.equal(status({ "src/a.js": "run();\n", "tests/a.test.js": "const url = process.env.DATABASE_URL;\n", "examples/demo.js": "const k = process.env.KEY;\n" }), "na");
 });
+
+test("a Stripe secret key in source fails the secrets check", () => {
+  const key = ["sk", "live", "51HabcdefghijklmnopqrstuvWXYZ"].join("_"); // built from pieces: no key-shaped text in the repo
+  const report = evaluate(project({ "package.json": "{}", "src/pay.js": `const stripe = require('stripe')('${key}');\n` }));
+  const item = report.checks.find((entry) => entry.id === "secrets.none-in-source");
+  assert.equal(item.status, "fail");
+  assert.doesNotMatch(JSON.stringify(item.evidence), /sk_live_51Habc/);
+});
