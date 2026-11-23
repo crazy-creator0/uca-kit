@@ -186,6 +186,8 @@ The **wiring check** follows the links between pages and routes without running 
 
 **Readiness** groups the Senior Bar checks, the audit and the wiring check into three levels: **Bronze** (safe to share), **Silver** (safe to show users), **Gold** (ready for production traffic). A level is reached when none of its checks, or those below it, fail. "Needs a human" findings are listed to confirm, not counted as failures, and checks that do not apply are left out. The percentage is checks passed out of checks that apply: a to-do list, not a measure of how ready a product is. Neither check can see problems reached through helper functions or visible only at run time, so no finding is not proof of safety. `--min` exits 1 below a level, for CI.
 
+The **target** for a project built with the kit is Silver and at least 80% of the checks that apply. Readiness shows whether it is met and, if not, the failing checks to fix first, lowest level first; a high percentage with a failing Bronze check does not count. The new-project workflow ends by reaching it (or saying what keeps the project below it), and the audit's fix plan aims at it. Change it with `--target <percent>` and `--target-level`, and use `--require-target` in CI. It is a goal for the work, not a measure of how good a product is.
+
 ## Scope-first workflow
 
 1. **Reconnaissance:** inspect only top-level structure, manifests, entry points, test commands, and Git status.
