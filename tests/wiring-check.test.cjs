@@ -124,3 +124,38 @@ test("crafted files of unclosed tags stay fast (no rescanning to the end of the 
   wiring(root);
   assert.ok(Date.now() - started < 4000, `took ${Date.now() - started} ms`);
 });
+
+test("link words that match nothing on the page they open need a human; actions, cards and the right page do not", () => {
+  const root = project({
+    "index.html": page('<nav><a href="pricing.html">Pricing</a>\n<a href="about.html">Team</a>\n<a href="about.html">Open full page</a>\n<a href="about.html"><h3>About us</h3><p>A long description of the card that goes on and on</p></a></nav>'),
+    "pricing.html": '<html><head><title>Plans and pricing</title></head><body><a href="index.html">back</a></body></html>',
+    "about.html": '<html><head><title>About us</title></head><body><h1>Who we are</h1><a href="index.html">back</a></body></html>'
+  });
+  assert.deepEqual(found(root), ["link-label index.html:2 needs a human"]);
+});
+
+test("--save then --compare lists every link whose words stayed but whose target moved, with its line", () => {
+  const root = project({
+    "index.html": page('<a href="pricing.html">Pricing</a>\n<a href="about.html">About</a>'),
+    "pricing.html": page('<h1>Pricing</h1><a href="index.html">home</a>'),
+    "about.html": page('<h1>About</h1><a href="index.html">home</a>')
+  });
+  const run = (...args) => spawnSync(process.execPath, [SCRIPT, root, ...args], { encoding: "utf8" });
+  assert.equal(run("--save", ".uca/wiring.json").status, 0);
+  assert.doesNotMatch(run("--compare", ".uca/wiring.json").stdout, /link-changed/);
+  fs.writeFileSync(path.join(root, "index.html"), page('<a href="about.html">Pricing</a>\n<a href="about.html">About</a>'));
+  const out = run("--compare", ".uca/wiring.json").stdout;
+  assert.match(out, /link-changed at index\.html:1: "Pricing" used to open pricing\.html, now opens about\.html/);
+  assert.equal(out.match(/link-changed/g).length, 1);
+});
+
+test("--save refuses paths outside the project and links, dangling ones included", () => {
+  const root = project({ "index.html": page("x") });
+  fs.mkdirSync(path.join(root, ".uca"));
+  fs.symlinkSync(path.join(os.tmpdir(), "uca-no-such-target"), path.join(root, ".uca", "map.json"));
+  const run = (...args) => spawnSync(process.execPath, [SCRIPT, root, ...args], { encoding: "utf8" });
+  assert.equal(run("--save", ".uca/map.json").status, 2);
+  assert.equal(run("--save", "../outside.json").status, 2);
+  assert.equal(fs.existsSync(path.join(os.tmpdir(), "uca-no-such-target")), false);
+  assert.equal(run("--compare", "missing.json").status, 2);
+});

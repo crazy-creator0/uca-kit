@@ -52,7 +52,7 @@ const AUDIT_TITLES = {
 };
 
 const WIRING = {
-  links: { title: "Links and routes lead somewhere", kinds: ["broken-link", "broken-anchor", "broken-route"] },
+  links: { title: "Links and routes lead somewhere", kinds: ["broken-link", "broken-anchor", "broken-route", "link-label"] },
   ways: { title: "Every page has a way in and a way out", kinds: ["dead-end", "orphan"] }
 };
 
