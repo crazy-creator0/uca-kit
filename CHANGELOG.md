@@ -4,6 +4,12 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 ## Unreleased
 
+Nothing yet.
+
+## 0.3.0 (2026-11-24)
+
+A minor release: the audit. "uca-audit" runs a read-only review of your own project, an audit check finds ten kinds of problem in what the code does, and readiness levels (Bronze, Silver, Gold) turn the Senior Bar and the audit into a to-do list. Measured: 13 of 13 planted problems on the audit benchmark with no false alarms, and on three real repositories, checked by hand, 7 real findings and 1 false alarm. Not measured yet: any of this with a real model, and whether the Key file notes from 0.2.1 save tokens (the token test is designed, not run).
+
 Fixed (Senior Bar, found by the readiness levels on real repositories)
 - Reading only `NODE_ENV` or Vite's `import.meta.env.MODE/DEV/PROD/SSR/BASE_URL` no longer counts as reading settings, so a library such as Koa is no longer told to ignore `.env` and ship an `.env.example`.
 - A `.gitignore` in a subfolder now counts for dependency folders (`backend/.gitignore` listing `__pycache__`, as in the FastAPI template).
