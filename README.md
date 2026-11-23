@@ -167,6 +167,14 @@ node scripts/uca-senior-check.cjs [project folder] [--json] [--list] [--min 70]
 
 A read-only checklist of what a carefully built project usually has: a README that says how to run it, tests and a test command, `.env` kept out of Git with an `.env.example`, no secret written into the source, a lockfile, a declared runtime, and basic accessibility on HTML pages. Risky patterns (`eval`, `innerHTML`, TLS checks turned off) are listed as hints with file and line, not scored. It never runs your code, never writes, never reads `.env` or key files, and never prints a secret value. A high score does not prove senior-grade quality; a low one is a to-do list. Standard and full tiers install it.
 
+## Audit check (in progress for v0.4.0)
+
+```
+node scripts/uca-audit-check.cjs [project folder] [--json]
+```
+
+A read-only look at what the code does, where the Senior Bar looks at what a project has: secrets that fall back to a value in the code, SQL built from strings, write routes without the auth the other routes use, reads with no filter or limit, database queries inside loops, stack traces sent to clients, login routes with no rate limiter, debug mode, wildcard CORS with credentials, and looked-up columns with no index, in JavaScript, TypeScript and Python. Each finding gives the file, the line, the risk, the fix and a confidence: "certain" (the line is the problem as written) or "needs a human". It never runs your code, never reads `.env` or key files and never prints a secret value. Tests, examples and benchmarks are skipped. It cannot see problems reached through helper functions or visible only at run time, so no finding is not proof of safety. It is not installed into projects yet; that comes with the audit pack.
+
 ## Scope-first workflow
 
 1. **Reconnaissance:** inspect only top-level structure, manifests, entry points, test commands, and Git status.
