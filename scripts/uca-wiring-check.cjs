@@ -11,11 +11,17 @@
 //   broken-route   a <Link to>, href, navigate(), router.push() or a menu entry ({ href: "/x" }) points to a route the app never defines
 //   dead-end       a page with no link to any other page (no way back)          needs a human
 //   orphan         a page that no other page links to (no way in)                needs a human
+//   link-label     a link whose words match nothing on the page it opens         needs a human
+//   link-changed   (with --compare) a link whose words stayed but whose target moved   needs a human
+//
+//   --save <file>     write the map of links (page, words, target) to a JSON file inside the project
+//   --compare <file>  compare the links now with a saved map: run it after a redesign to see every link that moved
 // A link that starts with "/" depends on where the site is served from, so a missing target there "needs a human".
 // Links built at run time (template strings, variables) are not followed. It cannot measure lag or loading time:
 // that needs the page running in a browser.
 //
-// Read-only: it never runs code, never writes, never follows symbolic links. Exit codes: 0 done, 2 usage error.
+// Read-only, apart from --save: it never runs code, never follows symbolic links, and --save writes only the given
+// file inside the project. Exit codes: 0 done, 2 usage error.
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -38,8 +44,29 @@ const FIX = {
   "broken-anchor": "Add id=\"...\" to the element the link should jump to, or fix the fragment after #.",
   "broken-route": "Add the route to the router, or change the link to a route that exists.",
   "dead-end": "Add a link back (to the home page, the previous step or a menu) so the visitor is not stuck.",
-  "orphan": "Link to this page from another page, or remove it if it is not used."
+  "orphan": "Link to this page from another page, or remove it if it is not used.",
+  "link-label": "Confirm with the user: either the words or the target are wrong. Change whichever one is.",
+  "link-changed": "Confirm with the user that the move was meant; if not, point the link back at its old target."
 };
+
+// Words that say nothing about where a link goes.
+const GENERIC = new Set("the and for our your you with this that from into page pages read more here click tap learn see view open opens go back next previous prev home start continue link links now all new get full side try show try demo it its out".split(" "));
+// Labels that say what happens rather than which page: "Open full page", "See it side by side", "Try it".
+const ACTION = /^(open|see|view|try|show|watch|download|read|go|get|start|continue|learn|click|tap)\b/i;
+const words = (text) => (text || "").toLowerCase().replace(/&[a-z]+;|&#\d+;/g, " ").split(/[^a-z0-9\u00c0-\uffff]+/).filter((word) => word.length >= 3 && !GENERIC.has(word) && !/^\d+$/.test(word));
+const near = (a, b) => a === b || a.replace(/e?s$/, "") === b.replace(/e?s$/, "") || (a.length >= 4 && b.length >= 4 && (a.startsWith(b.slice(0, 4)) || b.startsWith(a.slice(0, 4))));
+const stripTags = (html) => html.replace(/<[^>]{0,4000}>/g, " ").replace(/\s+/g, " ").trim();
+
+// What a page is about: its title, headings and file name.
+function pageWords(file, text) {
+  const parts = [path.posix.basename(file).replace(/\.html?$/i, ""), path.posix.basename(path.posix.dirname(file))];
+  // The first part of the visible text: what a visitor sees first when the page opens.
+  const body = /<body\b[^>]{0,4000}>([\s\S]*)/i.exec(text || "");
+  if (body) parts.push(stripTags(body[1].replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, " ")).slice(0, 1500));
+  for (const found of (text || "").matchAll(/<(title|h1|h2|h3)\b[^>]{0,4000}>([\s\S]{0,400}?)<\/\1>/gi)) parts.push(stripTags(found[2]));
+  for (const found of (text || "").matchAll(/<meta\b[^>]{0,4000}\bname\s*=\s*["']description["'][^>]{0,4000}\bcontent\s*=\s*["']([^"']{0,400})["']/gi)) parts.push(found[1]);
+  return words(parts.join(" "));
+}
 
 class UsageError extends Error {}
 
@@ -99,7 +126,19 @@ function pageLinks(text) {
     const name = found[1].toLowerCase();
     const attr = name === "form" ? "action" : ["script", "img", "source", "iframe"].includes(name) ? "src" : "href";
     const value = new RegExp(`\\b${attr}\\s*=\\s*(["'])(.*?)\\1`, "i").exec(found[2]);
-    if (value) links.push({ url: value[2].trim(), index: found.index, kind: name === "a" || name === "area" || name === "form" ? "page" : name === "iframe" ? "embed" : "asset" });
+    if (!value) continue;
+    let label = "";
+    if (name === "a") {
+      const after = text.slice(found.index + found[0].length, found.index + found[0].length + 4000);
+      const end = after.search(/<\/a>/i);
+      const inner = end === -1 ? "" : after.slice(0, end);
+      const aria = /\baria-label\s*=\s*(["'])(.*?)\1/i.exec(found[2]);
+      // A card (a tile wrapped in a link) is named by its heading; a long run of text is not a page name.
+      const heading = /<(h[1-6]|strong|b)\b[^>]{0,4000}>([\s\S]{0,200}?)<\/\1>/i.exec(inner);
+      label = (aria ? aria[2] : "") || stripTags(heading ? heading[2] : inner);
+      if (label.length > 60) label = "";
+    }
+    links.push({ url: value[2].trim(), index: found.index, label, kind: name === "a" || name === "area" || name === "form" ? "page" : name === "iframe" ? "embed" : "asset" });
   }
   // Script navigation with a literal target: location.href = "x.html", window.location.assign('x.html').
   for (const found of text.matchAll(/\blocation(?:\.href)?\s*=\s*(["'])([^"'\n]+)\1|\blocation\.(?:assign|replace)\(\s*(["'])([^"'\n]+)\3/g)) {
@@ -110,7 +149,7 @@ function pageLinks(text) {
 
 const idsOf = (text) => new Set([...text.matchAll(/\b(?:id|name)\s*=\s*(["'])([^"']+)\1/gi)].map((found) => found[2]));
 
-function checkPages(files, read, add) {
+function checkPages(files, read, add, map) {
   const pages = files.filter((file) => PAGE.test(file));
   const fileSet = new Set(files);
   const inbound = new Map(pages.map((page) => [page, 0]));
@@ -153,6 +192,12 @@ function checkPages(files, read, add) {
       if (link.kind === "embed" && inbound.has(target.file)) {
         embedded.add(target.file);
         inbound.set(target.file, inbound.get(target.file) + 1);
+      }
+      if (link.kind === "page" && link.label) map.push({ from: page, line, label: link.label, target: target.file + (url.includes("#") ? `#${url.split("#")[1]}` : "") });
+      if (link.kind === "page" && link.label && target.file !== page && PAGE.test(target.file)) {
+        const said = ACTION.test(link.label) ? [] : words(link.label);
+        const about = pageWords(target.file, read(target.file));
+        if (said.length && about.length && !said.some((word) => about.some((other) => near(word, other)))) add("link-label", page, line, "needs a human", `"${link.label.slice(0, 60)}" opens ${target.file}, whose title and headings do not mention it`);
       }
       if (link.kind === "page" && target.file !== page && inbound.has(target.file)) {
         inbound.set(target.file, inbound.get(target.file) + 1);
@@ -232,7 +277,7 @@ function routeMatches(routes, target) {
   });
 }
 
-function checkRoutes(files, read, add) {
+function checkRoutes(files, read, add, map) {
   const { router, routes, relative } = knownRoutes(files, read);
   if (!router || routes.length === 0) return { router: null, routes: 0, links: 0, catchAll: false };
   // A catch-all at the top ("*", "/[...slug]") accepts every path, so a link cannot be shown to lead nowhere.
@@ -254,6 +299,11 @@ function checkRoutes(files, read, add) {
       const target = raw.split("#")[0].split("?")[0] || "/";
       checked += 1;
       if (/\.[a-z0-9]{2,5}$/i.test(target)) continue; // a file under public/, not a route
+      if (/^<Link\b/.test(found[0])) {
+        const rest = text.slice(found.index, found.index + 800);
+        const label = stripTags((/>([\s\S]{0,600}?)<\/Link>/.exec(rest) || [])[1] || "");
+        if (label && !/[{}]/.test(label)) map.push({ from: file, line: lineAt(found.index), label, target: raw });
+      }
       if (!matches(target)) add("broken-route", file, lineAt(found.index), "certain", `${raw} is not a route the app defines (${router})`);
     }
   }
@@ -283,26 +333,108 @@ function wiring(root) {
     seen.add(id);
     findings.push({ kind, file, line, confidence, what, fix: FIX[kind] });
   };
-  const pages = checkPages(files, read, add);
-  const routes = checkRoutes(files, read, add);
+  const map = [];
+  const pages = checkPages(files, read, add, map);
+  const routes = checkRoutes(files, read, add, map);
   findings.sort((a, b) => (a.confidence === b.confidence ? 0 : a.confidence === "certain" ? -1 : 1) || a.file.localeCompare(b.file) || a.line - b.line);
-  return { root, pages: pages.pages, pageLinks: pages.links, router: routes.router, routes: routes.routes, routeLinks: routes.links, catchAll: routes.catchAll, findings };
+  return { root, pages: pages.pages, pageLinks: pages.links, router: routes.router, routes: routes.routes, routeLinks: routes.links, catchAll: routes.catchAll, findings, map };
+}
+
+// Links whose words and page stayed but whose target moved since a saved map. A label used on one page for two
+// different targets is ambiguous, so only labels used once per page are compared.
+function compareMaps(before, now) {
+  const index = (list) => {
+    const out = new Map();
+    const count = new Map();
+    for (const item of list) {
+      const key = `${item.from}|${item.label.toLowerCase()}`;
+      count.set(key, (count.get(key) || 0) + 1);
+      out.set(key, item);
+    }
+    for (const [key, total] of count) if (total > 1) out.delete(key);
+    return out;
+  };
+  const old = index(before);
+  const changed = [];
+  for (const [key, item] of index(now)) {
+    const was = old.get(key);
+    if (was && was.target !== item.target) changed.push({ from: item.from, line: item.line || 1, label: item.label, was: was.target, now: item.target });
+  }
+  return changed;
+}
+
+// The map file must stay inside the project and is written through a new file and a rename, never through a link.
+function mapPath(root, file) {
+  const full = path.resolve(file);
+  const back = path.relative(root, full);
+  if (back === "" || back.startsWith("..") || path.isAbsolute(back)) throw new UsageError(`The link map must be inside the project: ${file}`);
+  // lstat, not exists: a link that points nowhere (dangling) must be refused too.
+  const isLink = (target) => {
+    try {
+      return fs.lstatSync(target).isSymbolicLink();
+    } catch {
+      return false;
+    }
+  };
+  let current = root;
+  for (const part of back.split(path.sep).slice(0, -1)) {
+    current = path.join(current, part);
+    if (isLink(current)) throw new UsageError(`Refusing a linked folder on the way to the link map: ${current}`);
+  }
+  if (isLink(full)) throw new UsageError(`Refusing a link at the link map's path: ${full}`);
+  return full;
 }
 
 function main(argv) {
-  const json = argv.includes("--json");
-  const rest = argv.filter((arg) => arg !== "--json");
-  if (rest.some((arg) => arg.startsWith("-")) || rest.length > 1) throw new UsageError("Usage: uca-wiring-check.cjs [project folder] [--json]");
+  const usage = "Usage: uca-wiring-check.cjs [project folder] [--json] [--save <file>] [--compare <file>]";
+  let json = false;
+  let save = null;
+  let compare = null;
+  const rest = [];
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--json") json = true;
+    else if (arg === "--save" || arg === "--compare") {
+      const value = argv[++index];
+      if (!value) throw new UsageError(usage);
+      if (arg === "--save") save = value;
+      else compare = value;
+    } else if (arg.startsWith("-")) throw new UsageError(usage);
+    else rest.push(arg);
+  }
+  if (rest.length > 1) throw new UsageError(usage);
   const root = path.resolve(rest[0] || ".");
   if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) throw new UsageError(`Not a folder: ${root}`);
   const result = wiring(root);
+  if (compare) {
+    const file = mapPath(root, path.resolve(root, compare));
+    let before;
+    try {
+      before = JSON.parse(fs.readFileSync(file, "utf8")).links;
+    } catch (error) {
+      throw new UsageError(`Cannot read the saved link map ${compare}: ${error.message}`);
+    }
+    if (!Array.isArray(before)) throw new UsageError(`${compare} is not a saved link map.`);
+    for (const move of compareMaps(before, result.map)) {
+      result.findings.push({ kind: "link-changed", file: move.from, line: move.line, confidence: "needs a human", what: `"${move.label.slice(0, 60)}" used to open ${move.was}, now opens ${move.now}`, fix: FIX["link-changed"] });
+    }
+  }
+  if (save) {
+    const file = mapPath(root, path.resolve(root, save));
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const temporary = `${file}.${process.pid}-${Date.now()}.tmp`;
+    fs.writeFileSync(temporary, `${JSON.stringify({ version: 1, links: result.map }, null, 1)}\n`, { encoding: "utf8", flag: "wx" });
+    fs.renameSync(temporary, file);
+  }
   if (json) {
-    console.log(JSON.stringify(result, null, 1));
+    const { map, ...shown } = result;
+    console.log(JSON.stringify({ ...shown, mapEntries: map.length }, null, 1));
     return 0;
   }
   const lines = [`Wiring of ${root}: ${result.pages} page(s), ${result.pageLinks} link(s) checked${result.router ? `; ${result.router}: ${result.routes} route(s), ${result.routeLinks} route link(s) checked` : ""}; ${result.findings.length} finding(s).`];
   if (result.catchAll) lines.push("", "Note: the app has a catch-all route at the top level, which accepts every path, so a link to a missing page cannot be found by reading the code. Check those links in a browser.");
   for (const finding of result.findings) lines.push("", `[${finding.confidence}] ${finding.kind} at ${finding.file}:${finding.line}: ${finding.what}`, `  Fix: ${finding.fix}`);
+  if (save) lines.push("", `Saved ${result.map.length} link(s) to ${save}. After a change, run with --compare ${save} to see every link that moved.`);
   lines.push("", "Static reading only: links built at run time are not followed, and lag or loading time is not measured (that needs the page running in a browser).");
   console.log(lines.join("\n"));
   return 0;
