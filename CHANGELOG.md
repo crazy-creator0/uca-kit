@@ -4,6 +4,10 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 ## Unreleased
 
+Added (audit)
+- Audit check (`scripts/uca-audit-check.cjs`): reads JavaScript, TypeScript and Python and reports ten kinds of problem with file, line, risk, fix and a confidence ("certain" or "needs a human"); never runs code, never reads `.env`, never prints a secret value; skips tests, examples and benchmarks. Not installed into projects yet.
+- Results. Audit benchmark: 13 of 13 found, 0 false alarms, 0 decoys hit (the benchmark was written before the check, but by the same author, so this score alone proves little). On three real repositories it was not written for, every finding was checked by hand: the FastAPI full-stack template, 3 findings, all real (no rate limit on the two login routes, `Item.owner_id` used in lookups with no index); the Express RealWorld example, 5 findings, 4 real (the `superSecret` fallback in 3 places, no rate limit on login) and 1 false alarm (`POST /users` is sign-up, public by design); Koa, 0 findings, right for a library. A first version also reported two queries in loops in RealWorld that were not; the loop-body bug behind them is fixed and tested.
+
 Added (benchmarks)
 - Audit benchmark (`benchmarks/audit-planted/`): two small apps, Express and FastAPI, with 13 planted problems (hard-coded fallback secret, SQL injection twice, a delete route with no login, unbounded reads, queries in loops, stack traces sent to clients, no login rate limit, debug mode, wildcard CORS with credentials, a looked-up column with no index) and 12 decoys that look similar but are correct. `score.cjs` counts found, missed, false alarms and decoy hits. Baseline: the Senior Bar check finds 0 of 13. This is the ruler for the v0.4.0 audit, written before the audit.
 
