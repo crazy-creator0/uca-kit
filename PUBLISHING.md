@@ -20,19 +20,20 @@ The CLI source is maintained in [uca-kit](https://github.com/crazy-creator0/uca-
 1. Confirm availability and ownership of the name with `npm view create-universal-coding-agent-kit name`. If it exists, inspect ownership and select another name rather than overwriting another publisher.
 2. Confirm that the repository's original materials are yours to license and that any third-party skills/assets have compatible terms. The repository uses Apache-2.0; verify `LICENSE`, `NOTICE`, `package.json` (`"license": "Apache-2.0"`), README, `CITATION.cff` and the npm tarball all agree (`tests/license.test.cjs` checks most of this). Do not apply the license to third-party material that you do not have permission to relicense.
 3. Review the package file allowlist. Keep maintainer planning notes, test source, local-only files, credentials, and private project data out of the published tarball.
-4. Use Node.js 18+ and run:
+4. Run "uca-audit" on this repository (`.agents/workflows/audit.md`: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, then the hand review), fix what it finds with a test for each, and record what ran, what was found, what was fixed and what was not covered under "Checked before release" in the release's CHANGELOG entry.
+5. Use Node.js 18+ and run:
 
    ```bash
    npm run check
    npm pack --dry-run
    ```
 
-5. Test the tarball in a clean temporary project using the generic and at least one platform-specific profile. Confirm existing project files are preserved by default.
-6. Check the final README, author, keywords, repository URLs, version, and license metadata.
+6. Test the tarball in a clean temporary project using the generic and at least one platform-specific profile. Confirm existing project files are preserved by default.
+7. Check the final README, author, keywords, repository URLs, version, and license metadata.
 
 ## Promotion gate
 
-Publishing a testable early package and promoting the kit widely are separate decisions. Do not broadly promote the product until the Phase 2 benchmark has been run and the results are published. See [the roadmap](docs/ROADMAP.md) and [the demo plan](docs/DEMO.md). Keep every performance or compatibility claim proportional to measured evidence.
+Publishing a testable early package and promoting the kit widely are separate decisions. Keep every performance or compatibility claim proportional to measured evidence, and say plainly what has not been measured.
 
 ## Publish
 

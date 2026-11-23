@@ -130,7 +130,22 @@ function context(root) {
   // NODE_ENV and Vite's built-in MODE/DEV/PROD/SSR/BASE_URL say which mode the code runs in; they are not settings
   // a .env file would hold, so reading only those does not count.
   const usesEnv = sourceText.some((item) => /process\.env(?:\.(?!NODE_ENV\b)\w|\[(?!\s*["']NODE_ENV["']))|os\.environ(?:\[|\.get\(|\.setdefault\()|os\.getenv\(|import\.meta\.env\.(?!(?:MODE|DEV|PROD|SSR|BASE_URL)\b)\w|\bgetenv\(|\bENV\[/.test(item.text));
-  return { root, files, names, rootNames, read, source, scanned, manifests, hasUI, hasHtml, pkg, sourceText, usesEnv, truncated, hasSource: source.length > 0, staticSite: manifests.length === 0 && hasHtml };
+  // A setting read with a default (|| x, ?? x, a ? : fallback, os.getenv("X", default)) is optional: the code runs
+  // without it, so it does not need an .env.example entry. A line with a read and no default is a required setting.
+  const ENV_READ = /process\.env(?:\.(?!NODE_ENV\b)\w|\[(?!\s*["']NODE_ENV["']))|os\.environ(?:\[|\.get\(|\.setdefault\()|os\.getenv\(|import\.meta\.env\.(?!(?:MODE|DEV|PROD|SSR|BASE_URL)\b)\w|\bgetenv\(|\bENV\[/;
+  const HAS_DEFAULT = /\|\||\?\?|\?[^:\n]*:|getenv\(\s*["'][^"']+["']\s*,|environ\.get\(\s*["'][^"']+["']\s*,|\.setdefault\(/;
+  // Also optional: a read stored in a variable that the next two lines check before use (const d = ...; if (d > 0) ...).
+  const checkedNext = (lines, index) => {
+    const name = /\b(?:const|let|var)\s+(\w+)\s*=/.exec(lines[index]) || /^\s*(\w+)\s*=(?!=)/.exec(lines[index]);
+    return Boolean(name) && lines.slice(index + 1, index + 3).some((next) => new RegExp(`\\bif\\s*\\(\\s*!?\\s*(?:Number\\.\\w+\\()?${name[1]}\\b|^\\s*if\\s+(?:not\\s+)?${name[1]}\\b`).test(next));
+  };
+  // Tests, fixtures, examples, samples and benchmarks read settings for themselves, not for the app.
+  const appText = sourceText.filter((item) => !TEST_OR_FIXTURE.test(item.file.rel) && !/(?:^|\/)(?:examples?|samples?|benchmarks?)\//i.test(item.file.rel));
+  const needsEnvExample = appText.some((item) => {
+    const lines = item.text.split("\n");
+    return lines.some((textLine, index) => ENV_READ.test(textLine) && !HAS_DEFAULT.test(textLine) && !checkedNext(lines, index));
+  });
+  return { root, files, names, rootNames, read, source, scanned, manifests, hasUI, hasHtml, pkg, sourceText, usesEnv, needsEnvExample, truncated, hasSource: source.length > 0, staticSite: manifests.length === 0 && hasHtml };
 }
 
 // ---------- checks ----------
@@ -154,6 +169,9 @@ function findings(ctx, patterns, list) {
 }
 
 const TEST_FILE = /(?:^|\/)(?:tests?|__tests__|specs?)\/|\.(?:test|spec)\.[cm]?[jt]sx?$|(?:^|\/)test_[^/]*\.py$|_test\.(?:go|py)$|Test\.java$|_spec\.rb$/i;
+// Tests and their fixtures: secret-shaped values there are usually fakes (a guard's own test inputs), and HTML there
+// is often bad on purpose (a checker's test pages).
+const TEST_OR_FIXTURE = /(?:^|\/)(?:tests?|__tests__|specs?|e2e|fixtures?|__fixtures__|mocks?)\/|\.(?:test|spec)\.[cm]?[jt]sx?$|(?:^|\/)test_[^/]*\.py$|_test\.(?:go|py)$/i;
 const LOCKFILES = ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "poetry.lock", "Pipfile.lock", "uv.lock", "Cargo.lock", "go.sum", "Gemfile.lock", "composer.lock"];
 
 const CHECKS = [
@@ -190,11 +208,12 @@ const CHECKS = [
   } },
   { id: "config.env-example", dimension: "secrets", title: "An .env.example documents the settings the code reads", run: (ctx) => {
     if (!ctx.usesEnv) return na("the code reads no environment variables");
+    if (!ctx.needsEnvExample) return na("every setting the code reads has a default in the code");
     return [".env.example", ".env.sample", ".env.template"].some((name) => ctx.rootNames.has(name)) ? pass() : fail(["the code reads environment variables but no .env.example exists"]);
   } },
   { id: "secrets.none-in-source", dimension: "secrets", title: "No secret is written into the source", run: (ctx) => {
     if (!ctx.scanned.length) return na("no source files found");
-    const found = findings(ctx, SECRET_PATTERNS, ctx.scanned);
+    const found = findings(ctx, SECRET_PATTERNS, ctx.scanned.filter((file) => !TEST_OR_FIXTURE.test(file.rel)));
     return found.length ? fail(found.slice(0, 20)) : pass();
   } },
   { id: "tests.exist", dimension: "tests", title: "Test files exist", run: (ctx) => {
@@ -224,6 +243,7 @@ const CHECKS = [
   { id: "deploy.run-command", dimension: "deploy", title: "A start or build command is declared", run: (ctx) => {
     if (!ctx.pkg) return na("only checked for package.json projects");
     const scripts = ctx.pkg.scripts || {};
+    if (ctx.pkg.bin) return pass(["package.json bin (a command-line tool)"]);
     return scripts.start || scripts.build || scripts.dev ? pass([Object.keys(scripts).filter((name) => ["start", "build", "dev"].includes(name)).join(", ")]) : fail(["package.json has no start, build or dev script"]);
   } },
   { id: "deploy.runtime-declared", dimension: "deploy", title: "The runtime version is declared", run: (ctx) => {
@@ -248,19 +268,19 @@ const CHECKS = [
     return missing.length ? fail([`.gitignore does not list ${missing.map((item) => item.split("|")[0].replace("\\.", ".")).join(", ")}`]) : pass();
   } },
   { id: "a11y.img-alt", dimension: "accessibility", title: "Every image has an alt attribute", run: (ctx) => {
-    const files = ctx.files.filter((file) => [".html", ".htm", ".jsx", ".tsx", ".vue", ".svelte"].includes(file.ext));
+    const files = ctx.files.filter((file) => [".html", ".htm", ".jsx", ".tsx", ".vue", ".svelte"].includes(file.ext) && !TEST_OR_FIXTURE.test(file.rel));
     if (!files.length) return na("no UI files found");
     const found = findings(ctx, [["<img without alt", /<img\b(?![^>]*\balt\b)[^>]*>/i]], files);
     return found.length ? fail(found.slice(0, 20)) : pass();
   } },
   { id: "a11y.html-lang", dimension: "accessibility", title: "HTML pages declare a language", run: (ctx) => {
-    const pages = ctx.files.filter((file) => file.ext === ".html" || file.ext === ".htm");
+    const pages = ctx.files.filter((file) => (file.ext === ".html" || file.ext === ".htm") && !TEST_OR_FIXTURE.test(file.rel));
     if (!pages.length) return na("no HTML pages found");
     const bad = pages.filter((page) => /<html\b/i.test(ctx.read(page.rel) || "") && !/<html\b[^>]*\blang\s*=/i.test(ctx.read(page.rel) || "")).map((page) => `${page.rel} has <html> without lang`);
     return bad.length ? fail(bad.slice(0, 20)) : pass();
   } },
   { id: "a11y.viewport", dimension: "accessibility", title: "HTML pages set a viewport for phones", run: (ctx) => {
-    const pages = ctx.files.filter((file) => file.ext === ".html" || file.ext === ".htm");
+    const pages = ctx.files.filter((file) => (file.ext === ".html" || file.ext === ".htm") && !TEST_OR_FIXTURE.test(file.rel));
     if (!pages.length) return na("no HTML pages found");
     const bad = pages.filter((page) => /<head\b/i.test(ctx.read(page.rel) || "") && !/<meta[^>]*name\s*=\s*["']viewport["']/i.test(ctx.read(page.rel) || "")).map((page) => `${page.rel} has no viewport meta`);
     return bad.length ? fail(bad.slice(0, 20)) : pass();
@@ -270,6 +290,10 @@ const CHECKS = [
 const HINTS = [
   { id: "hint.risky-patterns", dimension: "security", title: "Patterns that need a reason (each may be fine)", run: (ctx) => {
     const found = findings(ctx, RISKY_PATTERNS, ctx.scanned);
+    return found.length ? hint(found.slice(0, 20)) : pass();
+  } },
+  { id: "hint.secrets-in-tests", dimension: "secrets", title: "Secret-shaped values in tests or fixtures (fine if fake)", run: (ctx) => {
+    const found = findings(ctx, SECRET_PATTERNS, ctx.scanned.filter((file) => TEST_OR_FIXTURE.test(file.rel)));
     return found.length ? hint(found.slice(0, 20)) : pass();
   } },
   { id: "hint.ui-states", dimension: "states", title: "The UI source mentions loading, error and empty states", run: (ctx) => {

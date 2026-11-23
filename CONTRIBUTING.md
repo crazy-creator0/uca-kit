@@ -31,7 +31,7 @@ If Python sync scripts or their tests are changed, run their relevant tests too 
 - [ ] Relevant tests added/updated and executed.
 - [ ] Any compatibility claims include exact product/version/date evidence.
 - [ ] Security, privacy, and rollback implications considered.
-- [ ] README and roadmap claims match what is actually implemented.
+- [ ] README claims match what is actually implemented.
 - [ ] New skills have a distinct reason to exist and clear use boundaries.
 - [ ] No credentials, private data, or unrelated generated files included.
 

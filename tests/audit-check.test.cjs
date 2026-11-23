@@ -156,3 +156,19 @@ test("standard and full install the audit check, the readiness check and the aud
   for (const tier of ["standard", "full"]) for (const file of ["scripts/uca-audit-check.cjs", "scripts/uca-readiness.cjs", "scripts/uca-senior-check.cjs"]) assert.ok(tiers[tier].include.includes(file), `${tier}: ${file}`);
   for (const tier of ["standard", "full"]) assert.match(fs.readFileSync(path.join(__dirname, "..", ".agents", tier, "CORE.md"), "utf8"), /"uca-audit", follow `\.agents\/workflows\/audit\.md`/);
 });
+
+test("a crafted file of unclosed loops does not make the scan grow with the square of its size", () => {
+  // 390 KB of "for (const a of b) { db.query(" took 5.8 s before the loop-body limits; it now takes about 0.15 s.
+  let text = "";
+  while (text.length < 390_000) text += "for (const a of b) { db.query(";
+  const root = project({ "package.json": "{}", "src/c.js": text });
+  const started = Date.now();
+  audit(root);
+  assert.ok(Date.now() - started < 3000, `took ${Date.now() - started} ms`);
+});
+
+test("the kit's own scripts are skipped only where the kit is installed", () => {
+  const files = { "scripts/uca-thing.cjs": "db.query(`SELECT * FROM t WHERE a = '${x}' LIMIT 1`);\n" };
+  assert.deepEqual(kinds(project(files)), ["sql-injection scripts/uca-thing.cjs:1"]);
+  assert.deepEqual(kinds(project({ ...files, ".uca/manifest.json": "{}" })), []);
+});

@@ -22,8 +22,12 @@ const path = require("node:path");
 
 const MAX_READ_BYTES = 400_000;
 const MAX_FILES = 3000;
+// Limits on loop bodies, so a crafted file (thousands of unclosed loops) cannot make the scan grow with the square of its size.
+const MAX_LOOP_BODY_CHARS = 20_000;
+const MAX_LOOP_BODY_LINES = 400;
+const MAX_LOOPS_PER_FILE = 2000;
 const SKIP_DIRS = new Set(["node_modules", ".git", "dist", "build", ".next", ".nuxt", "coverage", ".venv", "venv", "env", "__pycache__", "target", "vendor", ".uca", ".uca-workspace", ".agents", ".claude", ".cursor", ".opencode", ".idea", ".vscode", ".turbo", ".cache", "migrations", "alembic"]);
-const SKIP_PATH = /(^|\/)(tests?|__tests__|spec|e2e|examples?|fixtures?|mocks?|benchmarks?|scripts\/uca-[\w-]+\.cjs$)(\/|$)|\.(test|spec)\.[cm]?[jt]sx?$|(^|\/)(test_[^/]+|[^/]+_test|conftest)\.py$/;
+const SKIP_PATH = /(^|\/)(tests?|__tests__|spec|e2e|examples?|fixtures?|mocks?|benchmarks?)(\/|$)|\.(test|spec)\.[cm]?[jt]sx?$|(^|\/)(test_[^/]+|[^/]+_test|conftest)\.py$/;
 const SECRET_FILE = /^(?:\.env(?:\..*)?|.*\.(?:pem|key|p12|pfx|jks|keystore)|id_(?:rsa|dsa|ecdsa|ed25519)(?:\.pub)?)$/i;
 const JS = /\.[cm]?[jt]sx?$/;
 const PY = /\.py$/;
@@ -217,7 +221,9 @@ function unboundedReads(file, text, add) {
 function queriesInLoops(file, text, add) {
   const lines = text.split("\n");
   if (JS.test(file)) {
+    let loops = 0;
     for (const found of text.matchAll(/\bfor\s*\(\s*(?:const|let|var)\s+(?:\{([^}]*)\}|\[([^\]]*)\]|(\w+))\s+of\b|\.\s*(?:forEach|map|flatMap)\s*\(\s*(?:async\s*)?\(?\s*(\w+)/g)) {
+      if (++loops > MAX_LOOPS_PER_FILE) break;
       const names = (found[1] || found[2] || found[3] || found[4] || "").split(",").map((name) => name.trim().split(/\s*:\s*/).pop()).filter(Boolean);
       if (names.length === 0) continue;
       // The loop body. A callback (.map, .forEach): exactly the call's brackets. A for loop: after the head's
@@ -233,7 +239,8 @@ function queriesInLoops(file, text, add) {
         if (text[next] === "{") {
           let depth = 0;
           let end = next;
-          for (; end < text.length; end += 1) {
+          const stop = Math.min(text.length, next + MAX_LOOP_BODY_CHARS);
+          for (; end < stop; end += 1) {
             if (text[end] === "{") depth += 1;
             else if (text[end] === "}" && --depth === 0) break;
           }
@@ -252,7 +259,7 @@ function queriesInLoops(file, text, add) {
       if (!head) return;
       const indent = head[1].length;
       const names = head[2].replace(/[()]/g, "").split(",").map((name) => name.trim()).filter(Boolean);
-      for (let next = index + 1; next < lines.length; next += 1) {
+      for (let next = index + 1; next < Math.min(lines.length, index + 1 + MAX_LOOP_BODY_LINES); next += 1) {
         const body = lines[next];
         if (body.trim() === "") continue;
         if (body.length - body.trimStart().length <= indent) break;
@@ -346,7 +353,10 @@ function missingIndexes(files, read, add) {
 
 function audit(root) {
   const all = walk(root);
-  const files = all.filter((file) => !SKIP_PATH.test(file));
+  // In a project where the kit is installed (it has .uca/manifest.json), the kit's own scripts are installed copies,
+  // not the user's code, so they are skipped. In the kit's own repository they are read like any other code.
+  const installed = fs.existsSync(path.join(root, ".uca", "manifest.json"));
+  const files = all.filter((file) => !SKIP_PATH.test(file) && !(installed && /^scripts\/uca-[\w-]+\.cjs$/.test(file)));
   const read = reader(root);
   const findings = [];
   const seen = new Set();

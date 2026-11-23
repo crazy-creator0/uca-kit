@@ -1,6 +1,6 @@
 # Audit benchmark: planted problems and decoys
 
-The ruler for the v0.4.0 audit, built before the audit itself so the audit cannot be tuned to it after the fact.
+The ruler for the audit check, built before the check itself so the check could not be tuned to it after the fact.
 
 Two small apps, written for this benchmark and never meant to run in production:
 
