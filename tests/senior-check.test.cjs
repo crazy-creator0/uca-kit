@@ -202,3 +202,32 @@ test("a .gitignore in a subfolder counts for the dependency folders", () => {
   const report = evaluate(project({ "pyproject.toml": "[project]\nname='x'\n", ".gitignore": "node_modules/\n", "backend/.gitignore": "__pycache__\n", "backend/app.py": "print(1)\n" }));
   assert.equal(report.checks.find((item) => item.id === "git.ignores-dependencies").status, "pass");
 });
+
+test("a command-line package with bin has a run command", () => {
+  const report = evaluate(project({ "package.json": JSON.stringify({ name: "tool", bin: { tool: "cli.js" } }), "cli.js": "console.log(1);\n" }));
+  assert.equal(report.checks.find((item) => item.id === "deploy.run-command").status, "pass");
+});
+
+test("secret-shaped values in tests are a hint, not a failure; in source they still fail", () => {
+  const fake = "const key = 'sk-abcdefghijklmnopqrstuvwx';\n";
+  const inTests = evaluate(project({ "package.json": "{}", "src/a.js": "x();\n", "tests/guard.test.js": fake }));
+  assert.equal(inTests.checks.find((item) => item.id === "secrets.none-in-source").status, "pass");
+  assert.equal(inTests.checks.find((item) => item.id === "hint.secrets-in-tests").status, "hint");
+  const inSource = evaluate(project({ "package.json": "{}", "src/a.js": fake }));
+  assert.equal(inSource.checks.find((item) => item.id === "secrets.none-in-source").status, "fail");
+});
+
+test("deliberately bad HTML under tests/fixtures is not scored for accessibility", () => {
+  const report = evaluate(project({ "index.html": "<!doctype html><html lang=\"en\"><head><meta name=\"viewport\" content=\"width=device-width\"></head><body></body></html>\n", "tests/fixtures/bad.html": "<html><head></head><body><img src=x></body></html>\n" }));
+  for (const id of ["a11y.html-lang", "a11y.viewport", "a11y.img-alt"]) assert.equal(report.checks.find((item) => item.id === id).status, "pass", id);
+});
+
+test("settings with a default, or checked before use, do not need an .env.example; required ones and app code only", () => {
+  const status = (files) => evaluate(project({ "package.json": "{}", ...files })).checks.find((item) => item.id === "config.env-example").status;
+  assert.equal(status({ "a.js": "const port = process.env.PORT || 3000;\nconst t = process.env.TIMEOUT ?? 5;\nconst n = process.env.N ? 1 : 2;\n" }), "na");
+  assert.equal(status({ "a.js": "const d = Number(process.env.DELAY);\nif (d > 0) wait(d);\n" }), "na");
+  assert.equal(status({ "a.py": "import os\nhost = os.getenv('HOST', '0.0.0.0')\nport = os.environ.get('PORT', '8000')\n" }), "na");
+  assert.equal(status({ "a.js": "const url = process.env.DATABASE_URL;\n" }), "fail");
+  assert.equal(status({ "a.py": "import os\nurl = os.environ['DATABASE_URL']\n" }), "fail");
+  assert.equal(status({ "src/a.js": "run();\n", "tests/a.test.js": "const url = process.env.DATABASE_URL;\n", "examples/demo.js": "const k = process.env.KEY;\n" }), "na");
+});

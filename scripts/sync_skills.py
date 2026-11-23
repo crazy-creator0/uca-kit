@@ -111,6 +111,31 @@ def tier_definition(tiers_path: Path, tier: str) -> dict:
     return definition
 
 
+def first_symlink(root: Path, relative: Path) -> Path | None:
+    """The first existing folder or file on the way from root to root/relative that is a symbolic link, if any.
+
+    A linked .claude or skills folder would send every copy somewhere outside the project.
+    """
+    current = root
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            return current
+        if not current.exists():
+            return None
+    return None
+
+
+def symlink_inside(folder: Path) -> Path | None:
+    """A symbolic link anywhere inside an existing destination folder, if any (copying into it would follow it)."""
+    if not folder.exists():
+        return None
+    for path in folder.rglob("*"):
+        if path.is_symlink():
+            return path
+    return None
+
+
 def main() -> int:
     args = parse_args()
     kit_root = Path(__file__).resolve().parent.parent
@@ -136,8 +161,8 @@ def main() -> int:
             print("Error: --target custom requires --custom-dir.", file=sys.stderr)
             return 2
         relative_destination = Path(args.custom_dir)
-        if relative_destination.is_absolute():
-            print("Error: --custom-dir must be relative to --project-root.", file=sys.stderr)
+        if relative_destination.is_absolute() or ".." in relative_destination.parts:
+            print("Error: --custom-dir must be a folder inside --project-root (no absolute path, no '..').", file=sys.stderr)
             return 2
     else:
         if args.custom_dir:
@@ -192,7 +217,11 @@ def main() -> int:
             )
             return 2
 
-    destination_root = (project_root / relative_destination).resolve()
+    linked = first_symlink(project_root, relative_destination)
+    if linked is not None:
+        print(f"Error: refusing to copy through a symbolic link: {linked}. Nothing was copied.", file=sys.stderr)
+        return 2
+    destination_root = project_root / relative_destination
 
     # Avoid trying to copy a directory onto itself when this repository is the target project.
     if source_root.resolve() == destination_root:
@@ -216,6 +245,12 @@ def main() -> int:
             action = "UPDATE" if destination.exists() else "COPY"
             print(f"{action}: {source.name} -> {destination}")
             copied += 1
+            continue
+
+        linked = destination if destination.is_symlink() else symlink_inside(destination)
+        if linked is not None:
+            print(f"ERROR refusing {source.name}: symbolic link at {linked}", file=sys.stderr)
+            errors += 1
             continue
 
         try:

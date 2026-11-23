@@ -33,6 +33,31 @@ class SyncSkillsTests(unittest.TestCase):
             text=True,
         )
 
+    def test_symlinked_target_folder_is_refused_and_nothing_is_written_outside(self) -> None:
+        outside = self.root / "outside"
+        outside.mkdir()
+        (self.project / ".claude").symlink_to(outside, target_is_directory=True)
+        result = self.run_sync("--target", "claude", "--force")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("symbolic link", result.stderr)
+        self.assertEqual(list(outside.rglob("*")), [])
+
+    def test_symlink_inside_an_existing_skill_folder_is_refused(self) -> None:
+        outside = self.root / "outside"
+        outside.mkdir()
+        skill = self.project / ".claude" / "skills" / "python-engineering"
+        skill.mkdir(parents=True)
+        (skill / "SKILL.md").symlink_to(outside / "victim.md")
+        result = self.run_sync("--target", "claude", "--force")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("refusing python-engineering", result.stderr)
+        self.assertFalse((outside / "victim.md").exists())
+
+    def test_custom_dir_may_not_leave_the_project(self) -> None:
+        result = self.run_sync("--target", "custom", "--custom-dir", "../outside")
+        self.assertEqual(result.returncode, 2)
+        self.assertFalse((self.root / "outside").exists())
+
     def test_copies_skill_to_native_folder(self) -> None:
         result = self.run_sync("--target", "claude")
         self.assertEqual(result.returncode, 0, result.stderr)

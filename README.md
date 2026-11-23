@@ -14,7 +14,7 @@
 
 It is designed to help developers plan before coding, understand unfamiliar code, make focused changes, test carefully, protect existing behavior, and learn the reasoning behind engineering decisions.
 
-[Quick start](#quick-start) · [Workflow](#scope-first-workflow) · [Features](#what-is-included) · [Roadmap](docs/ROADMAP.md) · [Demo plan](docs/DEMO.md) · [Tool compatibility](docs/TOOL-COMPATIBILITY.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Platform guide](PLATFORM-SETUP.md)
+[Quick start](#quick-start) · [Workflow](#scope-first-workflow) · [Features](#what-is-included) · [Tool compatibility](docs/TOOL-COMPATIBILITY.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Platform guide](PLATFORM-SETUP.md)
 
 ## Read this first
 
@@ -258,16 +258,6 @@ The ledger is local by default at `~/.uca-kit/usage.json`; set `UCA_USAGE_FILE` 
 6. For substantial tasks, consult [the agent/skill routing map](AGENT-SKILL-MAP.md), suggest relevant skills up front, read only those skill files, and activate specialists only where the host supports them and the task benefits.
 7. Follow the compact risk-based policy in `AGENTS.md`; open only the specific workflow and skills required by the task.
 8. When the local usage script is installed, use its budget guard before optional specialist calls when the host integration supports it; never skip essential safety checks to save tokens.
-
-## Roadmap
-
-See the [measurable phased roadmap](docs/ROADMAP.md), [demo plan](docs/DEMO.md), and [tool compatibility matrix](docs/TOOL-COMPATIBILITY.md). The following are **planned capabilities, not claims about features already implemented**:
-
-- A colleague-like project planner that maintains NOW / NEXT / LATER priorities and explains trade-offs.
-- A visual planning workspace using source-backed SVG diagrams, user journeys, architecture maps, and UI previews.
-- Repository-aware beginner documentation with embedded diagrams and evidence-based improvement suggestions.
-- An independent pre-push change-impact review to surface possible changes to existing logic and regression risks.
-- Stronger integrated DevOps guidance for CI, deployment, monitoring, and rollback.
 
 ## Security and safe use
 
