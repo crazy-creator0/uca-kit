@@ -38,7 +38,7 @@ Look harder, never invent. Every finding must point to a file and line you read,
    | --- | --- | --- | --- | --- |
 
    Then the readiness level and checks passed (from step 2), the items you could not decide, and what the audit did not cover. Say "no finding" only for what you actually read.
-6. **Plan the fixes; do not fix yet.** Quick fixes made one after another, each with a generic idea, are how a cleaned-up project turns into a new mess. Write a fix plan and wait for the user to approve it:
+6. **Plan the fixes; do not fix yet.** Quick fixes made one after another, each with a generic idea, are how a cleaned-up project turns into a new mess. Write a fix plan and wait for the user to approve it. The plan aims at the readiness target (Silver and at least 80% of checks, from step 2) plus every Critical and High finding; if it cannot get there, say which items stand in the way:
    - Group findings that share a cause (one missing auth helper behind five routes is one fix, not five).
    - Order: what blocks other fixes first, then Critical, High, Medium, Low. Put fixes that touch the same files next to each other.
    - For each fix: the files it changes, the test that shows the problem before the fix, what could break, and how it will be checked afterwards (the same test, plus `node scripts/uca-readiness.cjs .` and the link check when pages change).

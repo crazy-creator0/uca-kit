@@ -77,3 +77,31 @@ test("--min exits 1 below the level asked for and 0 at or above it; the text nev
   assert.match(out.stdout, /not proof of production readiness/);
   assert.equal(run("--min", "platinum").status, 2);
 });
+
+test("target: Silver and 80% by default; a high percentage with a failing Bronze check does not meet it", () => {
+  const good = readiness(project(GOOD));
+  assert.equal(good.target.met, true);
+  assert.deepEqual(good.target.toDo, []);
+  const bronze = readiness(project({ ...GOOD, "src/auth.js": "const s = process.env.JWT_SECRET || 'dev-secret';\nmodule.exports = s;\n" }));
+  assert.ok(bronze.percent >= 80, `percent ${bronze.percent}`);
+  assert.equal(bronze.target.met, false);
+  assert.deepEqual(bronze.target.toDo.map((item) => item.id), ["audit:hardcoded-secret"]);
+});
+
+test("target: the to-do list adds the lowest-level failures until the percentage is reached; --require-target exits 1", () => {
+  const files = { ...GOOD };
+  delete files["package-lock.json"];
+  delete files[".env.example"];
+  const root = project({ ...files, "README.md": "# x\n" });
+  const report = readiness(root, { percent: 100, level: "Bronze" });
+  assert.equal(report.target.met, false);
+  assert.deepEqual(report.target.toDo.map((item) => item.level), ["Bronze", "Silver", "Silver"]);
+  const run = (...args) => spawnSync(process.execPath, [SCRIPT, root, ...args], { encoding: "utf8" });
+  const out = run("--require-target");
+  assert.equal(out.status, 1);
+  assert.match(out.stdout, /Target \(Silver and 80% of checks\): not met yet\. Fix these first, lowest level first:/);
+  assert.equal(run("--target", "0", "--target-level", "bronze", "--require-target").status, 1);
+  assert.equal(run("--target", "150").status, 2);
+  assert.equal(run("--target-level", "platinum").status, 2);
+  assert.equal(spawnSync(process.execPath, [SCRIPT, project(GOOD), "--require-target"], { encoding: "utf8" }).status, 0);
+});

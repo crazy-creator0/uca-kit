@@ -25,7 +25,7 @@ Do not ask about colors, fonts or folder names; pick sensible defaults and say w
 6. Identify security boundaries and test strategy.
 7. Create a prioritized backlog; define a small MVP.
 8. Implement the first vertical slice end-to-end, with realistic data from the domain. For a screen, review it with `design-taste-discovery` Step 7 and run `node scripts/uca-design-check.cjs` on the UI files when it exists.
-9. Add tests and verify the slice. When `scripts/uca-senior-check.cjs` is installed, run `node scripts/uca-senior-check.cjs .`, fix the failing basics that are in scope (README, .gitignore, .env.example, test command), and report the result honestly; it is a static checklist, not proof of quality.
+9. Add tests and verify the slice. When `scripts/uca-readiness.cjs` is installed, run `node scripts/uca-readiness.cjs .` (it includes the Senior Bar, `scripts/uca-senior-check.cjs`, plus the audit and link checks), fix the failing basics that are in scope (README, .gitignore, .env.example, test command), and report the result honestly; it is a static checklist, not proof of quality.
 10. Document setup, decisions, and next milestone.
 11. Check whether the project is already under Git. If not, explain the benefits of Git and ask whether the user wants to initialize it; if they decline, continue locally without blocking project work.
 
@@ -40,9 +40,9 @@ Do this once the first slice works, before you say it is done. Walk the list, fi
 6. **Works small.** The page is usable at phone width, images have alt text, controls are reachable by keyboard.
 7. **Tested.** At least one test for the main journey and one for a failure; the test command passes.
 8. **Safe by default.** No eval or raw HTML from user input, no wide-open CORS, no TLS checks turned off, no debug mode left on.
-9. **Static check.** Run `node scripts/uca-senior-check.cjs .` when installed and fix the failures that are in scope.
+9. **Reach the target.** Run `node scripts/uca-readiness.cjs .` when installed (otherwise `node scripts/uca-senior-check.cjs .`). The target is Silver and at least 80% of the checks that apply. Fix the items it lists, lowest level first. If something in scope still keeps the project below the target, say which item and why; the user decides whether to accept the gap. A "to confirm" item needs the user's answer, not a guess.
 
-Then give the user a scorecard of at most 12 lines in plain words: what is Done, what is Left and why, what you could not check (for example "not opened in a real browser"), and one next step. Do not call the project production-ready: say what was checked, not how good it is.
+Then give the user a scorecard of at most 12 lines in plain words: the readiness level and checks passed against the target, what is Done, what is Left and why, what you could not check (for example "not opened in a real browser"), and one next step. Do not call the project production-ready: say what was checked, not how good it is.
 
 ## Deliverables
 - Requirements and acceptance criteria.

@@ -3,7 +3,11 @@
 
 // Readiness levels: the Senior Bar checks and the audit check, grouped into Bronze, Silver and Gold.
 //
-//   node scripts/uca-readiness.cjs [project folder] [--json] [--min bronze|silver|gold]
+//   node scripts/uca-readiness.cjs [project folder] [--json] [--min bronze|silver|gold] [--target <percent>] [--target-level bronze|silver|gold] [--require-target]
+//
+// The target (default: Silver and 80% of the checks that apply) is what a project built with the kit should reach
+// before it is called done. The report shows the gap and the failing checks to fix first, lowest level first. It is a
+// goal for the work, not a promise about the product. --require-target exits 1 below it.
 //
 // Bronze: safe to share. Silver: safe to show users. Gold: ready for production traffic.
 // A level is reached when none of its checks, or the checks of the levels below it, fail. An audit finding marked
@@ -56,9 +60,12 @@ const WIRING = {
   ways: { title: "Every page has a way in and a way out", kinds: ["dead-end", "orphan"] }
 };
 
+const DEFAULT_TARGET = { percent: 80, level: "Silver" };
+const ORDER = ["Bronze", "Silver", "Gold"];
+
 class UsageError extends Error {}
 
-function readiness(root) {
+function readiness(root, target = DEFAULT_TARGET) {
   const bar = senior.evaluate(root);
   const found = auditCheck.audit(root);
   const wired = wiringCheck.wiring(root);
@@ -101,8 +108,18 @@ function readiness(root) {
   }
   const passed = levels.reduce((sum, level) => sum + level.passed, 0);
   const total = levels.reduce((sum, level) => sum + level.total, 0);
+  // The gap to the target: first every failing check of the target level and below, then the lowest-level failures
+  // until enough checks pass to reach the percentage. "To confirm" items are listed for a person, not counted.
+  const failing = levels.flatMap((level) => level.checks.filter((check) => check.status === "fail").map((check) => ({ level: level.name, id: check.id, title: check.title })));
+  const levelIndex = ORDER.indexOf(target.level);
+  const needed = Math.max(0, Math.ceil((target.percent * total) / 100) - passed);
+  const toDo = failing.filter((check) => ORDER.indexOf(check.level) <= levelIndex);
+  for (const check of failing) if (toDo.length < needed && !toDo.includes(check)) toDo.push(check);
+  const percentNow = total ? Math.round((passed / total) * 100) : null;
+  const met = total > 0 && reached !== null && ORDER.indexOf(reached) >= levelIndex && (passed / total) * 100 >= target.percent;
   return {
     root: path.basename(root),
+    target: { level: target.level, percent: target.percent, met, toDo },
     level: reached,
     toConfirm: levels.reduce((sum, level) => sum + level.toConfirm, 0),
     passed,
@@ -148,6 +165,13 @@ function render(report) {
   }
   lines.push(report.level ? `Level reached: ${report.level}${report.toConfirm ? ` (${report.toConfirm} item(s) to confirm by a person)` : ""}` : "Level reached: none yet (a Bronze check is failing)");
   if (report.percent !== null) lines.push(`Checks passed: ${report.passed} of ${report.total} (${report.percent}%)`);
+  const goal = `${report.target.level} and ${report.target.percent}% of checks`;
+  if (report.total === 0) lines.push(`Target (${goal}): nothing to score`);
+  else if (report.target.met) lines.push(`Target (${goal}): met`);
+  else {
+    lines.push(`Target (${goal}): not met yet. Fix these first, lowest level first:`);
+    for (const item of report.target.toDo) lines.push(`  - [${item.level}] ${item.title}`);
+  }
   lines.push(report.note);
   return lines.join("\n");
 }
@@ -155,6 +179,8 @@ function render(report) {
 function main(argv) {
   let json = false;
   let min = null;
+  let requireTarget = false;
+  const target = { ...DEFAULT_TARGET };
   const rest = [];
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -162,14 +188,24 @@ function main(argv) {
     else if (arg === "--min") {
       min = String(argv[++index] || "").toLowerCase();
       if (!["bronze", "silver", "gold"].includes(min)) throw new UsageError("--min needs bronze, silver or gold.");
-    } else if (arg.startsWith("-")) throw new UsageError(`Unknown option ${arg}. Usage: uca-readiness.cjs [project folder] [--json] [--min bronze|silver|gold]`);
+    } else if (arg === "--target") {
+      const value = Number(argv[++index]);
+      if (!Number.isFinite(value) || value < 0 || value > 100) throw new UsageError("--target needs a percent from 0 to 100.");
+      target.percent = value;
+    } else if (arg === "--target-level") {
+      const value = String(argv[++index] || "").toLowerCase();
+      if (!["bronze", "silver", "gold"].includes(value)) throw new UsageError("--target-level needs bronze, silver or gold.");
+      target.level = value[0].toUpperCase() + value.slice(1);
+    } else if (arg === "--require-target") requireTarget = true;
+    else if (arg.startsWith("-")) throw new UsageError(`Unknown option ${arg}. Usage: uca-readiness.cjs [project folder] [--json] [--min bronze|silver|gold] [--target <percent>] [--target-level bronze|silver|gold] [--require-target]`);
     else rest.push(arg);
   }
   if (rest.length > 1) throw new UsageError("Only one project folder can be given.");
   const root = path.resolve(rest[0] || ".");
   if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) throw new UsageError(`Not a folder: ${root}`);
-  const report = readiness(root);
+  const report = readiness(root, target);
   console.log(json ? JSON.stringify(report, null, 1) : render(report));
+  if (requireTarget && !report.target.met && report.total > 0) return 1;
   if (min) {
     const order = ["bronze", "silver", "gold"];
     const reached = report.level ? order.indexOf(report.level.toLowerCase()) : -1;
