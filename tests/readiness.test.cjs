@@ -36,7 +36,7 @@ test("every level check names a real Senior Bar check or an audit kind", () => {
   const ids = new Set(CHECKS.map((check) => check.id));
   const kinds = ["hardcoded-secret", "sql-injection", "missing-auth", "unbounded-read", "query-in-loop", "error-detail-leak", "no-rate-limit", "debug-mode", "cors-credentials-wildcard", "missing-index"];
   const used = LEVELS.flatMap((level) => level.checks);
-  for (const id of used) assert.ok(id.startsWith("audit:") ? kinds.includes(id.slice(6)) : ids.has(id), id);
+  for (const id of used) assert.ok(id.startsWith("audit:") ? kinds.includes(id.slice(6)) : id.startsWith("wiring:") ? ["wiring:links", "wiring:ways"].includes(id) : ids.has(id), id);
   assert.equal(new Set(used).size, used.length, "a check is in two levels");
   for (const kind of kinds) assert.ok(used.includes(`audit:${kind}`), `audit kind ${kind} is in no level`);
 });

@@ -178,7 +178,13 @@ node scripts/uca-readiness.cjs [project folder] [--json] [--min bronze|silver|go
 
 The **audit check** reads JavaScript, TypeScript and Python for ten kinds of problem: secrets that fall back to a value in the code, SQL built from strings, write routes without the auth the other routes use, reads with no filter or limit, database queries inside loops, stack traces sent to clients, login routes with no rate limiter, debug mode, wildcard CORS with credentials, and looked-up columns with no index. Each finding has a confidence: "certain" (the line is the problem as written) or "needs a human". Tests, examples and benchmarks are skipped.
 
-**Readiness** groups the Senior Bar checks and the audit into three levels: **Bronze** (safe to share), **Silver** (safe to show users), **Gold** (ready for production traffic). A level is reached when none of its checks, or those below it, fail. "Needs a human" findings are listed to confirm, not counted as failures, and checks that do not apply are left out. The percentage is checks passed out of checks that apply: a to-do list, not a measure of how ready a product is. Neither check can see problems reached through helper functions or visible only at run time, so no finding is not proof of safety. `--min` exits 1 below a level, for CI.
+```
+node scripts/uca-wiring-check.cjs [project folder] [--json]
+```
+
+The **wiring check** follows the links between pages and routes without running anything: links, images, scripts and forms that point to a file that does not exist, `#anchors` with no matching id, React Router and Next.js links (including menus kept in objects) to routes the app never defines, and pages with no way out (dead ends) or no way in (orphans). Links built at run time are not followed; a top-level catch-all route, which accepts every path, is reported instead of silently passing; lag and loading time are not measured, because that needs the page running in a browser.
+
+**Readiness** groups the Senior Bar checks, the audit and the wiring check into three levels: **Bronze** (safe to share), **Silver** (safe to show users), **Gold** (ready for production traffic). A level is reached when none of its checks, or those below it, fail. "Needs a human" findings are listed to confirm, not counted as failures, and checks that do not apply are left out. The percentage is checks passed out of checks that apply: a to-do list, not a measure of how ready a product is. Neither check can see problems reached through helper functions or visible only at run time, so no finding is not proof of safety. `--min` exits 1 below a level, for CI.
 
 ## Scope-first workflow
 

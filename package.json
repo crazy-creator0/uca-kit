@@ -60,7 +60,7 @@
     "pack:dry-run": "npm pack --dry-run",
     "verify": "node tests/verify.cjs",
     "prepublishOnly": "npm run check && npm run check:bench",
-    "test:bench": "node --test tests/benchmark-fixtures.test.cjs tests/score-run.test.cjs tests/project-questions.test.cjs tests/audit-planted.test.cjs tests/audit-check.test.cjs tests/readiness.test.cjs",
+    "test:bench": "node --test tests/benchmark-fixtures.test.cjs tests/score-run.test.cjs tests/project-questions.test.cjs tests/audit-planted.test.cjs tests/audit-check.test.cjs tests/readiness.test.cjs tests/wiring-check.test.cjs",
     "check:bench": "node --check benchmarks/score-run.cjs && node --check benchmarks/project-questions/score.cjs && node --check benchmarks/audit-planted/score.cjs && node --check benchmarks/make-snapshot.cjs && npm run test:bench"
   },
   "repository": {
