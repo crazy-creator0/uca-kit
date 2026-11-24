@@ -2,6 +2,8 @@
 
 Follow: Symptom → Investigate → Hypothesis → Evidence → Root cause → Fix → Prevention.
 
+No single symptom? When the user asks to find what is missing or broken in general, run the audit first (`.agents/workflows/audit.md`, read-only: the checks, the request list and the fix plan), then take its findings one at a time through the steps below, most severe first. Report the findings you did not fix.
+
 1. Capture expected/actual behavior and exact reproduction steps.
 2. Collect relevant code, sanitized logs, status codes, environment/version details, and recent changes.
 3. Trace the actual request path across client, network, backend, and database as applicable.
