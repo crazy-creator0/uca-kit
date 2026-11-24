@@ -34,7 +34,7 @@ It is designed to help developers plan before coding, understand unfamiliar code
    ```
 2. Pin a release if you want a fixed version. Without a tag you get the current `main`. Releases are listed in [CHANGELOG.md](CHANGELOG.md):
    ```bash
-   npx --yes github:crazy-creator0/uca-kit#v0.3.0 init . --platform generic
+   npx --yes github:crazy-creator0/uca-kit#v0.3.1 init . --platform generic
    ```
 3. Know what it does. The installer copies files into the folder you give it, prints each one, and records a hash of each in `.uca/manifest.json`. It makes no network requests and starts no other programs. `npx` downloads the package from GitHub before the installer runs. `uninstall` removes only the files it installed and never one you edited.
 4. Know what the scripts do. Two helper scripts call read-only `git` commands to list files. The handoff guard runs only the check command you configure, and the project scanner runs a command only when you name it with `--verify`. Nothing is sent anywhere. The package has no dependencies and no install-time scripts. `tests/package-boundary.test.cjs` checks this while the code runs, not only by reading it.

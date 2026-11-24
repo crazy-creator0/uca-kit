@@ -4,11 +4,28 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 ## Unreleased
 
-Changed (found by Sample 06, a "PDF editor like Sejda" built with and without the kit)
-- The kit's build lost to the build without it, 15 to 18 of 19 scored points: it had no page tools, and its README said Sejda lacks find and replace and redaction, which Sejda has. A blind `uca-audit` of that build found real bugs (one confirmed by hand: Replace all could change text twice), but none of these five gaps, because it never compared the app with the request.
-- New project: when the request names a product to match or beat ("like X"), the plan block now lists the core features a user of X would expect, each marked in this build, later or not planned, and the README may say X lacks a feature only after checking. The finishing scorecard gains "Does what was asked": each item in the request is Done or Left, never silently dropped.
+Nothing yet.
+
+## 0.3.1 (2026-11-24)
+
+A patch release from Sample 06, where the kit lost to plain prompting. The sample publishes the loss, what caused it, and the three changes below. Not measured yet: whether these changes help a model build or fix better.
+
+Added
+- Sample 06, a private PDF editor "like Sejda, but better", in three rounds, each scored on the same 20 points written before the first run: the build with and without the kit; a blind `uca-audit` of the kit's build; and the kit's build debugged by two fresh sessions, one with the kit and one without. All four builds, the audit report, the debug sessions' closing messages and the maintainer's test scripts are in `demo/samples/pdf-editor/`.
+- What it found: the kit's build lost, 15 to 18 of 19 scored points. It had no page tools, and its README said Sejda lacks find and replace and redaction, which Sejda has. The blind audit found five real problems the scoring missed (four confirmed by running them, including Replace all changing text twice on a 300-page file), and none of the five gaps between the build and the request. Debugging was a tie, 17 of 20 each way, and neither session fixed the audit's bugs because neither ran an audit. One run per side: data points, not rates.
+
+Changed
+- New project: when the request names a product to match or beat ("like X"), the plan block lists the core features a user of X would expect, each marked in this build, later or not planned, and the README may say X lacks a feature only after checking. The finishing scorecard gains "Does what was asked": each item in the request is Done or Left, never silently dropped.
 - Audit: a new lens, "the person who asked for it", and a required step that lists each feature the request named or implied as present, partly there or missing, and checks the README, help text and screens for false claims. A missing requested feature or a false claim is at least Medium, High when it is about privacy, safety or money.
-- Not measured yet: whether these steps change what a model builds.
+- Finding what is broken: a request to find what is missing or broken in existing code, with no single symptom, now starts with the audit's checks and fix plan, then fixes one finding at a time through the bug or feature workflow, and reports the findings left unfixed.
+
+Checked before release
+- What ran: the readiness check, the audit check and the link check on the whole repository; a check in Chrome of the new sample as it runs on the kit's website (service workers, browser storage, outside requests); the full test suite.
+- Readiness: Gold, 25 of 26, the same as 0.3.0; the one left is the old docs address, kept as a redirect on purpose. The audit check read 197 files with no findings.
+- Found and fixed: the new sample page linked to a folder with no page in it, which would have opened a "not found" page on the website (found by the link check).
+- Found and documented, not changed: on the website the four sample builds share one browser storage area, and three use the same database name. Once one build has created it, another can lose its autosave (checked: the build without the kit logs "Autosave failed"); opening, editing and saving still work. The builds stay as the runs left them; the sample page and its review say so.
+- Checked and found safe: each build's offline helper (service worker) is limited to its own folder; no build made a request outside the page in any test run; no local paths or personal addresses in the sample pages.
+- Not covered: Windows, and browsers other than Chrome.
 
 ## 0.3.0 (2026-11-24)
 

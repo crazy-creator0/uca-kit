@@ -1,0 +1,30 @@
+import sys
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4, letter
+out = sys.argv[1]
+c = canvas.Canvas(out + '/sample.pdf', pagesize=A4)
+c.setTitle('Sample Title'); c.setAuthor('Tester')
+c.bookmarkPage('p1'); c.addOutlineEntry('First page', 'p1')
+c.setFont('Helvetica', 14); c.drawString(72, 760, 'Invoice number 12345 for ACME Corp')
+c.setFont('Times-Roman', 12); c.drawString(72, 730, 'The total amount due is 500 dollars.')
+c.setFillColorRGB(0.85, 0.92, 1); c.rect(60, 680, 400, 30, fill=1, stroke=0)
+c.setFillColorRGB(0.8, 0, 0); c.setFont('Helvetica-Bold', 13); c.drawString(72, 690, 'SECRET: account 9988')
+c.setFillColorRGB(0, 0, 0); c.setFont('Courier', 11); c.drawString(72, 650, 'Courier line here')
+c.showPage()
+c.setPageRotation(90)
+c.setFont('Helvetica', 14); c.saveState(); c.translate(100, 72); c.rotate(90); c.drawString(0, 0, 'Rotated page text'); c.drawString(0, -30, 'Second upright line'); c.restoreState()
+c.bookmarkPage('p2'); c.addOutlineEntry('Second page', 'p2')
+c.showPage()
+c.setPageRotation(0)
+c.setFont('Helvetica', 14); c.drawString(72, 760, 'Third page says hello')
+c.showPage()
+c.save()
+c = canvas.Canvas(out + '/big.pdf', pagesize=letter)
+for i in range(300):
+    c.setFont('Helvetica', 20); c.drawString(72, 700, f'Page {i+1} of the big document')
+    c.setFont('Times-Roman', 11)
+    for j in range(40): c.drawString(72, 660 - j*14, f'Line {j} lorem ipsum dolor sit amet consectetur adipiscing elit {i}')
+    c.showPage()
+c.save()
+c = canvas.Canvas(out + '/other.pdf', pagesize=letter)
+c.setFont('Helvetica', 18); c.drawString(72, 700, 'Merged page from other file'); c.showPage(); c.save()

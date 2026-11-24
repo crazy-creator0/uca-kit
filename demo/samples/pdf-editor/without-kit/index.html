@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Privacy lock: the browser itself refuses to let this page send data to any other website. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self' blob: data:; connect-src 'self' blob: data:; worker-src 'self' blob:; media-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<title>Private PDF Editor</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand" title="Everything happens inside this browser. Your files are never uploaded.">
+    <span class="lock">&#128274;</span> <span class="brand-name">Private PDF Editor</span>
+  </div>
+  <button id="btnOpen" class="btn">Open PDF</button>
+  <span id="fileName" class="file-name"></span>
+  <div class="spacer"></div>
+  <button id="btnUndo" class="btn icon" title="Undo (Ctrl+Z)" disabled>&#8630;<span class="lbl"> Undo</span></button>
+  <button id="btnRedo" class="btn icon" title="Redo (Ctrl+Y)" disabled>&#8631;<span class="lbl"> Redo</span></button>
+  <button id="btnFind" class="btn icon needs-doc" title="Find and replace text (Ctrl+F)" disabled>&#128269;<span class="lbl"> Find</span></button>
+  <button id="btnPages" class="btn icon needs-doc" title="Arrange, rotate, delete and add pages" disabled>&#9638;<span class="lbl"> Pages</span></button>
+  <button id="btnOriginal" class="btn icon needs-doc" title="Hold or click to compare with the original" disabled>&#128065;<span class="lbl"> Original</span></button>
+  <button id="btnHelp" class="btn icon" title="Help">?</button>
+  <button id="btnSave" class="btn primary needs-doc" disabled>Save PDF</button>
+  <input id="fileInput" type="file" accept="application/pdf,.pdf" hidden>
+  <input id="mergeInput" type="file" accept="application/pdf,.pdf" multiple hidden>
+  <input id="imageInput" type="file" accept="image/*" hidden>
+  <input id="fontInput" type="file" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" multiple hidden>
+</header>
+
+<div id="propsBar" class="propsbar" hidden></div>
+
+<div class="workspace">
+  <nav id="tools" class="tools" aria-label="Tools">
+    <button class="tool" data-tool="edit" title="Click on any text in the page to change it"><span class="ti">&#9998;</span><span>Edit text</span></button>
+    <button class="tool" data-tool="text" title="Click on the page to add new text"><span class="ti">T</span><span>Add text</span></button>
+    <button class="tool" data-tool="select" title="Select, move and resize things you added"><span class="ti">&#10146;</span><span>Select</span></button>
+    <button class="tool" data-tool="whiteout" title="Drag to cover something with a white box"><span class="ti">&#9634;</span><span>White-out</span></button>
+    <button class="tool" data-tool="highlight" title="Drag to highlight"><span class="ti hl">H</span><span>Highlight</span></button>
+    <button class="tool" data-tool="rect" title="Drag to draw a box"><span class="ti">&#9645;</span><span>Box</span></button>
+    <button class="tool" data-tool="draw" title="Draw freehand"><span class="ti">&#10000;</span><span>Draw</span></button>
+    <button class="tool" data-tool="image" title="Put a picture on the page"><span class="ti">&#128247;</span><span>Image</span></button>
+    <button class="tool" data-tool="sign" title="Draw or type your signature"><span class="ti">&#10002;</span><span>Sign</span></button>
+    <button class="tool" data-tool="mark" title="Click to place a tick, cross or today's date"><span class="ti">&#10003;</span><span>Tick/Date</span></button>
+  </nav>
+
+  <main id="viewer" class="viewer" tabindex="-1">
+    <section id="welcome" class="welcome">
+      <div id="dropZone" class="drop">
+        <div class="big-lock">&#128274;</div>
+        <h1>Edit PDFs privately</h1>
+        <p>Your file stays on this device. Nothing is uploaded &mdash; this page is locked so it <b>cannot</b> send your documents anywhere.</p>
+        <button id="btnOpen2" class="btn primary large">Choose a PDF</button>
+        <p class="muted">or drag a PDF file here</p>
+        <div id="resumeBox" class="resume" hidden>
+          <p>You have unsaved work on <b id="resumeName"></b> from <span id="resumeTime"></span>.</p>
+          <button id="btnResume" class="btn primary">Continue that work</button>
+          <button id="btnDiscard" class="btn">Throw it away</button>
+        </div>
+        <ul class="promise">
+          <li>No page or edit limits</li>
+          <li>Change existing text, in any font on your device or your own font files</li>
+          <li>Your original file is never changed &mdash; you always save a new copy</li>
+          <li>Works offline once loaded</li>
+        </ul>
+      </div>
+    </section>
+    <div id="pages" class="pages"></div>
+  </main>
+
+  <aside id="findPanel" class="side" hidden>
+    <div class="side-head"><b>Find &amp; replace</b><button class="btn icon" id="findClose" title="Close">&#10005;</button></div>
+    <label>Find<input id="findText" type="search" placeholder="Text to find" autocomplete="off"></label>
+    <label class="row"><input id="findCase" type="checkbox"> Match capital letters</label>
+    <label>Replace with<input id="replaceText" type="text" placeholder="New text (optional)" autocomplete="off"></label>
+    <div class="row gap">
+      <button id="findGo" class="btn">Find</button>
+      <button id="replaceAll" class="btn primary" disabled>Replace all</button>
+    </div>
+    <div id="findStatus" class="muted small"></div>
+    <ol id="findResults" class="find-results"></ol>
+  </aside>
+</div>
+
+<div id="zoomBox" class="zoombox" hidden>
+  <button class="btn icon" id="zoomOut" title="Zoom out">&minus;</button>
+  <button class="btn icon" id="zoomFit" title="Fit width"><span id="zoomPct">100%</span></button>
+  <button class="btn icon" id="zoomIn" title="Zoom in">+</button>
+  <span class="sep"></span>
+  <input id="pageNum" type="number" min="1" value="1" aria-label="Page number"><span id="pageCount">/ 1</span>
+</div>
+
+<!-- Page organiser -->
+<section id="organizer" class="overlay" hidden>
+  <div class="org-head">
+    <b>Pages</b>
+    <span class="muted small">Drag to reorder (or use the arrows). Changes can be undone.</span>
+    <div class="spacer"></div>
+    <button id="orgBlank" class="btn">+ Blank page</button>
+    <button id="orgMerge" class="btn">+ Pages from another PDF</button>
+    <button id="orgDone" class="btn primary">Done</button>
+  </div>
+  <div id="orgGrid" class="org-grid"></div>
+</section>
+
+<!-- Generic modal -->
+<div id="modal" class="modal-back" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
