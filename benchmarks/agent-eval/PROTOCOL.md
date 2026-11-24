@@ -84,4 +84,4 @@ Each point scores **Right = 2, Partly = 1, Missing or wrong = 0**, so the maximu
 
   A check confirmed that every remaining code file matches its original after those two swaps, and that all 12 pages load without errors.
 - **Both tasks are scored again by fresh sessions,** with the same scorer instructions as before.
-
+- **The second blinding removed empty folders,** including the empty `.uca-workspace` the kit's installer creates. One task-1 build's documented test command needs it, so the build lost point 14. This was found after unblinding and corrected in `results/RESULTS.md`, which shows both numbers. The decision is the same either way.
