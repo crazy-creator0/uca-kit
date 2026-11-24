@@ -167,7 +167,7 @@ test("planning, scorecard, core rules, audit, design and debugging all use the s
   assert.match(plan, /nothing collapsed, cut off, overflowing or changed that the user did not change/);
   for (const tier of ["lite", "standard", "full"]) {
     const core = fs.readFileSync(path.join(root, ".agents", tier, "CORE.md"), "utf8");
-    assert.match(core, /main task steps with expected results/, tier);
+    assert.match(core, /title, goal, users, main task steps with expected results/, tier);
     assert.match(core, /Checks per main step \(read, script run, image really read, or steps left for the user\)/, tier);
   }
   for (const file of [".agents/workflows/audit.md", ".agents/skills/design-taste-discovery/SKILL.md", ".agents/workflows/bug-investigation.md", ".agents/workflows/new-project.md"]) {
@@ -177,8 +177,8 @@ test("planning, scorecard, core rules, audit, design and debugging all use the s
 
 test("the project card notes a missing main task without failing the check", () => {
   const { mainTaskNote } = require(path.join(root, "scripts", "uca-project-check.cjs"));
-  assert.match(mainTaskNote("# PROJECT.md\n## Stack\n- Node\n"), /^NOTE: no "## Main task" section/);
-  assert.match(mainTaskNote("## Main task (the user's words; not generated)\n- Not recorded yet. Ask the user.\n## Stack\n"), /not recorded yet/);
+  assert.match(mainTaskNote("# PROJECT.md\n## Stack\n- Node\n"), /^NOTE: no "## Project brief" section/);
+  assert.match(mainTaskNote("## Project brief (the user's words; not generated)\n- Not recorded yet. Draft it.\n## Stack\n"), /not filled in yet/);
   assert.equal(mainTaskNote("## Main task\n- Open a PDF: invoice.pdf -> all pages shown\n## Stack\n- Node\n"), "");
   assert.equal(mainTaskNote("## Stack\n- Node\n## Main task\n- Type a long sentence in a paragraph -> it wraps inside the paragraph (assumed)\n"), "");
   const dir = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "uca-main-task-"));
@@ -186,9 +186,34 @@ test("the project card notes a missing main task without failing the check", () 
   const run = (args) => require("node:child_process").spawnSync(process.execPath, args, { cwd: dir, encoding: "utf8" });
   run([path.join(root, "scripts", "uca-project-discover.cjs"), "--write", "PROJECT.md"]);
   const card = fs.readFileSync(path.join(dir, "PROJECT.md"), "utf8");
-  assert.match(card, /## Main task \(the user's words; not generated\)\n- Not recorded yet/);
-  assert.ok(card.indexOf("## Main task") > card.lastIndexOf("<!-- /uca:generated -->"), "the main task sits outside the generated blocks");
+  assert.match(card, /## Project brief \(the user's words; not generated\)\n- Not recorded yet/);
+  assert.ok(card.indexOf("## Project brief") > card.lastIndexOf("<!-- /uca:generated -->"), "the main task sits outside the generated blocks");
   const checked = run([path.join(root, "scripts", "uca-project-check.cjs")]);
-  assert.match(checked.stdout, /NOTE: the main task is not recorded yet/);
+  assert.match(checked.stdout, /NOTE: the project brief is not filled in yet/);
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test("a new project starts from a drafted brief, and attached documents or images are the spec", () => {
+  const plan = fs.readFileSync(path.join(root, ".agents", "workflows", "new-project.md"), "utf8");
+  assert.match(plan, /\*\*Project brief first\*\* \(an empty folder, or no clear direction\): draft four short lines yourself, each marked assumed: title, description \(one sentence\), goal/);
+  assert.match(plan, /The user edits what is wrong; "go ahead" accepts them/);
+  assert.match(plan, /\*\*Attached documents or images are the spec:\*\*/);
+  assert.match(plan, /naming where each point came from/);
+  assert.match(plan, /Plan the whole documented scope and build it slice by slice to the end/);
+  assert.match(plan, /If you cannot read an image, say so and ask for a short description; never guess from its name/);
+  const skill = fs.readFileSync(path.join(root, ".agents", "skills", "testing-and-code-review", "SKILL.md"), "utf8");
+  assert.match(skill, /one Checks line per step as `step \| level \| result`/);
+  const template = fs.readFileSync(path.join(root, ".agents", "PROJECT-TEMPLATE.md"), "utf8");
+  for (const key of ["- title:", "- description:", "- goal:", "- task:"]) assert.ok(template.includes(key), key);
+});
+
+test("skill-gap-router is installed but no longer read on every task", () => {
+  const rule = fs.readFileSync(path.join(root, ".agents", "router-rule.md"), "utf8");
+  assert.match(rule, /\*\*Guardrails are always on\*\* \(`anti-ai-slop`, `anti-hallucination`\)/);
+  assert.match(rule, /`skill-gap-router` is read only for the "Unclear, or spans many areas" row or a missing capability/);
+  assert.match(rule, /search for outside skills only when the user asks; never install or run third-party skills or scripts without showing their contents and getting a yes/);
+  const { GUARDRAILS } = require(path.join(root, "scripts", "uca-route.cjs"));
+  assert.deepEqual(GUARDRAILS, ["anti-ai-slop", "anti-hallucination"]);
+  const profiles = JSON.parse(fs.readFileSync(path.join(root, ".agents", "profiles", "profiles.json"), "utf8"));
+  assert.ok(JSON.stringify(profiles).includes("skill-gap-router"), "still installed by the profiles");
 });

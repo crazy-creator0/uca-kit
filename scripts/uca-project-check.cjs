@@ -193,9 +193,9 @@ function checkCard({ cardPath, root }) {
 
 // A note, not a problem: it never changes the exit code, so existing cards keep passing.
 function mainTaskNote(text) {
-  const match = /^## Main task\b[^\n]*\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(text);
-  if (!match) return "NOTE: no \"## Main task\" section. Write the user's main task as steps in their words, each with an input and the expected result (or mark it assumed), so the work can be checked the way the user will use it.";
-  if (/Not recorded yet/.test(match[1]) || !/\S/.test(match[1])) return "NOTE: the main task is not recorded yet. Ask the user, or write it from the request and mark it assumed.";
+  const match = /^## (?:Project brief|Main task)\b[^\n]*\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(text);
+  if (!match) return "NOTE: no \"## Project brief\" section. Draft title, description, goal and the main task steps (input -> expected result), mark them assumed, and let the user edit them, so the work can be checked the way the user will use it.";
+  if (/Not recorded yet/.test(match[1]) || !/^- task: \S/m.test(match[1]) && !/->/.test(match[1])) return "NOTE: the project brief is not filled in yet. Draft it from the request or attached files, mark it assumed, and let the user edit it.";
   return "";
 }
 

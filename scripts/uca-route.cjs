@@ -15,7 +15,8 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const GUARDRAILS = ["anti-ai-slop", "anti-hallucination", "skill-gap-router"];
+// skill-gap-router is installed everywhere but read only for unclear or many-area tasks (router-rule step 7).
+const GUARDRAILS = ["anti-ai-slop", "anti-hallucination"];
 const ALL_SKILLS = [
   "anti-ai-slop", "anti-hallucination", "application-security", "backend-api", "cloudflare-operations", "database-engineering",
   "data-engineering-analytics", "debugging", "design-taste-discovery", "frontend-engineering", "frontend-visuals-and-3d", "import-hygiene",

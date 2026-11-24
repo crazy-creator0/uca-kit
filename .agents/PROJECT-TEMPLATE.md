@@ -5,8 +5,11 @@
 Verified at: <git commit hash, or today's date if the project has no Git>
 Checked by: <what was read or run to verify this card>
 
-## Main task (the user's words; not generated)
-- <step as the user does it>: <input> -> <expected result> (confirmed by the user, or "assumed")
+## Project brief (the user's words; not generated)
+- title: <name>
+- description: <one sentence>
+- goal: <what done means for the user>
+- task: <step as the user does it> | <input> -> <expected result> | <confirmed or assumed>
 
 ## Stack
 - Language and runtime: <name and version> (source: <file>)

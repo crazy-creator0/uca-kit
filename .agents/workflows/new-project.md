@@ -6,12 +6,14 @@ Turn an idea into a small, verifiable, maintainable application without overengi
 ## Size the plan first
 A small request (one file, one screen, one person using it, for example "create a cafe management file") gets a short plan, not an interview: write the plan block below in about six lines, state your assumptions, ask at most one question and only if a wrong guess would be costly, then build. A larger or riskier request gets the full steps and your plan is approved before you build.
 
+**Project brief first** (an empty folder, or no clear direction): draft four short lines yourself, each marked assumed: title, description (one sentence), goal (what "done" means for the user), and the main task below. The user edits what is wrong; "go ahead" accepts them. Keep them in PROJECT.md under "Project brief".
+
 **Plan block (show it before any code):** who uses it; their main task as they would do it, in 3 to 6 steps in their words, each with a concrete input and the result they expect (one input hard: long, real-tool file, another language or the largest size), confirmed by the user or marked assumed; the main objects and states; the stack decision (choice, why, cost, what would make you switch); the files you will create; the first slice; how you will check it.
 
 **"Like X" or "better than X".** When the request names a product to match or beat, add to the plan block the core features a user of X would expect, with one line on how each behaves in X, each marked "in this build", "later" or "not planned" with a short reason; the user corrects the list, not the code. List only features you know X has or have checked; if you could not check, say so. For "better than X", name each extra and how you know X lacks it. Never write in the README or the app that X lacks a feature unless you checked.
 
 ## Intake: only the questions that change the build
-Before asking anything, read what the user already gave you (the request, attached files, the folder). Ask only what a wrong guess would make expensive to redo, at most three questions, in plain words, each with your default so "go ahead" works. Good candidates:
+Before asking anything, read what the user already gave you (the request, attached files, the folder). **Attached documents or images are the spec:** draft the brief and plan from them, naming where each point came from (file and section, or which image), and ask only what they leave open. Plan the whole documented scope and build it slice by slice to the end, saying which parts are done and which are left. If you cannot read an image, say so and ask for a short description; never guess from its name. Ask only what a wrong guess would make expensive to redo, at most three questions, in plain words, each with your default so "go ahead" works. Good candidates:
 - Who uses it, and on what device (phone, laptop, both)?
 - Does it store anything about people, take payments, or need logins? (This changes the stack and the security work.)
 - Where will it run: just their machine, or on the internet?
