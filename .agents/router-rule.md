@@ -9,7 +9,7 @@ Other files (`AGENTS.md`, `AGENT-SKILL-MAP.md`, platform adapters) point here. I
 4. **Add at most ONE companion skill**, and only when the task clearly crosses two areas (for example, login code inside an API: `backend-api` + `application-security`).
 5. **Say why in one line.** Tell the user which skills you chose and why. If the user names a skill or asks you to skip one, follow that instead, unless it would break a safety rule.
 6. **Open the file.** Read `.agents/skills/<name>/SKILL.md` before relying on it. Naming a skill is not loading it. If it starts with a `## Read first` block, read that block first; keep reading only when the task needs more than its "Must do" and "Done when" lines, or a "Read on only for" condition applies.
-7. **Guardrails are always on** (`anti-ai-slop`, `anti-hallucination`, `skill-gap-router`) and do not count toward the limit.
+7. **Guardrails are always on** (`anti-ai-slop`, `anti-hallucination`) and do not count toward the limit. `skill-gap-router` is read only for the "Unclear, or spans many areas" row or a missing capability.
 
 ## Intent table
 | The task is about… | Tag | Primary skill |
@@ -36,6 +36,7 @@ A whole new product ("create a cafe management file", "make me a todo app") star
 ## Edge cases
 - **Skill not installed** (the active profile left it out): continue with the guardrails and do not guess the skill's contents.
 - **No skill fits:** that is fine. Reason from the project's real files and say what you could not verify.
-- **Unsure which row applies:** use `skill-gap-router`, or ask the user one short question.
+- **Unsure which row applies, or a capability seems missing:** use `skill-gap-router`, or ask the user one short question.
+- **External skills and third-party code:** search for outside skills only when the user asks; never install or run third-party skills or scripts without showing their contents and getting a yes. Web research is a separate step: local evidence first.
 
 To check a choice, run `node scripts/uca-route.cjs "<task>"`. It is a plain-keyword reference of this table, not a model; a real model's routing is only known from benchmark runs.

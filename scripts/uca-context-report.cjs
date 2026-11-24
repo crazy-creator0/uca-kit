@@ -10,7 +10,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const ROOT = path.join(__dirname, "..");
-const GUARDRAILS = ["anti-ai-slop", "anti-hallucination", "skill-gap-router"];
+// skill-gap-router is installed everywhere but read only for unclear or many-area tasks (router-rule step 7).
+const GUARDRAILS = ["anti-ai-slop", "anti-hallucination"];
 const MIN_DUPLICATE_LENGTH = 25;
 
 const estimateTokens = (text) => Math.ceil(text.length / 4);
@@ -75,6 +76,11 @@ function measureTier(name, tier) {
   const base = sum(alwaysOn) + sum(guardrails);
   const median = tasks.length ? tasks[Math.floor(tasks.length / 2)].tokens : 0;
   const duplicates = duplicateOverhead(files);
+  // Workflow tasks load a workflow file plus their skills; the two largest real paths are reported on their own.
+  const skillTokens = (name) => (skills.find((skill) => skill.skill === name) || { tokens: 0 }).tokens;
+  const workflow = (name) => (tier.extras && exists(`.agents/workflows/${name}.md`) ? estimateTokens(readText(`.agents/workflows/${name}.md`)) : 0);
+  const newAppTask = workflow("new-project") ? base + router + workflow("new-project") + skillTokens("design-taste-discovery") + skillTokens("testing-and-code-review") : null;
+  const auditTask = workflow("audit") ? base + router + workflow("audit") + skillTokens("testing-and-code-review") : null;
   return {
     tier: name,
     alwaysOnTokens: sum(alwaysOn),
@@ -85,6 +91,8 @@ function measureTier(name, tier) {
     guardrailSkills: guardrails.map(({ skill, tokens }) => ({ skill, tokens })),
     typicalTask: base + router + median,
     worstCaseTask: base + router + (tasks[0] ? tasks[0].tokens : 0) + (tasks[1] ? tasks[1].tokens : 0),
+    newAppTask,
+    auditTask,
     allSkillsTokens: sum(skills),
     duplicateTokens: duplicates.tokens,
     duplicateLines: duplicates.repeated.slice(0, 5),
@@ -130,6 +138,7 @@ function main(argv = process.argv.slice(2)) {
     console.log(`${pad(row.tier, 10)}${pad(row.alwaysOnTokens, 11)}${pad(row.guardrailTokens, 12)}${pad(row.routerTokens, 8)}${pad(row.typicalTask, 14)}${pad(row.worstCaseTask, 12)}${pad(row.allSkillsTokens, 12)}${row.duplicateTokens}`);
   }
   console.log("\nTypical task = always on + guardrails + router + a median skill. Worst case = the two largest task skills (one primary, one companion).");
+  for (const row of rows) if (row.newAppTask) console.log(`${row.tier}: new app with a screen ${row.newAppTask} (new-project + design + testing); audit ${row.auditTask} (audit + testing).`);
   console.log("Task success per token: not measured. It needs the benchmark runs.");
   return 0;
 }

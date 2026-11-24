@@ -28,7 +28,7 @@ Find out what you can do by doing it, never by assuming: run the test command, o
 3. **One look** (only if you can read images, only for what a script cannot judge, such as whether a font looks the same): one picture of the app's own page or window, never the whole screen; keep it local and delete it after. First read a picture whose content you know (a page you made showing one word); if you cannot name the word, you cannot look. A picture you did not read is not a check.
 4. **Hand over** (always, for whatever is left): 2 or 3 steps the user can try in a minute and what they should see; if they want it researched, a ready prompt with the problem and the tools available, without their content.
 
-Report one Checks line per step: the step, the level used, the result.
+Report one Checks line per step as `step | level | result`, for example `type a long line in a paragraph | script | FAIL: 58pt past the margin`.
 
 ## Testing strategy
 Choose tests according to risk:
