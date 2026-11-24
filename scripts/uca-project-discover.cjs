@@ -1225,8 +1225,8 @@ const open = (name) => `<!-- uca:generated:${name} -->`;
 const CLOSE = "<!-- /uca:generated -->";
 const wrap = (name, lines) => `${open(name)}\n${lines.join("\n")}\n${CLOSE}`;
 
-// The user's main task comes from the user, never from the code, so it sits outside the generated blocks.
-const MAIN_TASK = "## Main task (the user's words; not generated)\n- Not recorded yet. Ask the user, or write it from the request and mark it assumed: 3 to 6 steps as they would do them, each with a concrete input and the result they expect.";
+// The project brief (title, description, goal, main task) comes from the user, never from the code, so it sits outside the generated blocks.
+const MAIN_TASK = "## Project brief (the user's words; not generated)\n- Not recorded yet. Draft it from the request or attached files and mark each line assumed; the user edits it.\n- title:\n- description:\n- goal:\n- task: step | input -> expected result | assumed";
 
 function renderFresh(blocks) {
   const title = "# PROJECT.md\n\n> Project card for coding agents. Blocks between uca:generated markers are rewritten by `node scripts/uca-project-discover.cjs --write`. Text outside them is yours and is never changed.\n";

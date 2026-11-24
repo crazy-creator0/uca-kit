@@ -208,7 +208,7 @@ test("the CLI prints the choice, supports --json and --tier, and rejects bad inp
   const plain = cli(["The checkout page crashes on an empty cart"]);
   assert.equal(plain.status, 0, plain.stderr);
   assert.match(plain.stdout, /Primary: debugging/);
-  assert.match(plain.stdout, /Always on: anti-ai-slop, anti-hallucination, skill-gap-router/);
+  assert.match(plain.stdout, /Always on: anti-ai-slop, anti-hallucination\n/);
   const json = JSON.parse(cli(["Add an index to the orders table", "--json"]).stdout);
   assert.equal(json.primary.name, "database-engineering");
   assert.match(cli(["Add a column to the users table", "--tier", "lite"]).stdout, /Note: database-engineering is not installed/);

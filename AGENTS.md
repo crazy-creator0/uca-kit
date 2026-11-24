@@ -16,9 +16,8 @@ Even from a one-line request such as "create a cafe management file", do not sta
 ## Evergreen guardrails
 - **anti-ai-slop** — prevent unnecessary abstractions, boilerplate, overengineering
 - **anti-hallucination** — ground claims in evidence, explicit uncertainty
-- **skill-gap-router** — route to the smallest useful set of trusted skills
 
-For substantial tasks, consult `AGENT-SKILL-MAP.md` and choose skills with `.agents/router-rule.md` (one primary skill, at most one companion). Use `HOST-CAPABILITY-FALLBACK.md` only when needed. Existing-stack changes follow `.agents/workflows/stack-migration.md`.
+For substantial tasks, consult `AGENT-SKILL-MAP.md` and choose skills with `.agents/router-rule.md` (one primary skill, at most one companion; `skill-gap-router` only when routing is unclear). Use `HOST-CAPABILITY-FALLBACK.md` only when needed. Existing-stack changes follow `.agents/workflows/stack-migration.md`.
 
 Git is recommended, not mandatory for local work; ask before initializing a repository. If the user declines or Git is unavailable, continue with local files and available checks.
 
