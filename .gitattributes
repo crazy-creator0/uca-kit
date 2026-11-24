@@ -1,1 +1,2 @@
 benchmarks/** text eol=lf
+benchmarks/agent-eval/inputs/** -text
