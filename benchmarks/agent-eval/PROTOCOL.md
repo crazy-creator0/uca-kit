@@ -76,3 +76,12 @@ Each point scores **Right = 2, Partly = 1, Missing or wrong = 0**, so the maximu
 ## Deviations
 - **The prompts had one note appended** (recorded as the runs started on 24 November). The note gave the browser and Playwright paths and asked the session not to open other folders. It was word for word the same in all 12 prompts, so it does not differ between the arms. The text is in `prompts/environment-note.txt`.
 - **All 12 build sessions stopped together at about 14:30** on 24 November, when the maintainer's account hit its usage limit. Each was resumed from where it stopped at 15:20, with the same one-line message: continue the same task under the same instructions. The stop hit both arms at the same moment.
+- **The first blinding attempt damaged the builds** (maintainer error). The word redaction was applied to code files as well as prose: `core.js` became `[redacted].js`, and parts of `border-box` were replaced. That broke four of the six task-1 builds on load. Stripping the kit's scratch folder also removed test files some builders had put there. The first task-1 scorer found this and reported it. Its scores are kept, but not used. The task-2 scorer was stopped.
+- **The builds were blinded again with these rules:**
+  - code files are left byte for byte the same, except the scratch-folder name (`.uca-workspace` becomes `.work`) and the build's own folder path (which named the arm) inside files;
+  - kit files are removed only where identical to a fresh install;
+  - redaction applies only to `.md` files and the closing messages.
+
+  A check confirmed that every remaining code file matches its original after those two swaps, and that all 12 pages load without errors.
+- **Both tasks are scored again by fresh sessions,** with the same scorer instructions as before.
+
