@@ -74,4 +74,4 @@ Each point scores **Right = 2, Partly = 1, Missing or wrong = 0**, so the maximu
 - **Will be recorded:** wall time and, where the host reports it, tokens per session.
 
 ## Deviations
-None yet.
+- **The prompts had one note appended** (recorded as the runs started on 24 November). The note gave the browser and Playwright paths and asked the session not to open other folders. It was word for word the same in all 12 prompts, so it does not differ between the arms. The text is in `prompts/environment-note.txt`.

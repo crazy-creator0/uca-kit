@@ -1,0 +1,1 @@
+Notes for this environment: Headless Chrome is at /usr/bin/google-chrome and Playwright is at /opt/npm-tools/node_modules/playwright if you want to test. Do not open any other folder under /home/claude, /tmp or /opt except to run those two programs.
