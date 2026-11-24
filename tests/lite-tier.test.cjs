@@ -106,6 +106,7 @@ test("lite import-hygiene covers the cycle-check fallback order and never instal
   const text = read("import-hygiene", "SKILL.md");
   assert.match(text, /configured checks first/);
   assert.match(text, /Never install a tool/);
-  assert.match(text, /Never fix an import error by adding another import/);
+  // The "never add another import" rule lives once, in the always-loaded lite core (R-IMPORT); the skill no longer repeats it.
+  assert.match(read("CORE.md"), /Never fix an import error by adding another import/);
   assert.match(text, /third module/);
 });

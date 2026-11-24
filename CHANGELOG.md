@@ -8,24 +8,30 @@ Nothing yet.
 
 ## 0.3.1 (2026-11-24)
 
-A patch release from Sample 06, where the kit lost to plain prompting. The sample publishes the loss, what caused it, and the three changes below. Not measured yet: whether these changes help a model build or fix better.
+A patch release. Sample 06 showed agents building and testing from their own assumptions: every build passed its own tests, and a person using the editors found the main job, changing text on a page, did not work the way they expected. This release makes the kit check the main task the way the user does it, for any model: text-only or image-reading, small or large, on any host or operating system. Not measured yet: whether these changes help a model build or fix better. No claim is made until a planned evaluation is run.
 
 Added
-- Sample 06, a private PDF editor "like Sejda, but better", in three rounds, each scored on the same 20 points written before the first run: the build with and without the kit; a blind `uca-audit` of the kit's build; and the kit's build debugged by two fresh sessions, one with the kit and one without. All four builds, the audit report, the debug sessions' closing messages and the maintainer's test scripts are in `demo/samples/pdf-editor/`.
-- What it found: the kit's build lost, 15 to 18 of 19 scored points. It had no page tools, and its README said Sejda lacks find and replace and redaction, which Sejda has. The blind audit found five real problems the scoring missed (four confirmed by running them, including Replace all changing text twice on a 300-page file), and none of the five gaps between the build and the request. Debugging was a tie, 17 of 20 each way, and neither session fixed the audit's bugs because neither ran an audit. One run per side: data points, not rates.
+- Sample 06, a private PDF editor "like Sejda, but better", in three rounds, each scored on the same 20 points written before the first run: the build with and without the kit, a blind `uca-audit` of the kit's build, and the kit's build debugged by two fresh sessions, one with the kit and one without. All four builds, the audit report, the debug sessions' closing messages and the maintainer's test scripts are in `demo/samples/pdf-editor/`. The kit's build lost the build round, 15 to 18 of 19 scored points, and the debug round was a tie, 17 of 20 each. Later testing by a person found problems the 20 points did not cover: in all four builds, a longer line typed into a paragraph runs off the page, and a paragraph cannot be edited as one block. One run per side: data points, not rates.
+- "Check it like the user", in `testing-and-code-review`: before saying the main task works, check it from the user's expected results, with at least one hard input from their world, at the highest level the model can actually use. Ability is shown by running a command, not assumed. The levels: read the code (any model); a short script with what is installed that does what the user does and prints at most about 20 lines (models that run commands); one picture of the app's own page for what a script cannot judge, only after reading a known test picture (models that read images); and steps or a research prompt for the user (always, for whatever is left). Scripts print counts and positions, never the user's content; nothing is installed without asking; no whole-screen pictures.
+- PROJECT.md gets a "Main task" section in the user's words, outside the generated blocks. `uca-project-check` prints a note when it is missing or not filled in; the note never changes the exit code, so existing cards keep passing.
 
 Changed
-- New project: when the request names a product to match or beat ("like X"), the plan block lists the core features a user of X would expect, each marked in this build, later or not planned, and the README may say X lacks a feature only after checking. The finishing scorecard gains "Does what was asked": each item in the request is Done or Left, never silently dropped.
-- Audit: a new lens, "the person who asked for it", and a required step that lists each feature the request named or implied as present, partly there or missing, and checks the README, help text and screens for false claims. A missing requested feature or a false claim is at least Medium, High when it is about privacy, safety or money.
-- Finding what is broken: a request to find what is missing or broken in existing code, with no single symptom, now starts with the audit's checks and fix plan, then fixes one finding at a time through the bug or feature workflow, and reports the findings left unfixed.
+- Core rules (all tiers): R-NEW's plan now includes the main task steps with expected results; R-FINISH reports Checks per main step (read, script run, image really read, or steps left for the user).
+- New project: the plan block holds the main task as the user would do it, 3 to 6 steps in their words, each with a concrete input and the expected result, confirmed by the user or marked assumed. A "like X" request lists X's core features with one line on how each behaves in X, marked checked or unchecked, and the README may say X lacks a feature only after checking. The scorecard checks each main-task step like the user, and "Does what was asked" now includes: the output matches the expected results, with nothing collapsed, cut off or overflowing.
+- Audit: the user lenses are merged into one, "The people who use it": the ordinary user's main task first, through the same check, then edge users, then the request and every claim in the README and screens. A missing requested feature or a false claim is at least Medium. The workflow is 32 tokens shorter.
+- Finding what is broken: a request with no single symptom starts with the audit; the fix is re-checked the way the user hit the problem.
+- Design review (Step 7) judges what the user produces, not only the screen. The OpenCode verifier agent uses the same check.
+- Sizes, estimated tokens: lite worst case 1,598 of its 1,600 limit (paid for by shorter wording of R-AUDIENCE and R-TOKENS, and by removing a lite skill line that repeated R-IMPORT word for word); the testing skill grows by about 500, loaded only when checking; new-project grows by about 135.
+
+Removed
+- An unlinked planning document from the repository root.
 
 Checked before release
-- What ran: the readiness check, the audit check and the link check on the whole repository; a check in Chrome of the new sample as it runs on the kit's website (service workers, browser storage, outside requests); the full test suite.
+- What ran: the full test suite, the readiness, audit and link checks on the whole repository, an install of every tier, and the sample page in Chrome (service workers, browser storage, outside requests).
 - Readiness: Gold, 25 of 26, the same as 0.3.0; the one left is the old docs address, kept as a redirect on purpose. The audit check read 197 files with no findings.
-- Found and fixed: the new sample page linked to a folder with no page in it, which would have opened a "not found" page on the website (found by the link check).
-- Found and documented, not changed: on the website the four sample builds share one browser storage area, and three use the same database name. Once one build has created it, another can lose its autosave (checked: the build without the kit logs "Autosave failed"); opening, editing and saving still work. The builds stay as the runs left them; the sample page and its review say so.
-- Checked and found safe: each build's offline helper (service worker) is limited to its own folder; no build made a request outside the page in any test run; no local paths or personal addresses in the sample pages.
-- Not covered: Windows, and browsers other than Chrome.
+- Found and fixed: the sample page linked to a folder with no page in it (found by the link check).
+- Found and documented, not changed: on the website the four sample builds share one browser storage area, so one can lose another's autosave; editing and saving still work.
+- Not covered: Windows; hosts other than Claude Code reading the new skill text; models other than one frontier model.
 
 ## 0.3.0 (2026-11-24)
 
