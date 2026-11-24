@@ -13,6 +13,8 @@ metadata:
 
 Code quality means satisfying real requirements with understandable, verifiable code—not maximizing code volume or architectural complexity.
 
+These rules cut needless code, not features. The small extras a user of this kind of product expects (a best score and a sound switch in a game, undo in an editor, a clear empty state) are requirements once the plan lists them; build them simply, and never drop one to make the diff smaller.
+
 ## Before coding
 1. Restate the specific behavior or defect.
 2. Inspect relevant files and conventions.

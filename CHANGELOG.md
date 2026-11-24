@@ -6,6 +6,27 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 Nothing yet.
 
+## 0.3.4 (2026-11-25)
+
+The kit changes meant for 0.3.3, which missed that tag. Not measured yet: whether they help.
+
+Changed
+- `anti-ai-slop` now says its rules cut needless code, not features: the small extras a user of this kind of product expects are requirements once the plan lists them, and none is dropped to make the diff smaller. A user's own snake-game test, run outside the evaluation, showed the build with the kit plainer than the one without (no best score, speed display or sound switch).
+- New project: the plan block lists 3 to 5 small extras a user of this kind of product would expect, each marked in or out. In an empty folder the project-discovery script is skipped until the first slice exists; PROJECT.md starts with the brief.
+- Sizes, estimated tokens: `anti-ai-slop` +73 (read on every task in standard and full), new-project +76 (read for new projects only). Lite unchanged.
+
+Checked before release
+- What ran: the full test suite (7 checks), the readiness, audit and link checks on the whole repository.
+- Readiness: Gold, 25 of 26, unchanged; the audit check read 196 files with no findings; the link check found nothing new.
+- Not covered: whether the new wording changes what a model builds. That is what evaluation round 2 is for.
+
+## 0.3.3 (2026-11-25)
+
+Tagged on the evaluation commit, so it contains 0.3.2 plus the round 1 evaluation below; the kit changes first listed here ship in 0.3.4. Its package.json still reads 0.3.2.
+
+Added
+- Agent evaluation round 1 in `benchmarks/agent-eval/`: two tasks (a household spending tool, a trip expense splitter), three runs with and three without the kit, scored blind on 15 points each, with the protocol, hidden inputs and decision rule fixed and pushed before any run. Result under that rule: no clear difference. Every build scored 29 or 30 of 30, so the tasks were too easy to separate the two sides. The kit side used roughly 10 to 17% more tokens (partial counts). Scores, evidence, closing messages and the maintainer's own blinding errors are published.
+
 ## 0.3.2 (2026-11-24)
 
 A patch release that finishes the 0.3.1 work. Not measured yet: whether any of it helps a model build, route or fix better.
