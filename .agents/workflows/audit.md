@@ -14,6 +14,7 @@ Think like an attacker and like an unhappy operations engineer at 3 a.m.: what w
 Then put on three more hats, one at a time:
 - **Every kind of user.** A first-time visitor, someone on an old phone with a slow connection, someone using only a keyboard or a screen reader, someone who reads another language or right to left, someone who makes every mistake a form allows, and the person who runs this app on a server at night. Where does each one get stuck, lose data or give up?
 - **The careful spender.** For each request, page and job: what does it cost to run (database work, paid APIs and models, bandwidth, storage, servers left running), what grows with users, and what is the cheapest change that keeps the same result? Give the saving and its trade-off, never a saving that weakens security or correctness.
+- **The person who asked for it.** Does the project do what was asked? Compare it with the request (from the user, the README, PROJECT.md or the plan), and when the request names a product to match or beat ("like X"), with the core features a user of X would expect. Check every claim the README, help text and screens make: each feature said to exist is in the code, and each "X does not have this" is something you checked or is marked unchecked.
 - **The breaker.** Assume the project is already rated 10/10 and look for what the first nine reviewers missed: the second step of a flow, the empty and the full state, the rename that broke a link, the default nobody changed, the error message nobody reads, the thing that only fails on the 1,000th user or the 31st of the month.
 
 Look harder, never invent. Every finding must point to a file and line you read, or to a step you ran. When a lens finds nothing, say what you looked at, so "nothing found" means something.
@@ -32,6 +33,7 @@ Look harder, never invent. Every finding must point to a file and line you read,
    - **Problems through helper functions:** a query in a loop or an unsafe call one function away from the route.
    - **Wiring the check cannot follow:** links built at run time, buttons that navigate in code, the way back from each step of a flow (A to B and back to A), and pages that are slow to open. Say plainly that lag was not measured unless you ran the page in a browser.
    - **Links that say one thing and go to another:** the wiring check lists links whose words do not match the page they open (a "Pricing" link that opens the About page). Ask the user to confirm each one. If the project was changed since a saved link map (`node scripts/uca-wiring-check.cjs . --compare .uca/wiring.json`), list every link whose target moved and ask whether each move was meant.
+   - **What was asked against what exists:** list each feature the request named or implied ("like X"), and mark it present (file:line), partly there, or missing. This list is part of every audit, not an optional extra; if no request can be found, ask the user for it in one line, and say in the report that the list was skipped.
 5. Report, sorted by severity:
 
    | Severity | Where (file:line) | What could happen | Fix | How checked |
@@ -51,3 +53,5 @@ Look harder, never invent. Every finding must point to a file and line you read,
 - **High:** a logged-in user can do the above, or a likely outage or large cost.
 - **Medium:** a leak of internals, a missing limit, or a slow path that grows with data.
 - **Low:** hardening and hygiene.
+
+A feature the user asked for that is missing, or a claim in the README, help text or screens that is false, is at least **Medium**; it is **High** when the claim is about privacy, safety or money.

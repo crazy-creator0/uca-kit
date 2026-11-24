@@ -108,3 +108,21 @@ test("new-project ends with a scorecard that cannot mark unchecked lines Done", 
   assert.match(workflow, /Do not call the project production-ready/);
   for (const topic of ["README", ".env.example", "No secrets", "Real states", "validated", "phone width", "test", "Safe by default"]) assert.ok(workflow.includes(topic), topic);
 });
+
+// Sample 06: a "like Sejda" build left out page tools and its README said Sejda lacks features it has.
+test("new-project lists the named product's core features and checks the request before done", () => {
+  const workflow = fs.readFileSync(path.join(root, ".agents", "workflows", "new-project.md"), "utf8");
+  assert.match(workflow, /\*\*"Like X" or "better than X"\.\*\*/);
+  assert.match(workflow, /"in this build", "later" or "not planned"/);
+  assert.match(workflow, /Never write in the README or the app that X lacks a feature unless you checked/);
+  assert.match(workflow, /\*\*Does what was asked\.\*\*/);
+  assert.match(workflow, /never silently dropped/);
+});
+
+test("the audit compares the project with the request and checks its own claims", () => {
+  const workflow = fs.readFileSync(path.join(root, ".agents", "workflows", "audit.md"), "utf8");
+  assert.match(workflow, /\*\*The person who asked for it\.\*\*/);
+  assert.match(workflow, /\*\*What was asked against what exists:\*\*/);
+  assert.match(workflow, /part of every audit, not an optional extra/);
+  assert.match(workflow, /missing, or a claim in the README, help text or screens that is false, is at least \*\*Medium\*\*/);
+});

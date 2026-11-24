@@ -8,6 +8,8 @@ A small request (one file, one screen, one person using it, for example "create 
 
 **Plan block (show it before any code):** who uses it and what they do; the main objects and states; the stack decision (choice, why, cost, what would make you switch); the files you will create; the first slice; how you will check it.
 
+**"Like X" or "better than X".** When the request names a product to match or beat, add to the plan block the core features a user of X would expect, each marked "in this build", "later" or "not planned" with a short reason; the user corrects the list, not the code. List only features you know X has or have checked; if you could not check, say so. For "better than X", name each extra and how you know X lacks it. Never write in the README or the app that X lacks a feature unless you checked.
+
 ## Intake: only the questions that change the build
 Before asking anything, read what the user already gave you (the request, attached files, the folder). Ask only what a wrong guess would make expensive to redo, at most three questions, in plain words, each with your default so "go ahead" works. Good candidates:
 - Who uses it, and on what device (phone, laptop, both)?
@@ -40,7 +42,8 @@ Do this once the first slice works, before you say it is done. Walk the list, fi
 6. **Works small.** The page is usable at phone width, images have alt text, controls are reachable by keyboard.
 7. **Tested.** At least one test for the main journey and one for a failure; the test command passes.
 8. **Safe by default.** No eval or raw HTML from user input, no wide-open CORS, no TLS checks turned off, no debug mode left on.
-9. **Reach the target.** Run `node scripts/uca-readiness.cjs .` when installed (otherwise `node scripts/uca-senior-check.cjs .`). The target is Silver and at least 80% of the checks that apply. Fix the items it lists, lowest level first. If something in scope still keeps the project below the target, say which item and why; the user decides whether to accept the gap. A "to confirm" item needs the user's answer, not a guess.
+9. **Does what was asked.** Read the request again, and the "like X" list if there is one. Mark each item Done or Left (say why); a feature the user named is never silently dropped.
+10. **Reach the target.** Run `node scripts/uca-readiness.cjs .` when installed (otherwise `node scripts/uca-senior-check.cjs .`). The target is Silver and at least 80% of the checks that apply. Fix the items it lists, lowest level first. If something in scope still keeps the project below the target, say which item and why; the user decides whether to accept the gap. A "to confirm" item needs the user's answer, not a guess.
 
 Then give the user a scorecard of at most 12 lines in plain words: the readiness level and checks passed against the target, what is Done, what is Left and why, what you could not check (for example "not opened in a real browser"), and one next step. Do not call the project production-ready: say what was checked, not how good it is.
 
