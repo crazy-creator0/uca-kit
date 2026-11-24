@@ -6,6 +6,29 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 Nothing yet.
 
+## 0.3.2 (2026-11-24)
+
+A patch release that finishes the 0.3.1 work. Not measured yet: whether any of it helps a model build, route or fix better.
+
+Added
+- Project brief: for an empty folder or a project with no clear direction, the agent drafts title, description, goal and the main task steps, each marked assumed, and the user edits them; "go ahead" accepts. They live in PROJECT.md under "Project brief", in `key: value` lines, outside the generated blocks. `uca-project-check` prints a note when the brief is missing or empty; the note never changes the exit code. (The 0.3.1 "Main task" section is still recognised.)
+- Attached documents or images are the spec: the brief and plan are drafted from them, naming where each point came from, and only what they leave open is asked. The whole documented scope is planned and built slice by slice to the end. A model that cannot read an image says so and asks for a description.
+- `uca-context-report` also reports the two largest workflow tasks (a new app with a screen, an audit), which it used to leave out.
+
+Changed
+- `skill-gap-router` is still installed in every profile but no longer read on every task: only for unclear or many-area tasks or a missing capability (`router-rule.md` step 7). Its rules found nowhere else moved to the router rule: outside skills only when the user asks; nothing third-party installed or run without showing it and a yes; web research separate from skill search. The skill itself is shorter, with a Read first block, and leaves verifying and reporting to the testing skill and the core.
+- Core rules (all tiers): R-NEW's plan also names the title and goal. Checks lines use the form `step | level | result`.
+- Sizes, estimated tokens (characters / 4): a typical standard task falls from about 6,520 to 5,070 (−22%), a new app with a screen from about 10,490 to 9,045, an audit from about 9,040 to 7,590. Lite worst case is exactly at its 1,600 limit, paid for by shorter wording of R-LOOP.
+
+Removed
+- An unlinked planning document from the repository root (listed under 0.3.1 by mistake; see the correction there).
+
+Checked before release
+- What ran: the full test suite (591 tests, 7 checks), the readiness, audit and link checks on the whole repository, the reference router on five tasks (a bug, "improve this", a many-area payment flow, a new app, a greeting), and a search for documents still calling `skill-gap-router` always read.
+- Readiness: Gold, 25 of 26, unchanged; the one left is the old docs address, kept as a redirect on purpose. The audit check read 196 files with no findings. The link check found nothing new.
+- Found and fixed: the 0.3.1 entry listed a file as removed that was still in the repository; the removal ships here and the 0.3.1 entry carries a correction.
+- Not covered: Windows; hosts other than Claude Code; any real model run on the changed routing.
+
 ## 0.3.1 (2026-11-24)
 
 A patch release. Sample 06 showed agents building and testing from their own assumptions: every build passed its own tests, and a person using the editors found the main job, changing text on a page, did not work the way they expected. This release makes the kit check the main task the way the user does it, for any model: text-only or image-reading, small or large, on any host or operating system. Not measured yet: whether these changes help a model build or fix better. No claim is made until a planned evaluation is run.
@@ -13,21 +36,18 @@ A patch release. Sample 06 showed agents building and testing from their own ass
 Added
 - Sample 06, a private PDF editor "like Sejda, but better", in three rounds, each scored on the same 20 points written before the first run: the build with and without the kit, a blind `uca-audit` of the kit's build, and the kit's build debugged by two fresh sessions, one with the kit and one without. All four builds, the audit report, the debug sessions' closing messages and the maintainer's test scripts are in `demo/samples/pdf-editor/`. The kit's build lost the build round, 15 to 18 of 19 scored points, and the debug round was a tie, 17 of 20 each. Later testing by a person found problems the 20 points did not cover: in all four builds, a longer line typed into a paragraph runs off the page, and a paragraph cannot be edited as one block. One run per side: data points, not rates.
 - "Check it like the user", in `testing-and-code-review`: before saying the main task works, check it from the user's expected results, with at least one hard input from their world, at the highest level the model can actually use. Ability is shown by running a command, not assumed. The levels: read the code (any model); a short script with what is installed that does what the user does and prints at most about 20 lines (models that run commands); one picture of the app's own page for what a script cannot judge, only after reading a known test picture (models that read images); and steps or a research prompt for the user (always, for whatever is left). Scripts print counts and positions, never the user's content; nothing is installed without asking; no whole-screen pictures.
-- Project brief: for an empty folder or a project with no clear direction, the agent drafts title, description, goal and the main task steps, each marked assumed, and the user edits them; "go ahead" accepts. They live in PROJECT.md under "Project brief", in `key: value` lines, outside the generated blocks. `uca-project-check` prints a note when the brief is missing or empty; the note never changes the exit code, so existing cards keep passing.
-- Attached documents or images are the spec: the brief and plan are drafted from them, naming where each point came from, and only what they leave open is asked. The whole documented scope is planned and built slice by slice to the end. A model that cannot read an image says so and asks for a description.
-- `uca-context-report` also reports the two largest workflow tasks (a new app with a screen, an audit), which it used to leave out.
+- PROJECT.md gets a "Main task" section in the user's words, outside the generated blocks. `uca-project-check` prints a note when it is missing or not filled in; the note never changes the exit code, so existing cards keep passing.
 
 Changed
-- Core rules (all tiers): R-NEW's plan now includes title, goal and the main task steps with expected results; R-FINISH reports Checks per main step (read, script run, image really read, or steps left for the user). Checks lines use the form `step | level | result`.
-- `skill-gap-router` is still installed in every profile but no longer read on every task: only for unclear or many-area tasks or a missing capability (`router-rule.md` step 7). Its rules found nowhere else moved to the router rule (outside skills only when asked; nothing third-party installed or run without showing it and a yes; web research separate from skill search). The skill itself is shorter, with a Read first block, and leaves verifying and reporting to the testing skill and the core.
+- Core rules (all tiers): R-NEW's plan now includes the main task steps with expected results; R-FINISH reports Checks per main step (read, script run, image really read, or steps left for the user).
 - New project: the plan block holds the main task as the user would do it, 3 to 6 steps in their words, each with a concrete input and the expected result, confirmed by the user or marked assumed. A "like X" request lists X's core features with one line on how each behaves in X, marked checked or unchecked, and the README may say X lacks a feature only after checking. The scorecard checks each main-task step like the user, and "Does what was asked" now includes: the output matches the expected results, with nothing collapsed, cut off or overflowing.
 - Audit: the user lenses are merged into one, "The people who use it": the ordinary user's main task first, through the same check, then edge users, then the request and every claim in the README and screens. A missing requested feature or a false claim is at least Medium. The workflow is 32 tokens shorter.
 - Finding what is broken: a request with no single symptom starts with the audit; the fix is re-checked the way the user hit the problem.
 - Design review (Step 7) judges what the user produces, not only the screen. The OpenCode verifier agent uses the same check.
-- Sizes, estimated tokens (characters / 4): a typical standard task falls from about 6,520 to 5,070 (−22%), a new app with a screen from about 10,490 to 9,045, an audit from about 9,040 to 7,590. Lite worst case is exactly at its 1,600 limit, paid for by shorter wording of R-AUDIENCE, R-TOKENS and R-LOOP and by removing a lite skill line that repeated R-IMPORT word for word. The testing skill grows by about 500 tokens, read only when checking. Effect on what models build or route: not measured.
+- Sizes, estimated tokens: lite worst case 1,598 of its 1,600 limit (paid for by shorter wording of R-AUDIENCE and R-TOKENS, and by removing a lite skill line that repeated R-IMPORT word for word); the testing skill grows by about 500, loaded only when checking; new-project grows by about 135.
 
 Removed
-- An unlinked planning document from the repository root.
+- An unlinked planning document from the repository root. Correction: this removal was listed here but merged after the 0.3.1 tag; it ships in 0.3.2.
 
 Checked before release
 - What ran: the full test suite, the readiness, audit and link checks on the whole repository, an install of every tier, and the sample page in Chrome (service workers, browser storage, outside requests).
