@@ -126,3 +126,14 @@ test("the audit compares the project with the request and checks its own claims"
   assert.match(workflow, /part of every audit, not an optional extra/);
   assert.match(workflow, /missing, or a claim in the README, help text or screens that is false, is at least \*\*Medium\*\*/);
 });
+
+// Sample 06, debug round: asked to "find what is missing or broken", neither run used the audit and both left its confirmed bugs in place.
+test("an open-ended 'find what is broken' request starts with the audit", () => {
+  const router = fs.readFileSync(path.join(root, ".agents", "router-rule.md"), "utf8");
+  const bugs = fs.readFileSync(path.join(root, ".agents", "workflows", "bug-investigation.md"), "utf8");
+  assert.match(router, /find what is missing or broken in existing code, with no single symptom/);
+  assert.match(router, /starts `audit`/);
+  assert.match(bugs, /No single symptom\?/);
+  assert.match(bugs, /run the audit first \(`\.agents\/workflows\/audit\.md`/);
+  assert.match(bugs, /Report the findings you did not fix/);
+});

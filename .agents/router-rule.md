@@ -31,7 +31,7 @@ Other files (`AGENTS.md`, `AGENT-SKILL-MAP.md`, platform adapters) point here. I
 | Unclear, or spans many areas | — | `skill-gap-router` |
 
 ## Workflows
-A whole new product ("create a cafe management file", "make me a todo app") starts `new-project`, with `design-taste-discovery` as its companion when the product has a screen; in a project that already has code it is a feature, not a project. Open a workflow instead of guessing the steps when the task matches one: `new-project`, `feature-development`, `bug-investigation`, `production-deployment`, `stack-migration`, `project-notes`, `audit` (all in `.agents/workflows/`). A workflow counts as the primary item; add a skill only if the workflow says so.
+A whole new product ("create a cafe management file", "make me a todo app") starts `new-project`, with `design-taste-discovery` as its companion when the product has a screen; in a project that already has code it is a feature, not a project. Open a workflow instead of guessing the steps when the task matches one: `new-project`, `feature-development`, `bug-investigation`, `production-deployment`, `stack-migration`, `project-notes`, `audit` (all in `.agents/workflows/`). A workflow counts as the primary item; add a skill only if the workflow says so. A request to find what is missing or broken in existing code, with no single symptom ("people say it doesn't work right, fix it"), starts `audit`: its read-only checks and its list of requested features come first, then each fix goes through `bug-investigation` or `feature-development`, most severe first.
 
 ## Edge cases
 - **Skill not installed** (the active profile left it out): continue with the guardrails and do not guess the skill's contents.
