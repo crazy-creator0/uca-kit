@@ -12,7 +12,7 @@ No single symptom? When the user asks to find what is missing or broken in gener
 6. Confirm root cause only when evidence supports it; otherwise identify the next useful investigation.
 7. Apply the smallest durable fix.
 8. Add a regression test that fails before the fix and passes after, or other appropriate prevention.
-9. Repeat the original reproduction and run relevant tests.
+9. Repeat the original reproduction the way the user hit it (see "Check it like the user" in `testing-and-code-review`) and run relevant tests.
 10. Report findings, evidence, root-cause confidence, fix, verification, and remaining unknowns.
 
 Never ask for secrets. Redact credentials, cookies, tokens, private keys, and personal data.

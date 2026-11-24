@@ -88,6 +88,10 @@ Added by both: pictures, signatures, highlight, underline and strike-out, shapes
 
 The page counts depend on click timing and differ between runs; any count above zero means the bug is there.
 
+## Later finding (24 November 2026)
+
+A person using the editors found problems that none of the 20 points covered. Checked afterwards with a PDF made by LibreOffice and one printed by Chrome, driven by clicks and typing: in all four builds, changing one line of a justified paragraph to a longer one makes it run off the right edge of the page, because each line is edited on its own and nothing reflows; and no build can edit a paragraph as one block. Short single lines kept their spaces in all four builds with these two files. A report of spaces collapsing ("this is a text" saved as "thisisatext") was not reproduced with them. The scores above are kept as measured.
+
 ## What this changed in the kit
 
 - **The build lost** because nothing made it list what "like Sejda" means, and nothing at the end checked the build against the request. In 0.3.1, a "like X" request lists X's core features in the plan, the README may say X lacks a feature only after checking, and the finishing scorecard checks each requested item.

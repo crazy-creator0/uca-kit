@@ -191,6 +191,14 @@ function checkCard({ cardPath, root }) {
   return { problems, sourceCount: sources.length, verifiedAt, quoteCount: quotes.length, quotesFound };
 }
 
+// A note, not a problem: it never changes the exit code, so existing cards keep passing.
+function mainTaskNote(text) {
+  const match = /^## Main task\b[^\n]*\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(text);
+  if (!match) return "NOTE: no \"## Main task\" section. Write the user's main task as steps in their words, each with an input and the expected result (or mark it assumed), so the work can be checked the way the user will use it.";
+  if (/Not recorded yet/.test(match[1]) || !/\S/.test(match[1])) return "NOTE: the main task is not recorded yet. Ask the user, or write it from the request and mark it assumed.";
+  return "";
+}
+
 function main(argv = process.argv.slice(2)) {
   let options;
   try {
@@ -212,6 +220,8 @@ function main(argv = process.argv.slice(2)) {
   }
 
   const { problems, sourceCount, verifiedAt, quoteCount, quotesFound } = checkCard({ cardPath, root });
+  const note = mainTaskNote(fs.readFileSync(cardPath, "utf8"));
+  if (note) console.log(note);
   if (problems.length === 0) {
     console.log(`No staleness found: ${sourceCount} cited file(s) unchanged since ${verifiedAt}.`);
     if (quoteCount > 0) console.log(`${quotesFound} of ${quoteCount} quoted note(s) found on their cited lines.`);
@@ -227,4 +237,4 @@ if (require.main === module) {
   process.exitCode = main();
 }
 
-module.exports = { checkCard, extractQuotes, extractSources, main, parseArgs, readVerifiedAt };
+module.exports = { mainTaskNote, checkCard, extractQuotes, extractSources, main, parseArgs, readVerifiedAt };

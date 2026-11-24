@@ -56,7 +56,7 @@ Give the product's main job and its main action visual priority, and test with r
 When the user asks for advanced animation, page transitions or a unique animated experience, treat motion as part of the brief and follow `.agents/skills/design-taste-discovery/motion.md`.
 
 ## Step 7 — review like a product designer
-Check each item in `.agents/skills/design-taste-discovery/review.md`, and mark it pass or fail with the evidence. Do not claim visual inspection when only source code was checked. Fix every failed item with a targeted change.
+Check each item in `.agents/skills/design-taste-discovery/review.md`, and mark it pass or fail with the evidence. Then judge what the user produces, not only the screen: do the main task with "Check it like the user" in `testing-and-code-review` and compare the result with what they expect. Do not claim visual inspection when only source code was checked. Fix every failed item with a targeted change.
 
 ## Step 8 — approval and implementation
 - Ask before adding dependencies, external services, plugins or third-party code. Do not install reference tools as a preset.
