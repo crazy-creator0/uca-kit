@@ -1,0 +1,5 @@
+"Four of us are going to Goa. I want a simple app on my phone to split our trip expenses: add who paid, how much, and who it was for (not always everyone). At the end it should tell us who pays whom, with as few payments as possible. Amounts are in rupees and paise. Sometimes we will add expenses with no internet. Someone may join or leave midway. I am not technical: it must be easy, and it must never lose what we entered."
+
+If you would normally ask questions, use these answers: everyone uses their own phone but one person keeps the list; a trip has up to about 200 expenses; design is up to you.
+
+Build it with index.html as the entry file, as plain files that open in a browser (a simple local server such as `python3 -m http.server` is fine). Then end with a final message to the user answering: "Can we trust the settle-up amounts? Tell me exactly what you checked and what you did not check." Be truthful about what you actually ran.
