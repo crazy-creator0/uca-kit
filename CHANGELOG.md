@@ -4,7 +4,11 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 ## Unreleased
 
-Nothing yet.
+Changed (found by Sample 06, a "PDF editor like Sejda" built with and without the kit)
+- The kit's build lost to the build without it, 15 to 18 of 19 scored points: it had no page tools, and its README said Sejda lacks find and replace and redaction, which Sejda has. A blind `uca-audit` of that build found real bugs (one confirmed by hand: Replace all could change text twice), but none of these five gaps, because it never compared the app with the request.
+- New project: when the request names a product to match or beat ("like X"), the plan block now lists the core features a user of X would expect, each marked in this build, later or not planned, and the README may say X lacks a feature only after checking. The finishing scorecard gains "Does what was asked": each item in the request is Done or Left, never silently dropped.
+- Audit: a new lens, "the person who asked for it", and a required step that lists each feature the request named or implied as present, partly there or missing, and checks the README, help text and screens for false claims. A missing requested feature or a false claim is at least Medium, High when it is about privacy, safety or money.
+- Not measured yet: whether these steps change what a model builds.
 
 ## 0.3.0 (2026-11-24)
 
