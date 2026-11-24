@@ -75,3 +75,4 @@ Each point scores **Right = 2, Partly = 1, Missing or wrong = 0**, so the maximu
 
 ## Deviations
 - **The prompts had one note appended** (recorded as the runs started on 24 November). The note gave the browser and Playwright paths and asked the session not to open other folders. It was word for word the same in all 12 prompts, so it does not differ between the arms. The text is in `prompts/environment-note.txt`.
+- **All 12 build sessions stopped together at about 14:30** on 24 November, when the maintainer's account hit its usage limit. Each was resumed from where it stopped at 15:20, with the same one-line message: continue the same task under the same instructions. The stop hit both arms at the same moment.
