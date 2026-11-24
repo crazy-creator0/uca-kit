@@ -217,3 +217,14 @@ test("skill-gap-router is installed but no longer read on every task", () => {
   const profiles = JSON.parse(fs.readFileSync(path.join(root, ".agents", "profiles", "profiles.json"), "utf8"));
   assert.ok(JSON.stringify(profiles).includes("skill-gap-router"), "still installed by the profiles");
 });
+
+// A user's snake-game test: the build with the kit was plainer, with fewer of the extras players expect.
+test("anti-slop cuts code, not the extras users expect, and new projects list those extras", () => {
+  const slop = fs.readFileSync(path.join(root, ".agents", "skills", "anti-ai-slop", "SKILL.md"), "utf8");
+  assert.match(slop, /These rules cut needless code, not features/);
+  assert.match(slop, /never drop one to make the diff smaller/);
+  const plan = fs.readFileSync(path.join(root, ".agents", "workflows", "new-project.md"), "utf8");
+  assert.match(plan, /3 to 5 small extras a user of this kind of product would expect/);
+  assert.match(plan, /each marked in or out/);
+  assert.match(plan, /In an empty folder, skip R-PROJECT's discovery script/);
+});
