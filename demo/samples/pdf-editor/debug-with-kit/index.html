@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self' blob: data:; worker-src 'self' blob:; connect-src 'self' blob: data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Private PDF Editor</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:,">
+<link rel="manifest" href="manifest.webmanifest">
+</head>
+<body>
+<header class="topbar" role="toolbar" aria-label="Main tools">
+  <button id="btn-open" class="btn" title="Open a PDF (Ctrl+O)">Open PDF</button>
+  <input id="file-input" type="file" accept="application/pdf,.pdf" hidden>
+  <span class="sep" aria-hidden="true"></span>
+  <div class="group" role="radiogroup" aria-label="Tool">
+    <button class="btn tool" data-tool="edit" aria-pressed="true" title="Click any text on the page to change it">Change text</button>
+    <button class="btn tool" data-tool="add" aria-pressed="false" title="Click anywhere on a page to add new text">Add text</button>
+    <button class="btn tool" data-tool="cover" aria-pressed="false" title="Drag over an area to cover it with a box (whiteout)">Cover area</button>
+    <button class="btn tool" data-tool="mark" aria-pressed="false" title="Drag over text to highlight, underline or strike it out">Highlight</button>
+    <select id="sel-mark" class="toolopt" aria-label="Kind of marking" title="Kind of marking">
+      <option value="highlight">Highlight</option><option value="underline">Underline</option><option value="strike">Strike out</option>
+    </select>
+    <button class="btn tool" data-tool="shape" aria-pressed="false" title="Drag on a page to draw a shape">Shape</button>
+    <select id="sel-shape" class="toolopt" aria-label="Kind of shape" title="Kind of shape">
+      <option value="rect">Rectangle</option><option value="ellipse">Ellipse</option><option value="line">Line</option>
+    </select>
+    <button class="btn tool" data-tool="draw" aria-pressed="false" title="Draw freehand on a page">Draw</button>
+    <button class="btn tool" data-tool="link" aria-pressed="false" title="Drag over an area to make it a link to a web address or a page">Link</button>
+  </div>
+  <button id="btn-image" class="btn" title="Add a picture (PNG, JPEG and other image files)" disabled>Image</button>
+  <button id="btn-sign" class="btn" title="Draw or type a signature and place it" disabled>Sign</button>
+  <span class="sep" aria-hidden="true"></span>
+  <button id="btn-undo" class="btn" title="Undo (Ctrl+Z)" disabled>Undo</button>
+  <button id="btn-redo" class="btn" title="Redo (Ctrl+Y)" disabled>Redo</button>
+  <button id="btn-find" class="btn" title="Find and replace (Ctrl+F)" disabled>Find &amp; replace</button>
+  <button id="btn-compare" class="btn" aria-pressed="false" title="Show the page without your changes" disabled>Show original</button>
+  <span class="sep" aria-hidden="true"></span>
+  <div class="group zoom" aria-label="Zoom">
+    <button id="btn-zoom-out" class="btn" title="Zoom out" aria-label="Zoom out">−</button>
+    <span id="zoom-label" class="zoom-label">100%</span>
+    <button id="btn-zoom-in" class="btn" title="Zoom in" aria-label="Zoom in">+</button>
+  </div>
+  <label class="pagejump">Page <input id="page-input" type="number" min="1" value="1" inputmode="numeric" aria-label="Go to page"> <span id="page-count">of 0</span></label>
+  <span class="spacer"></span>
+  <button id="btn-save" class="btn primary" title="Save an edited copy (Ctrl+S)" disabled>Save a copy</button>
+</header>
+
+<div id="stylebar" class="stylebar" hidden role="toolbar" aria-label="Text style">
+  <label class="field" data-for="text">Font
+    <select id="sel-font" aria-label="Font"></select>
+  </label>
+  <label class="field" data-for="text">Size <input id="inp-size" type="number" min="2" max="400" step="0.5" aria-label="Font size"></label>
+  <button id="btn-bold" class="btn small" data-for="text" aria-pressed="false" title="Bold"><b>B</b></button>
+  <button id="btn-italic" class="btn small" data-for="text" aria-pressed="false" title="Italic"><i>I</i></button>
+  <label class="field" data-for="text shape ink mark">Colour <input id="inp-color" type="color" aria-label="Colour"></label>
+  <label class="field" id="cover-field">Cover <input id="inp-cover" type="color" aria-label="Cover box colour"></label>
+  <span class="field" id="fill-field" data-for="shape"><label class="check"><input id="chk-fill" type="checkbox"> Fill</label> <input id="inp-fill" type="color" aria-label="Fill colour"></span>
+  <label class="field" id="width-field" data-for="shape ink">Line <input id="inp-width" type="number" min="0" max="50" step="0.5" aria-label="Line thickness in points"></label>
+  <label class="field" id="link-field" data-for="link">Link to <input id="inp-link" type="text" placeholder="https://… or a page number" autocomplete="off" aria-label="Link to a web address or page number"></label>
+  <span id="style-hint" class="hint">Click a change to set its font, size and colour, or to remove it.</span>
+  <span id="orig-font" class="hint"></span>
+  <span class="spacer"></span>
+  <button id="btn-delete" class="btn danger small" title="Remove this change (Delete)">Remove change</button>
+</div>
+
+<main id="viewer" class="viewer" tabindex="-1">
+  <section id="empty" class="empty">
+    <h1>Edit a PDF without sending it anywhere</h1>
+    <p>Everything happens inside this browser window. Your file is never uploaded, and the original is never changed: you always save a new copy.</p>
+    <button id="btn-open-big" class="btn primary big">Choose a PDF</button>
+    <p class="hint">or drop a PDF file anywhere on this window</p>
+    <div id="restore" class="restore" hidden>
+      <p id="restore-text"></p>
+      <button id="btn-restore" class="btn primary">Continue editing</button>
+      <button id="btn-forget" class="btn">Forget it</button>
+    </div>
+    <ol class="howto">
+      <li><strong>Change text:</strong> click any words on the page and type.</li>
+      <li><strong>Add text:</strong> pick "Add text", then click where it should go.</li>
+    <li><strong>More:</strong> pictures, signatures, highlights, shapes, drawing, links, filling in forms, and turning, adding or deleting pages.</li>
+      <li><strong>Any font, any language:</strong> use fonts on your device, or add a font file (.ttf, .otf, .woff).</li>
+      <li><strong>Save a copy:</strong> you get a new file; the original stays as it was.</li>
+    </ol>
+  </section>
+  <div id="pages" class="pages"></div>
+</main>
+
+<aside id="findpanel" class="findpanel" hidden aria-label="Find and replace">
+  <div class="findhead"><h2>Find &amp; replace</h2><button id="btn-find-close" class="btn small" aria-label="Close find and replace">Close</button></div>
+  <label class="field col">Find <input id="find-text" type="text" autocomplete="off"></label>
+  <label class="field col">Replace with <input id="replace-text" type="text" autocomplete="off"></label>
+  <label class="check"><input id="find-case" type="checkbox"> Match capital letters</label>
+  <div class="row">
+    <button id="btn-find-go" class="btn">Find</button>
+    <button id="btn-replace-all" class="btn primary" disabled>Replace all</button>
+  </div>
+  <p id="find-status" class="hint" role="status"></p>
+  <ul id="find-results" class="findresults"></ul>
+  <p class="hint">Finds words within one line. Words split across two lines are not found.</p>
+</aside>
+
+<footer class="strip" role="status" aria-live="polite">
+  <span class="safe">Stays on this device</span>
+  <span>Original never changed</span>
+  <span id="st-changes">No changes</span>
+  <span id="st-saved"></span>
+  <span id="st-msg" class="msg"></span>
+</footer>
+
+<dialog id="save-dialog" class="dialog">
+  <form method="dialog" id="save-form">
+    <h2>Save a copy</h2>
+    <p id="save-summary"></p>
+    <label class="field col">File name <input id="save-name" type="text" required></label>
+    <div id="save-cover-box" hidden>
+      <label class="check"><input id="save-erase" type="checkbox"> Erase covered text for real</label>
+      <p class="hint">Without this, text you changed or covered is hidden but still inside the file, and someone could copy it out. With it, those pages are saved as pictures, so their text can no longer be selected or searched.</p>
+    </div>
+    <p id="save-warn" class="warn" hidden></p>
+    <div id="save-progress" class="progress" hidden><div id="save-bar"></div></div>
+    <p id="save-result" role="status"></p>
+    <div class="row end">
+      <button type="button" class="btn" id="btn-save-cancel">Close</button>
+      <button id="btn-save-go" class="btn primary" value="default">Save a copy</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="pw-dialog" class="dialog">
+  <form method="dialog">
+    <h2>This PDF has a password</h2>
+    <p>Type the password to open it. It is only used inside this window.</p>
+    <label class="field col">Password <input id="pw-input" type="password" autocomplete="off"></label>
+    <p id="pw-error" class="warn" hidden>That password did not work. Try again.</p>
+    <div class="row end"><button type="button" class="btn" id="btn-pw-cancel">Cancel</button><button value="ok" class="btn primary">Open</button></div>
+  </form>
+</dialog>
+
+<dialog id="sign-dialog" class="dialog">
+  <form method="dialog" id="sign-form">
+    <h2>Add a signature</h2>
+    <div class="row" role="group" aria-label="How to sign">
+      <button type="button" class="btn small" id="sign-tab-draw" aria-pressed="true">Draw</button>
+      <button type="button" class="btn small" id="sign-tab-type" aria-pressed="false">Type</button>
+    </div>
+    <div id="sign-draw">
+      <canvas id="sign-pad" class="signpad" width="640" height="220" aria-label="Draw your signature here"></canvas>
+      <p class="hint">Sign with your mouse, finger or pen.</p>
+    </div>
+    <div id="sign-type" hidden>
+      <label class="field col">Your name <input id="sign-name" type="text" autocomplete="off"></label>
+      <label class="field col">Style <select id="sign-font"></select></label>
+    </div>
+    <div class="row">
+      <label class="field">Ink <select id="sign-color"><option value="#111111">Black</option><option value="#1a3fa8">Blue</option></select></label>
+      <button type="button" class="btn small" id="sign-clear">Clear</button>
+    </div>
+    <label class="check"><input id="sign-remember" type="checkbox"> Remember this signature in this browser (only on this device)</label>
+    <div id="sign-saved-box" hidden>
+      <p class="hint">Remembered signatures: click one to place it.</p>
+      <div id="sign-saved" class="signsaved"></div>
+    </div>
+    <p id="sign-error" class="warn" hidden>Draw or type a signature first.</p>
+    <div class="row end">
+      <button type="button" class="btn" id="sign-cancel">Cancel</button>
+      <button type="button" class="btn primary" id="sign-use">Place signature</button>
+    </div>
+  </form>
+</dialog>
+
+<input id="image-file" type="file" accept="image/*" hidden>
+<input id="font-file" type="file" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" multiple hidden>
+<div id="drop-hint" class="drophint" hidden>Drop the PDF to open it</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
