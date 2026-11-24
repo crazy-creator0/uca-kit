@@ -1,0 +1,3 @@
+debits 1752193.26
+credits 1281615.11
+rows 600
