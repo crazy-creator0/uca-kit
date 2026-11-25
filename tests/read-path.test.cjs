@@ -240,3 +240,9 @@ test("new-project's Read first block names the testing section, so the check lik
   assert.match(readFirst, /"Check it like the user" in `testing-and-code-review`/);
   assert.ok(section(read(".agents/skills/testing-and-code-review/SKILL.md"), "Check it like the user"), "the named section exists");
 });
+
+test("new-project sizes the closing message and never cuts Still unknown", () => {
+  const finish = section(read(".agents/workflows/new-project.md"), "Senior finish: the scorecard");
+  assert.match(finish, /closing message starts with the R-FINISH lines \(Changed, Checks, Still unknown\)/);
+  assert.match(finish, /A small build's closing message is 300 words or less; never shorten Still unknown to fit\./);
+});
