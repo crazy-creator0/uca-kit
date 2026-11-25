@@ -6,6 +6,26 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 Nothing yet.
 
+## 0.3.7-pre.2 (2026-11-25)
+
+Pre-release. Structure and tooling changes for the rest of round 3's extra cost: models without the read helper reading whole files, and a test script written from scratch in every build. Not measured yet with models: round 4 tests them.
+
+Changed
+- **Split into parts.** `new-project`, `audit`, `stack-migration`, `design-taste-discovery`, `testing-and-code-review`, `frontend-engineering` and the design directions keep their Read first block in the main file and list every other section, with its own file, under `## Parts` in the first 25 lines. A model without Node opens the main file and only the part it needs. `uca-read` follows the Parts list, so every `--section` pointer works as before. Audit's limits and mindset stay in `audit.md`. A check showed no line of text was lost.
+- **Design review evidence**: text checks first (the design check, then printed sizes, positions and overflow at two widths); one look at the main screen and a second only at phone width for a model that can read images; a text-only model marks the item "read, not looked" and hands the look to the user.
+- **Page check**, new in standard and full: `scripts/uca-page-check.cjs` runs the user's steps, written by the agent from the plan one per line, on a local page, and reports page and console errors, overflow, images without alt, unnamed controls, and a note when a clicked button keeps keyboard focus (the pause or restart bug behind round 3's lost snake point). Local files and localhost only; uses Playwright if installed and never installs it; without a browser it runs static checks and says the steps were not run. "Check it like the user" points to it.
+- **Context report** adds a column for a model without Node: the files that hold each section, opened whole. Split files count whole in the other columns.
+- Sizes, estimated tokens, standard: new app with a screen 7,970 with the read helper (7,769 in pre.1: the Parts lists and the longer review item), 8,996 without Node (was 10,736: every file whole), 11,701 every file whole. Worst case 8,519 (was 8,187). Lite unchanged: 1,600 worst case.
+
+Not reached
+- The plan's target of 4,000 estimated tokens or less for a small build. Most of the new-app path is design steps and review; the small-build design path (E11) is planned for 0.3.8.
+
+Checked before release
+- What ran: `node tests/verify.cjs` (7 checks, all passed) before each commit; `npm test` 523 tests; uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, `node scripts/uca-wiring-check.cjs .`, and a hand review of this release's diff.
+- Readiness: Gold, 25 of 26, unchanged (the orphan `demo/docs/index.html`, also on 0.3.6). The audit check read 198 files with no findings.
+- Hand review: the new scripts run no other programs and use no `eval`; a Parts list cannot reach files outside `.agents` (tested); the page check refuses non-local hosts (tested); install and uninstall carry and remove the part folders.
+- Page check in a browser: run on Linux with Playwright and Chrome. In CI, Playwright is not installed, so that test is skipped there; the static path and the parser run on Linux and Windows. Not covered: the browser path on Windows and macOS, and anything on macOS.
+
 ## 0.3.7-pre.1 (2026-11-25)
 
 Pre-release. Instruction-only changes aimed at the extra work round 3 measured (more tool calls, a skipped user check, long closing messages, a stray bookkeeping read). Not measured yet: round 4 tests them.
