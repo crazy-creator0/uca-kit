@@ -68,6 +68,8 @@ function profileSkillNames(profile) {
 const TIER_NAMES = ["lite", "standard", "full"];
 const DEFAULT_TIER = "standard";
 const CONFIG_PATH = ".uca/config.json";
+// Context sizes for --model: a small local model (about 8k), a mid or free-tier model (about 32k), a large one.
+const MODEL_CONTEXT = { small: 8000, mid: 32000, large: 128000 };
 let cachedTiers = null;
 
 function loadTiers() {
@@ -230,6 +232,9 @@ Options:
   --context <tokens>             Print a suggested tier for your model's context
                                  size (<= 8000 lite, <= 32000 standard, above: full).
                                  Display only, unless --auto-tier is also given.
+  --model <size>                 small, mid or large: a preset for --context
+                                 (8000, 32000, 128000 tokens), so you need not
+                                 know the number. Same rules as --context.
   --auto-tier                    Choose the tier from --context (unknown context:
                                  standard) and show the detected machine and the
                                  reason. An explicit --tier always wins, and a tier
@@ -273,6 +278,7 @@ function parseArgs(argv) {
     tier: null,
     context: null,
     autoTier: false,
+    model: null,
     yes: false,
     force: false,
     dryRun: false,
@@ -350,6 +356,15 @@ function parseArgs(argv) {
       options.autoTier = true;
       continue;
     }
+    if (arg === "--model") {
+      const value = argv[index + 1];
+      if (!Object.hasOwn(MODEL_CONTEXT, value || "")) {
+        throw new Error(`Option --model requires one of: ${Object.keys(MODEL_CONTEXT).join(", ")}.`);
+      }
+      options.model = value;
+      index += 1;
+      continue;
+    }
     if (arg === "--context") {
       const value = argv[index + 1];
       if (!value || value.startsWith("--") || !/^[0-9]+$/.test(value) || Number(value) < 1) {
@@ -370,6 +385,11 @@ function parseArgs(argv) {
     throw new Error(`Unexpected extra argument: ${arg}`);
   }
 
+  // --model is a plain-words preset for --context; giving both would leave it unclear which one counts.
+  if (options.model) {
+    if (options.context !== null) throw new Error("Use --model or --context, not both.");
+    options.context = MODEL_CONTEXT[options.model];
+  }
   return options;
 }
 
@@ -750,7 +770,8 @@ async function main(argv = process.argv.slice(2)) {
     console.log("  Memory and CPU are shown for information. They do not tell how large the model's context is.");
   }
   if (options.context !== null && !options.autoTier) {
-    console.log(`Suggested tier for ${options.context} tokens of context: ${suggestTier(options.context)} (suggestion only; it does not change your selection).`);
+    const source = options.model ? `a ${options.model} model (about ${options.context} tokens of context)` : `${options.context} tokens of context`;
+    console.log(`Suggested tier for ${source}: ${suggestTier(options.context)} (suggestion only; it does not change your selection).`);
   }
 
   if (!options.tier) {
@@ -876,6 +897,7 @@ module.exports = {
   TIER_NAMES,
   buildEntries,
   CONFIG_PATH,
+  MODEL_CONTEXT,
   assertNoSymlinkParents,
   collectFiles,
   findExistingConflicts,
