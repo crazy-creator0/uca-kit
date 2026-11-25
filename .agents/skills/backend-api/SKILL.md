@@ -1,6 +1,6 @@
 ---
 name: backend-api
-description: Use when designing or changing an API, server routes, middleware or business logic in any backend stack (Node.js, Python, Go, Java, Ruby, PHP, .NET and others), including request validation, authentication boundaries and reliable HTTP behavior.
+description: Use when designing or changing an API, server routes, middleware, request validation or business logic, in any backend stack.
 metadata:
   domain: backend
   triggers: API routes, server logic, request validation

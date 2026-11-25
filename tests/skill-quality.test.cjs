@@ -126,3 +126,13 @@ test("every skill description, full and lite, says when to use it", () => {
   }
   assert.deepEqual(bad, [], "descriptions must start with 'Use when' or 'Use for' (the trigger the model reads first)");
 });
+
+test("skill descriptions name triggers only and stay short, because hosts that list skills load them every session", () => {
+  for (const { name, text } of skills) {
+    const description = (text.match(/^description: (.*)$/m) || [])[1] || "";
+    assert.ok(description.length <= 130, `${name}: description is ${description.length} characters (limit 130)`);
+  }
+  const { report } = require("../scripts/uca-host-cost.cjs");
+  const claude = report("standard").find((row) => row.platform === "claude");
+  assert.ok(claude.skillList <= 550, `listed skills cost ${claude.skillList} estimated tokens per session (limit 550)`);
+});

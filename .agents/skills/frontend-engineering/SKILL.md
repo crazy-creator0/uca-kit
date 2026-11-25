@@ -1,6 +1,6 @@
 ---
 name: frontend-engineering
-description: Use when building screens, components, forms or client state, calling an API from the browser, or fixing accessibility or front-end speed.
+description: Use for screens, components, forms, client state, browser API calls, accessibility or front-end speed.
 metadata:
   domain: frontend
   triggers: screen, component, accessibility, state, front-end speed

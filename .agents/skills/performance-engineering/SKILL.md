@@ -1,6 +1,6 @@
 ---
 name: performance-engineering
-description: Use when the goal is faster, lighter or smaller (latency, memory, bundle size, run time); measures first and proves the gain with the same measurement.
+description: Use when the goal is faster, lighter or smaller: latency, memory, bundle size or run time.
 metadata:
   domain: performance
   triggers: optimize, reduce latency, profile, benchmark, bundle size, memory usage

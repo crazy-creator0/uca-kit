@@ -1,6 +1,6 @@
 ---
 name: skill-gap-router
-description: Use when a task is unclear, crosses domains, or may need a capability that is missing; picks the smallest set of trusted skills without loading the catalogue or inventing capabilities.
+description: Use when a task is unclear, crosses domains, or may need a capability that is missing.
 metadata:
   domain: routing
   triggers: unclear task, spans many areas, missing capability

@@ -1,6 +1,6 @@
 ---
 name: database-engineering
-description: Use when tables, schemas, migrations, queries, indexes or transactions change; keeps data safe with reversible migrations and parameterized queries.
+description: Use when tables, schemas, migrations, queries, indexes or transactions change.
 metadata:
   domain: data
   triggers: schema, migration, query, index, transaction

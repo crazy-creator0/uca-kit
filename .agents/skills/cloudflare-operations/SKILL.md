@@ -1,6 +1,6 @@
 ---
 name: cloudflare-operations
-description: Use when DNS, TLS, caching, WAF, rate limits or Workers on Cloudflare are involved; diagnoses layer by layer with evidence before changing anything.
+description: Use when DNS, TLS, caching, WAF, rate limits or Workers on Cloudflare are involved.
 metadata:
   domain: infrastructure
   triggers: Cloudflare DNS, TLS, Workers, caching

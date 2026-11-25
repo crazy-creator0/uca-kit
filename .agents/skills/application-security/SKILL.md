@@ -1,6 +1,6 @@
 ---
 name: application-security
-description: Use when a task touches secrets, login, permissions, user input, uploads or personal data; finds trust boundaries and fixes weaknesses with evidence.
+description: Use when a task touches secrets, login, permissions, user input, uploads or personal data.
 metadata:
   domain: security
   triggers: secrets, login, permissions, user input, privacy

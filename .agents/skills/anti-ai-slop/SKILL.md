@@ -1,6 +1,6 @@
 ---
 name: anti-ai-slop
-description: Use when about to add an abstraction, dependency, wrapper or pattern, or when finishing a change; keeps code free of overengineering and placeholder work.
+description: Use when about to add an abstraction, dependency, wrapper or pattern, or when finishing a change.
 metadata:
   domain: guardrail
   triggers: adding abstractions, wrappers, new dependencies, filler wording

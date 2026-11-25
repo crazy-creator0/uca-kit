@@ -1,6 +1,6 @@
 ---
 name: testing-and-code-review
-description: Use when writing or fixing tests, or reviewing a change or pull request; checks correctness, security, edge cases and maintainability with evidence.
+description: Use when writing or fixing tests, or reviewing a change or pull request.
 metadata:
   domain: quality
   triggers: write tests, review a diff, check quality, prepare a release
