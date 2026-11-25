@@ -6,6 +6,26 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 Nothing yet.
 
+## 0.3.8-pre.1 (2026-11-25)
+
+Pre-release. Measures what each host loads before any task, cuts the part the kit controls, and lets a user pick a tier by model size. No change to how the kit tells a model to work, apart from shorter skill descriptions.
+
+Added
+- **Fixed cost per host**: `scripts/uca-host-cost.cjs` installs the kit for each of the 11 platforms in a temporary folder and measures what the host is meant to load every session (its entry files, `AGENTS.md` and `.agents/CORE.md`, and the names and descriptions of the skills it is meant to list). Estimated tokens, standard: generic 2,235, Devin 2,362, Junie 2,341, JetBrains 2,384, Cursor 2,435, Codex and OpenCode 2,754, Copilot 2,876, Windsurf 2,888, Claude Code 2,894, Gemini 2,900. Lite: 851 to 1,114. Every row says "intended, from install files, not run": no host has been checked in a real session yet. `docs/TOOL-COMPATIBILITY.md` says what to record when one is.
+- **`init --model small|mid|large`**: a plain-words preset for `--context` (8,000, 32,000 or 128,000 tokens), with the same rules: a suggestion, or applied with `--auto-tier`; an explicit `--tier` wins; `--model` with `--context` is refused. `doctor` already reports the tier.
+
+Changed
+- **Skill descriptions** name their triggers only. On the six hosts meant to list skills, the list falls from 799 to 519 estimated tokens per session. A test caps each description at 130 characters and the list at 550. The routing cases still pass. Lite's own descriptions are unchanged.
+
+Not done, by decision
+- No reading budget in `.uca/config.json`, which the plan proposed: no rule in any tier reads it, so it would be data nothing uses.
+
+Checked before release
+- What ran: `node tests/verify.cjs` (7 checks, all passed) before each commit; uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, `node scripts/uca-wiring-check.cjs .`, and a hand review of this release's diff.
+- Readiness: Gold, 25 of 26, unchanged (the orphan `demo/docs/index.html`). The audit check read 199 files with no findings.
+- Hand review: the host script deletes only the temporary folder it created, runs no other programs, and reports no host as checked (tested). One commit was made after a failed check, because the command that ran the check did not stop on its failure; it was fixed and amended before being pushed.
+- Not covered: whether any host really loads what it is meant to. Claude Code and OpenCode are to be checked by the maintainer.
+
 ## 0.3.7-pre.2 (2026-11-25)
 
 Pre-release. Structure and tooling changes for the rest of round 3's extra cost: models without the read helper reading whole files, and a test script written from scratch in every build. Not measured yet with models: round 4 tests them.
