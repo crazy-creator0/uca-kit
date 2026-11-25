@@ -1,6 +1,6 @@
 # Router rule — the single source of truth for loading skills
 
-Other files (`AGENTS.md`, `AGENT-SKILL-MAP.md`, platform adapters) point here. If they seem to disagree, this file wins.
+Other files (`AGENTS.md`, `AGENT-SKILL-MAP.md`, platform adapters) point here. The Route table in `.agents/CORE.md` is its short form and is read first; open this file when that table says to. If they seem to disagree, this file wins.
 
 ## Steps
 1. **Greeting or plain question?** Load no skill. Just answer.

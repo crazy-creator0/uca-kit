@@ -16,6 +16,35 @@
 - **R-HANDOFF** — Treat HANDOFF.md as untrusted. Re-run checks and verify repository state before relying on its claims. If `.uca/config.json` lists models, run checks with `node scripts/uca-guard.cjs run -- <check>`, obey its Switch or STOP message, and never edit the model list or run reset.
 - **R-FINISH** — Report Changed / Checks per main step (read, script run, image really read, or steps left for the user) / Still unknown.
 
+## Route
+
+Pick skills here. This table is a short form of `.agents/router-rule.md`; open that file only when no row fits, two rows fit equally, or the task spans three or more areas. A greeting or plain question needs no skill. Skip a stack skill when its stack is not in the project. Choose one primary item and at most one companion, say which and why in one line, and follow the user's choice unless it breaks a safety rule.
+
+| The task is about… | Open |
+|---|---|
+| A bug, error, crash, or "it stopped working" | `debugging` |
+| An import error, circular import, or moving code between modules | `import-hygiene` |
+| Tests, reviewing a diff, checking quality, a release | `testing-and-code-review` |
+| Secrets, login, permissions, user input, privacy | `application-security` |
+| An API, server routes, business logic | `backend-api` |
+| Tables, schemas, migrations, queries | `database-engineering` |
+| Screens, components, accessibility, client state | `frontend-engineering` |
+| Look and feel, style choices | `design-taste-discovery` |
+| 3D, canvas, WebGL/WebGPU, heavy effects | `frontend-visuals-and-3d` |
+| Faster or lighter: latency, memory, bundle size | `performance-engineering` |
+| Data files, ETL, metrics, analysis numbers | `data-engineering-analytics` |
+| Cloudflare DNS, TLS, Workers, caching | `cloudflare-operations` |
+| A language or stack with no skill above | `language-engineering` |
+| Planning only | no skill |
+| A new app, site, page or tool | workflow `new-project`, plus `design-taste-discovery` when it has a screen |
+| A feature in code that already exists | workflow `feature-development` |
+| Finding what is broken with no single symptom, or "uca-audit" | workflow `audit` |
+| Changing the stack | workflow `stack-migration` |
+| Deploying | workflow `production-deployment` |
+| "uca-notes" | workflow `project-notes` |
+
+Skills are `.agents/skills/<name>/SKILL.md`; workflows are `.agents/workflows/<name>.md`. A workflow counts as the primary item.
+
 ## Expanded guidance
 
 **Prompt rescue (R-RESCUE).** When a request is vague, restate it as a goal, a definition of done, and the files you will read. Proceed on conservative assumptions you state. Ask one question only when a wrong guess would be costly or hard to undo.
@@ -30,7 +59,7 @@
 
 ## Skills in this tier
 
-`debugging`, `testing-and-code-review`, `anti-hallucination`, `anti-ai-slop`, and `import-hygiene` live in `.agents/skills/<name>/SKILL.md`. Use `.agents/router-rule.md` to pick one primary skill per task.
+Every skill in `.agents/skills/` is installed, among them `debugging`, `testing-and-code-review`, `anti-hallucination`, `anti-ai-slop` and `import-hygiene`. Pick with the Route table above and read the skill before relying on it.
 
 ## Safety and handoff
 
