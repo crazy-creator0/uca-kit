@@ -27,6 +27,6 @@ Check each item, and mark it pass or fail with the evidence:
 3. **Three specific choices:** name three decisions that suit this product, not "looks modern".
 4. **Hierarchy:** the main action and main content are the most prominent things on screen.
 5. **Quality:** alignment, density, responsive behavior, keyboard use, contrast, reduced motion, and empty/error states.
-6. **Evidence:** if screenshots or a browser are available, look at the result. Do not claim visual inspection when only source code was checked.
+6. **Evidence:** text first: the design check, then a script that prints sizes, positions and overflow at phone and desktop widths. If you can read images, add one look at the main screen for what text cannot judge ("One look" in `testing-and-code-review`), and a second only at phone width; no more. A model that cannot read images marks this item "read, not looked" and hands the look to the user. Do not claim visual inspection when only source code was checked.
 
 Fix every failed item with a targeted change. Do not replace one generic template with another, and do not equate “less AI-looking” with “unstyled.”

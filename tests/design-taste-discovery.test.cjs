@@ -74,3 +74,11 @@ test("the skill points to its reference files at the step that needs them, and t
   assert.match(review, /uca-design-check\.cjs/);
   assert.match(techniques, /WebGPU/);
 });
+
+test("the design review checks with text first and caps looks at two pictures, with a path for text-only models", () => {
+  const evidence = review.split("\n").find((line) => line.startsWith("6. **Evidence:**"));
+  assert.match(evidence, /text first: the design check, then a script that prints sizes, positions and overflow/);
+  assert.match(evidence, /one look at the main screen[^.]*and a second only at phone width; no more\./);
+  assert.match(evidence, /cannot read images marks this item "read, not looked" and hands the look to the user/);
+  assert.match(evidence, /Do not claim visual inspection when only source code was checked\./);
+});
