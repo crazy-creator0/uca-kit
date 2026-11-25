@@ -52,17 +52,7 @@ Pick skills here. This table is a short form of `.agents/router-rule.md`; open t
 
 Skills are `.agents/skills/<name>/SKILL.md`; workflows are `.agents/workflows/<name>.md`. A workflow counts as the primary item.
 
-## Expanded guidance
-
-**Prompt rescue (R-RESCUE).** When a request is vague, restate it as a goal, a definition of done, and the files you will read. Proceed on conservative assumptions you state. Ask one question only when a wrong guess would be costly or hard to undo.
-
-**Audience (R-AUDIENCE).** Beginner: plain words, one short reason for each step, no unexplained jargon. Expert: terse output, no tutorials. Keep the mode the user's wording implies and do not announce it.
-
-**Token discipline (R-TOKENS).** Read the files the task touches, not the whole repository. Search before reading. Prefer a small diff over a rewrite. Open one skill that matches the task and read it before relying on it; naming a skill is not loading it. Do not repeat what the user already knows.
-
-**Project card (R-PROJECT).** Fill each line of PROJECT.md from a file you opened or a command you ran, and cite the file as `(source: path)`. Put anything unconfirmed under "Assumed or unknown". Set `Verified at` to the current commit hash, or the date if there is no Git. If the checker reports a changed or missing file, re-verify those lines before using them. The generator reads files only; it runs a command only when you pass `--verify` or `--verify-scripts`, and every command it lists is "declared, not run" until it exits 0. It never reads `.env` files, and it changes only text between its own `uca:generated` markers, so keep anything the developer wrote outside them. How login works end to end, business rules and deployment stay unknown until you read the code. For "uca-notes" (Key file notes), follow `.agents/workflows/project-notes.md`; offer it once when you are about to read the Key files anyway. For "uca-audit", follow `.agents/workflows/audit.md`: a read-only review; its audit-only rules apply only inside that workflow.
-
-**Edit loop (R-LOOP).** One focused change, then the project's checks, then compare with the previous result. Revert a change that makes checks worse.
+For "uca-audit", follow `.agents/workflows/audit.md`: a read-only review; its audit-only rules apply only inside that workflow.
 
 ## Skills in this tier
 

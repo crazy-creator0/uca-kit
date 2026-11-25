@@ -1,6 +1,6 @@
 # PROJECT.md
 
-> Project card for coding agents. Verified facts only. If a line here disagrees with the files, trust the files and fix this card.
+> Project card for coding agents. Verified facts only. If a line here disagrees with the files, trust the files and fix this card. Each line cites the file it came from; anything not confirmed goes under "Assumed or unknown". How login works end to end, business rules and deployment stay there until someone reads the code.
 
 Verified at: <git commit hash, or today's date if the project has no Git>
 Checked by: <what was read or run to verify this card>
