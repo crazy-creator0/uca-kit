@@ -3,7 +3,7 @@
 ## Shared rules
 
 - **R-RESCUE** — State the goal, definition of done, and files to read. Ask at most one consequential question; never make the user rewrite their prompt.
-- **R-LOOP** — Make one focused edit, run project checks, compare results. Revert if checks worsen. Stop after the same error twice or if one step changes 3+ files. After 2 failed attempts, suggest a stronger model or a manual step.
+- **R-LOOP** — One focused edit, then run project checks; revert if worse. Stop at 2 failed tries on one step, the same error twice, or a step changing 3+ files; report facts, not guesses; suggest a stronger model or manual step.
 - **R-IMPORT** — Run a relevant import-cycle check. Never fix an import error by adding another import; move shared code to a third module one move at a time.
 - **R-AUDIENCE** — Default to Beginner (plain words, brief); Expert if the user writes technical terms or asks.
 - **R-TOKENS** — Read only needed files; small diffs; no needless recaps.

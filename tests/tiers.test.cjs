@@ -182,3 +182,13 @@ test("R-MODE keeps its parts in every tier: user override, safe default, drop or
     assert.match(rule, /Retry a failed step once, then report it/, tier);
   }
 });
+
+test("R-LOOP stops after two failed tries at one step and hands over facts, not guesses, in every tier", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const line = (tier) => fs.readFileSync(path.join(__dirname, "..", ".agents", tier, "CORE.md"), "utf8").split("\n").find((l) => l.startsWith("- **R-LOOP**"));
+  const lite = line("lite");
+  assert.match(lite, /Stop at 2 failed tries on one step/);
+  assert.match(lite, /report facts, not guesses/);
+  for (const tier of ["standard", "full"]) assert.equal(line(tier), lite, tier);
+});
