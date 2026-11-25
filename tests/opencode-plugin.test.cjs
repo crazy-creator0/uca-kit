@@ -89,3 +89,37 @@ test("OpenCode adapter records final usage once and consults local subagent budg
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("OpenCode adapter: the opt-in step log names token counts and kit files only", async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "uca-opencode-steps-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(dir, "scripts"), { recursive: true });
+  fs.copyFileSync(SCRIPT, path.join(dir, "scripts", "uca-usage.cjs"));
+  const saved = { file: process.env.UCA_USAGE_FILE, steps: process.env.UCA_USAGE_STEPS };
+  process.env.UCA_USAGE_FILE = path.join(dir, "private", "usage.json");
+  const stepsFile = path.join(dir, "steps.jsonl");
+  process.env.UCA_USAGE_STEPS = stepsFile;
+  try {
+    const { UcaUsagePlugin } = await import(pathToFileURL(PLUGIN).href + "?steps");
+    const hooks = await UcaUsagePlugin({ directory: dir, client: {} });
+    const message = (id, input) => ({ type: "message.updated", properties: { info: { id, role: "assistant", time: { completed: Date.now() }, cost: 0, tokens: { input, output: 7, reasoning: 0, cache: { read: 3, write: 0 } } } } });
+    await hooks.event({ event: message("m1", 100) });
+    await hooks["tool.execute.before"]({ tool: "read" }, { args: { filePath: "C:\\proj\\.agents\\skills\\debugging\\SKILL.md" } });
+    await hooks["tool.execute.before"]({ tool: "bash" }, { args: { command: "node scripts/uca-read.cjs design-taste-discovery --section \"Step 3\"" } });
+    await hooks["tool.execute.before"]({ tool: "read" }, { args: { filePath: "/home/me/secret-project/src/app.js" } });
+    await hooks["tool.execute.before"]({ tool: "bash" }, { args: { command: "cat .env" } });
+    await hooks.event({ event: message("m2", 250) });
+    await hooks.event({ event: message("m2", 250) });
+    const lines = fs.readFileSync(stepsFile, "utf8").trim().split("\n").map((line) => JSON.parse(line));
+    assert.deepEqual(lines.map(({ time, ...rest }) => rest), [
+      { step: 1, input: 100, output: 7, reasoning: 0, cacheRead: 3, cacheWrite: 0, cost: 0 },
+      { afterStep: 1, tool: "read", kit: ".agents/skills/debugging/SKILL.md" },
+      { afterStep: 1, tool: "bash", kit: "uca-read design-taste-discovery --section \"Step 3\"" },
+      { step: 2, input: 250, output: 7, reasoning: 0, cacheRead: 3, cacheWrite: 0, cost: 0 }
+    ]);
+  } finally {
+    for (const [key, value] of [["UCA_USAGE_FILE", saved.file], ["UCA_USAGE_STEPS", saved.steps]]) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});

@@ -5,6 +5,9 @@ import { spawnSync } from "node:child_process";
 // OpenCode v1-style plugin adapter. It records only aggregate counters and
 // provider-reported message usage; prompt, output, tool results and source code
 // are never read by this plugin or passed to the usage ledger.
+// Opt-in step log: when UCA_USAGE_STEPS names a file, each finished assistant
+// message adds one line with its token counts, and each tool call that opens a
+// kit file adds one line naming that file. No prompt, output or file content.
 export const UcaUsagePlugin = async ({ directory, client }) => {
   const script = path.join(directory, "scripts", "uca-usage.cjs");
   const seenMessageIds = new Set();
@@ -53,6 +56,27 @@ export const UcaUsagePlugin = async ({ directory, client }) => {
     }
   };
 
+  const stepsFile = process.env.UCA_USAGE_STEPS || "";
+  let stepNumber = 0;
+  const logStep = (entry) => {
+    if (!stepsFile) return;
+    try {
+      fs.appendFileSync(stepsFile, JSON.stringify({ time: new Date().toISOString(), ...entry }) + "\n", "utf8");
+    } catch {
+      // The step log is optional; it must never break the host.
+    }
+  };
+  // Only the kit's own files are named: the part of the path from ".agents/" on, or the
+  // arguments of a scripts/uca-read.cjs call (skill names and headings). Nothing else.
+  const kitTarget = (args) => {
+    const file = String(args?.filePath || args?.path || "").replace(/\\/g, "/");
+    const at = file.indexOf(".agents/");
+    if (at !== -1) return file.slice(at);
+    const command = String(args?.command || "");
+    const read = command.match(/uca-read\.cjs\s+([^|;&<>]{1,120})/);
+    return read ? "uca-read " + read[1].trim() : null;
+  };
+
   const requireSuccess = (result, action) => {
     if (result.error) {
       throw new Error("UCA Kit local usage " + action + " failed; the local budget/usage guard was not verified. Check Node.js and USAGE-PRIVACY.md.");
@@ -92,6 +116,8 @@ export const UcaUsagePlugin = async ({ directory, client }) => {
         "--cache-write-tokens", String(cacheWrite)
       ];
       if (cost > 0) args.push("--cost-source", "estimated", "--cost-usd", String(cost));
+      stepNumber += 1;
+      logStep({ step: stepNumber, input, output, reasoning, cacheRead, cacheWrite, cost });
       const result = ledgerCall(args);
       requireSuccess(result, "recording");
       await notifyThresholds(result.stdout);
@@ -100,7 +126,9 @@ export const UcaUsagePlugin = async ({ directory, client }) => {
 
     // Gate actual OpenCode subagent/task tool dispatches before execution.
     // A configured budget is respected; an unconfigured guard reports inactive.
-    "tool.execute.before": async (input) => {
+    "tool.execute.before": async (input, output) => {
+      const target = kitTarget(output?.args);
+      if (target) logStep({ afterStep: stepNumber, tool: String(input?.tool || ""), kit: target });
       if (!["task", "subagent"].includes(String(input?.tool || ""))) return;
 
       const check = ledgerCall(["guard", "--planned-agent-calls", "1"]);
