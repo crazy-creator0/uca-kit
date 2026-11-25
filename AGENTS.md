@@ -11,10 +11,10 @@ This is the canonical core policy. Read `.agents/CORE.md` before every task and 
 6. **Ask before risk.** Stop and ask before deleting files, adding deps, changing config, touching secrets, running migrations, or deploying.
 
 ## New app, site, page or tool (always-on)
-Even from a one-line request such as "create a cafe management file", do not start coding. Follow R-NEW in `.agents/CORE.md`: open `.agents/workflows/new-project.md` and `.agents/skills/design-taste-discovery/SKILL.md`, show the plan block, then build.
+Even from a one-line request such as "create a cafe management file", do not start coding. Follow R-NEW in `.agents/CORE.md`: open `.agents/workflows/new-project.md` and `.agents/skills/design-taste-discovery/SKILL.md` (start with their Read first blocks: `node scripts/uca-read.cjs <name>`), show the plan block, then build.
 
 ## Evergreen guardrails
-Always on through their lines under "Guardrails" in `.agents/CORE.md`; open the full files only when those lines say so.
+Always on via the Guardrails lines in `.agents/CORE.md`.
 - **anti-ai-slop** — prevent unnecessary abstractions, boilerplate, overengineering
 - **anti-hallucination** — ground claims in evidence, explicit uncertainty
 

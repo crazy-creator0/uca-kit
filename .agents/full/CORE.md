@@ -50,7 +50,7 @@ Pick skills here. This table is a short form of `.agents/router-rule.md`; open t
 | Deploying | workflow `production-deployment` |
 | "uca-notes" | workflow `project-notes` |
 
-Skills are `.agents/skills/<name>/SKILL.md`; workflows are `.agents/workflows/<name>.md`. A workflow counts as the primary item.
+Skills are `.agents/skills/<name>/SKILL.md`; workflows are `.agents/workflows/<name>.md`. A workflow counts as the primary item. Open one with `node scripts/uca-read.cjs <name>`, which prints its Read first block; read more only when that block says so, with `--section "<heading>"` for one section or `--full` for all of it. A pointer to one section of a skill means that section only. Without Node, read the file's first 25 lines.
 
 For "uca-audit", follow `.agents/workflows/audit.md`: a read-only review; its audit-only rules apply only inside that workflow.
 

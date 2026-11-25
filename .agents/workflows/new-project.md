@@ -1,5 +1,13 @@
 # Workflow: New Project
 
+## Read first
+Use when: a new app, site, page or tool, even from a one-line request.
+Not when: a feature in a project that already has code (`feature-development`).
+Must do: read "Size the plan first" now; show the plan block before any code; build slice by slice with real data from the domain; check the main task like the user; never drop a feature the user named.
+Done when: the finish for the build's size is done, every plan item is marked Done or Left with a reason, and the closing message is truthful.
+Stop here if: the user only wants the plan; then "Size the plan first" is enough.
+Read on only for: "Intake" before asking questions or when documents or images are attached; "Steps" and "Senior finish" for a medium or large build.
+
 ## Goal
 Turn an idea into a small, verifiable, maintainable application without overengineering.
 
@@ -21,6 +29,8 @@ Before asking anything, read what the user already gave you (the request, attach
 Do not ask about colors, fonts or folder names; pick sensible defaults and say what you picked. If the user cannot answer, use your default, write it under "Assumptions" in the plan block, and keep going.
 
 ## Steps
+Where a step names one section of a skill, read that section only: `node scripts/uca-read.cjs <skill> --section "<heading>"`.
+
 1. Clarify users, problem, constraints, data sensitivity and hosting; the main task in the plan block is the acceptance criteria. If the product has a screen, do `design-taste-discovery` Step 1 here (real objects and states, daily jobs in their own words, believable sample data).
 2. Inspect repository and existing conventions before choosing a stack.
 3. Separate confirmed requirements from assumptions.
