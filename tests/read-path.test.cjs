@@ -157,7 +157,8 @@ test("uca-read can log each read's name, part and size, never its text", (t) => 
   const entries = fs.readFileSync(log, "utf8").trim().split("\n").map((line) => JSON.parse(line));
   assert.deepEqual(entries.map((entry) => [entry.name, entry.part]), [["debugging", "read-first"], ["new-project", "section:Size the plan"]]);
   for (const entry of entries) {
-    assert.deepEqual(Object.keys(entry).sort(), ["name", "part", "time", "tokens"]);
+    assert.deepEqual(Object.keys(entry).sort(), ["name", "part", "project", "time", "tokens"]);
+    assert.equal(entry.project, path.basename(ROOT));
     assert.ok(entry.tokens > 0);
   }
 });

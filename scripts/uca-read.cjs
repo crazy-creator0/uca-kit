@@ -142,7 +142,8 @@ function main(argv = process.argv.slice(2), { agentsDir = AGENTS_DIR, out = cons
     return 1;
   }
   out(result.text);
-  logRead({ time: new Date().toISOString(), name: options.name, part: options.section ? `section:${options.section}` : options.full ? "full" : options.list ? "list" : "read-first", tokens: estimateTokens(result.text) });
+  // "project" is the name of the folder the kit is installed in, so runs side by side can be told apart.
+  logRead({ time: new Date().toISOString(), project: path.basename(path.dirname(agentsDir)), name: options.name, part: options.section ? `section:${options.section}` : options.full ? "full" : options.list ? "list" : "read-first", tokens: estimateTokens(result.text) });
   return 0;
 }
 

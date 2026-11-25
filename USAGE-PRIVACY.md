@@ -21,6 +21,13 @@
 - Cost remains unknown unless supplied; the utility does not assume a model, plan, cache policy, exchange rate, or current provider price.
 - Context-window occupancy and subscription-plan credits are separate metrics. Do not infer them from cumulative token totals.
 
+## Step logs for measuring the kit (opt-in, off by default)
+
+Two logs exist for measuring what the kit costs per step. Both stay on your machine, are written only when you set the variable, and never hold prompts, replies or file contents.
+
+- `UCA_USAGE_STEPS=<file>` (OpenCode plugin): one line per finished assistant message with its token counts (input, output, reasoning, cache read and write, estimated cost), and one line per tool call that opens a kit file, naming only the kit part of the path (from `.agents/` on) or the arguments of a `scripts/uca-read.cjs` call. Other files and commands are not logged. Simulated in tests; not yet tried in a real OpenCode session.
+- `UCA_READ_LOG=<file>` (`scripts/uca-read.cjs`): one line per read with the time, the kit's folder name, the skill or workflow name, which part was printed and its estimated tokens.
+
 ## Commands
 
 From a project where the UCA Kit usage script is installed:
