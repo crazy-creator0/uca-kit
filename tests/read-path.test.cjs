@@ -94,3 +94,94 @@ test("the guardrails' must-do lines live in the standard and full cores, once", 
   assert.match(read(".agents/skills/anti-ai-slop/SKILL.md"), /^Must do: No slop, in the core's guardrails \(`\.agents\/CORE\.md`\)/m);
   assert.match(read(".agents/router-rule.md"), /through their lines under "Guardrails" in `\.agents\/CORE\.md`/);
 });
+
+// ---- scripts/uca-read.cjs: partial reads ----
+const os = require("node:os");
+const { main: readMain, resolve: resolveName } = require(path.join(ROOT, "scripts", "uca-read.cjs"));
+
+function runRead(args, env = {}) {
+  const saved = {};
+  for (const [key, value] of Object.entries(env)) { saved[key] = process.env[key]; process.env[key] = value; }
+  const out = [];
+  const err = [];
+  try {
+    const code = readMain(args, { out: (text) => out.push(text), err: (text) => err.push(text) });
+    return { code, out: out.join("\n"), err: err.join("\n") };
+  } finally {
+    for (const [key, value] of Object.entries(saved)) { if (value === undefined) delete process.env[key]; else process.env[key] = value; }
+  }
+}
+
+test("uca-read prints only the Read first block by default, and much less than the file", () => {
+  const result = runRead(["debugging"]);
+  assert.equal(result.code, 0);
+  assert.match(result.out, /^# Debugging Playbook\n\n## Read first\nUse when:/);
+  assert.doesNotMatch(result.out, /## 1\. Symptom\n/);
+  assert.match(result.out, /Sections: introduction: --section "Read first" \| 1\. Symptom/);
+  assert.ok(result.out.length * 2 < read(".agents/skills/debugging/SKILL.md").length);
+});
+
+test("uca-read prints one section by the start of its heading, any case", () => {
+  const result = runRead(["design-taste-discovery", "--section", "step 3"]);
+  assert.equal(result.code, 0);
+  assert.match(result.out, /^## Step 3 — commit to a design brief/);
+  assert.doesNotMatch(result.out, /## Step 4/);
+  const missing = runRead(["debugging", "--section", "Nope"]);
+  assert.equal(missing.code, 1);
+  assert.match(missing.err, /No section starts with "Nope"\. Sections: Read first \|/);
+});
+
+test("uca-read lists a reference file's sections with their first line, so the model reads only the ones it picks", () => {
+  const result = runRead(["design-taste-discovery/directions", "--list"]);
+  assert.equal(result.code, 0);
+  assert.match(result.out, /^## Ledger — Fits: money, invoices/m);
+  assert.ok(result.out.length * 4 < read(".agents/skills/design-taste-discovery/directions.md").length);
+});
+
+test("uca-read takes names, never paths, and reports usage errors with exit 2", () => {
+  for (const name of ["../package", "/etc/passwd", "skills/debugging/SKILL.md", "debugging/../../x", "Debugging", ""]) assert.equal(resolveName(name), null, name);
+  assert.equal(runRead(["../package"]).code, 1);
+  assert.equal(runRead([]).code, 2);
+  assert.equal(runRead(["debugging", "--section"]).code, 2);
+  assert.equal(runRead(["debugging", "--full", "--list"]).code, 2);
+  assert.equal(runRead(["debugging", "--bogus"]).code, 2);
+  assert.ok(resolveName("audit").endsWith(path.join("workflows", "audit.md")));
+});
+
+test("uca-read can log each read's name, part and size, never its text", (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "uca-read-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const log = path.join(dir, "reads.jsonl");
+  runRead(["debugging"], { UCA_READ_LOG: log });
+  runRead(["new-project", "--section", "Size the plan"], { UCA_READ_LOG: log });
+  const entries = fs.readFileSync(log, "utf8").trim().split("\n").map((line) => JSON.parse(line));
+  assert.deepEqual(entries.map((entry) => [entry.name, entry.part]), [["debugging", "read-first"], ["new-project", "section:Size the plan"]]);
+  for (const entry of entries) {
+    assert.deepEqual(Object.keys(entry).sort(), ["name", "part", "time", "tokens"]);
+    assert.ok(entry.tokens > 0);
+  }
+});
+
+test("every skill and the three large workflows open with a Read first block within their first 25 lines", () => {
+  const files = [...skills.map((name) => `.agents/skills/${name}/SKILL.md`), ...["new-project", "audit", "stack-migration"].map((name) => `.agents/workflows/${name}.md`)];
+  for (const file of files) {
+    const index = read(file).split(/\r?\n/).findIndex((line) => line === "## Read first");
+    assert.ok(index !== -1, `${file} has no Read first block`);
+    const blockEnd = read(file).split(/\r?\n/).findIndex((line, i) => i > index && line.trim() === "");
+    assert.ok(blockEnd <= 25, `${file}: the block ends on line ${blockEnd + 1}, past the 25 lines the no-Node fallback reads`);
+  }
+});
+
+test("every section a workflow or skill points to exists, so a --section read finds it", () => {
+  const pointers = [
+    ["design-taste-discovery", "Step 1"], ["design-taste-discovery", "Step 3"], ["design-taste-discovery", "Step 7"],
+    ["frontend-engineering", "Stack decision"], ["testing-and-code-review", "Check it like the user"],
+    ["new-project", "Size the plan first"], ["new-project", "Intake"], ["new-project", "Steps"], ["new-project", "Senior finish"],
+    ["audit", "Limits"], ["audit", "Steps"], ["audit", "Severity"]
+  ];
+  for (const [name, heading] of pointers) assert.equal(runRead([name, "--section", heading]).code, 0, `${name} --section "${heading}"`);
+  const plan = read(".agents/workflows/new-project.md");
+  for (const [skill, heading] of [["design-taste-discovery", "Step 1"], ["design-taste-discovery", "Step 3"], ["design-taste-discovery", "Step 7"], ["frontend-engineering", "Stack decision"], ["testing-and-code-review", "Check it like the user"]]) {
+    assert.ok(plan.includes(skill) && plan.includes(heading), `new-project no longer points to ${skill} "${heading}"; update this list`);
+  }
+});

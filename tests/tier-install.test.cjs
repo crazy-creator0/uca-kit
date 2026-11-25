@@ -259,6 +259,7 @@ test("every tier installs the PROJECT.md template and its staleness checker", ()
       assert.ok(exists(root, "scripts/uca-project-check.cjs"), `${tier} should install the staleness checker`);
       assert.ok(exists(root, "scripts/uca-project-discover.cjs"), `${tier} should install the project discovery script`);
       assert.equal(exists(root, "scripts/uca-route.cjs"), tier !== "lite", `${tier}: the reference router belongs with the router rule, not in lite`);
+      assert.equal(exists(root, "scripts/uca-read.cjs"), tier !== "lite", `${tier}: the partial-read helper belongs with the Route table, not in lite`);
     });
   }
 });

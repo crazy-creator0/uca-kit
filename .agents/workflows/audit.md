@@ -1,5 +1,13 @@
 # Workflow: audit ("uca-audit")
 
+## Read first
+Use when: "uca-audit", or finding what is broken or risky in existing code with no single symptom.
+Not when: one known bug (`debugging`); building something new.
+Must do: read "Limits" every time (read-only, the user's own project only, no exploits, no secret values); every finding points to a file and line you read or a step you ran.
+Done when: the report lists findings by severity with how each was checked, says what each lens looked at, and ends with a fix plan for the user to approve.
+Stop here if: the user only asked what an audit covers.
+Read on only for: the whole file for a full audit; "Limits", "Steps" and "Severity" for a narrow one (one file or one concern).
+
 A read-only review of the user's own project that looks for what could go wrong before users find it: security holes, data leaks, slow or costly code, and gaps before production. This file is the only place in the kit where the attacker mindset below applies. Outside an audit, build normally.
 
 ## Limits (always, before anything else)
