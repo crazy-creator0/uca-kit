@@ -227,3 +227,10 @@ test("uca-read logs to .uca/read-log.jsonl only when that file already exists", 
     if (saved === undefined) delete process.env.UCA_READ_LOG; else process.env.UCA_READ_LOG = saved;
   }
 });
+
+test("standard and full CORE tell models not to open kit bookkeeping in .uca/", () => {
+  for (const tier of ["standard", "full"]) {
+    const route = section(read(`.agents/${tier}/CORE.md`), "Route");
+    assert.match(route, /Never open files in `\.uca\/` \(kit bookkeeping\) unless a rule names one\./, tier);
+  }
+});
