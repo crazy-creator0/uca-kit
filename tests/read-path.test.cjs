@@ -234,3 +234,9 @@ test("standard and full CORE tell models not to open kit bookkeeping in .uca/", 
     assert.match(route, /Never open files in `\.uca\/` \(kit bookkeeping\) unless a rule names one\./, tier);
   }
 });
+
+test("new-project's Read first block names the testing section, so the check like the user is not skipped", () => {
+  const readFirst = section(read(".agents/workflows/new-project.md"), "Read first");
+  assert.match(readFirst, /"Check it like the user" in `testing-and-code-review`/);
+  assert.ok(section(read(".agents/skills/testing-and-code-review/SKILL.md"), "Check it like the user"), "the named section exists");
+});

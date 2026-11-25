@@ -6,7 +6,7 @@ Not when: a feature in a project that already has code (`feature-development`).
 Must do: read "Size the plan first" now; show the plan block before any code; build slice by slice with real data from the domain; check the main task like the user; never drop a feature the user named.
 Done when: the finish for the build's size is done, every plan item is marked Done or Left with a reason, and the closing message is truthful.
 Stop here if: the user only wants the plan; then "Size the plan first" is enough.
-Read on only for: "Intake" before asking questions or when documents or images are attached; "Steps" before building; "Senior finish" before saying it is done.
+Read on only for: "Intake" before asking questions or when documents or images are attached; "Steps" before building; "Senior finish" before saying it is done, and "Check it like the user" in `testing-and-code-review` (`node scripts/uca-read.cjs testing-and-code-review --section "Check it like the user"`) before saying the main task works.
 
 ## Goal
 Turn an idea into a small, verifiable, maintainable application without overengineering.
