@@ -44,7 +44,7 @@ Where a step names one section of a skill, read that section only: `node scripts
 11. Check whether the project is already under Git. If not, explain the benefits of Git and ask whether the user wants to initialize it; if they decline, continue locally without blocking project work.
 
 ## Senior finish: the scorecard
-Scale it to the build. **A small build** (as in "Size the plan first") walks items 4 to 9 below, fixes what they find, and reports with R-FINISH in a few lines: no README, .env.example, readiness run, scorecard or deliverables list unless the user asked for them. **A medium or large build** walks every item and ends with the scorecard.
+Scale it to the build. **A small build** (as in "Size the plan first") walks items 4 to 9 below, fixes what they find, and reports with R-FINISH in a few lines: no README, .env.example, readiness run, scorecard or deliverables list unless the user asked for them. **A medium or large build** walks every item and ends with the scorecard. Either way, the closing message starts with the R-FINISH lines (Changed, Checks, Still unknown) and leaves out what the user can see in the files: no recap of the code, the plan or each step. A small build's closing message is 300 words or less; never shorten Still unknown to fit.
 
 Do this once the first slice works, before you say it is done. Walk the list, fix what is in scope, and mark each line Done, Not applicable (say why) or Left (say why). Never mark a line Done without having looked at the file or run the command.
 
