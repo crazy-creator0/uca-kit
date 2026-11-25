@@ -1,0 +1,659 @@
+[
+ {
+  "build": "t3-kit-1",
+  "directFiles": [
+   ".agents/CORE.md",
+   ".agents/skills/design-taste-discovery/review.md",
+   ".uca/config.json",
+   "AGENTS.md",
+   "CLAUDE.md"
+  ],
+  "directTokens": 3031,
+  "helperReads": [
+   {
+    "name": "new-project",
+    "part": "read-first",
+    "tokens": 243
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "read-first",
+    "tokens": 301
+   },
+   {
+    "name": "new-project",
+    "part": "section:Size the plan first",
+    "tokens": 537
+   },
+   {
+    "name": "new-project",
+    "part": "section:Steps",
+    "tokens": 477
+   },
+   {
+    "name": "new-project",
+    "part": "section:Senior finish: the scorecard",
+    "tokens": 712
+   },
+   {
+    "name": "new-project",
+    "part": "section:Deliverables (medium or large build)",
+    "tokens": 106
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 1 \u2014 learn the domain, and what the user already told us",
+    "tokens": 234
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 3 \u2014 commit to a design brief",
+    "tokens": 397
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 5 \u2014 avoid generic AI-generated UI patterns",
+    "tokens": 89
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 7 \u2014 review like a product designer",
+    "tokens": 112
+   },
+   {
+    "name": "testing-and-code-review",
+    "part": "section:Check it like the user",
+    "tokens": 499
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "list",
+    "tokens": 228
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "section:Poster",
+    "tokens": 135
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "section:Control room",
+    "tokens": 133
+   },
+   {
+    "name": "frontend-engineering",
+    "part": "section:Stack decision",
+    "tokens": 318
+   }
+  ],
+  "helperTokens": 4521,
+  "scriptsRun": [
+   "scripts/uca-design-check.cjs",
+   "scripts/uca-read.cjs"
+  ],
+  "kitTokensRead": 7552
+ },
+ {
+  "build": "t3-kit-2",
+  "directFiles": [
+   ".agents/CORE.md",
+   ".agents/skills/design-taste-discovery/review.md",
+   ".claude/skills/anti-ai-slop/SKILL.md",
+   ".claude/skills/anti-hallucination/SKILL.md",
+   ".claude/skills/application-security/SKILL.md",
+   ".claude/skills/backend-api/SKILL.md",
+   ".claude/skills/cloudflare-operations/SKILL.md",
+   ".claude/skills/data-engineering-analytics/SKILL.md",
+   ".claude/skills/database-engineering/SKILL.md",
+   ".claude/skills/debugging/SKILL.md",
+   ".claude/skills/design-taste-discovery/SKILL.md",
+   ".claude/skills/frontend-engineering/SKILL.md",
+   ".claude/skills/frontend-visuals-and-3d/SKILL.md",
+   ".claude/skills/import-hygiene/SKILL.md",
+   ".claude/skills/language-engineering/SKILL.md",
+   ".claude/skills/performance-engineering/SKILL.md",
+   ".claude/skills/skill-gap-router/SKILL.md",
+   ".claude/skills/testing-and-code-review/SKILL.md",
+   ".uca/config.json",
+   ".uca/manifest.json",
+   "AGENTS.md",
+   "CLAUDE.md"
+  ],
+  "directTokens": 20142,
+  "helperReads": [
+   {
+    "name": "new-project",
+    "part": "read-first",
+    "tokens": 243
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "read-first",
+    "tokens": 301
+   },
+   {
+    "name": "new-project",
+    "part": "section:Size the plan first",
+    "tokens": 537
+   },
+   {
+    "name": "new-project",
+    "part": "section:Steps",
+    "tokens": 477
+   },
+   {
+    "name": "new-project",
+    "part": "section:Senior finish: the scorecard",
+    "tokens": 712
+   },
+   {
+    "name": "new-project",
+    "part": "section:Deliverables (medium or large build)",
+    "tokens": 106
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 1 \u2014 learn the domain, and what the user already told us",
+    "tokens": 234
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 3 \u2014 commit to a design brief",
+    "tokens": 397
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 5 \u2014 avoid generic AI-generated UI patterns",
+    "tokens": 89
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 7 \u2014 review like a product designer",
+    "tokens": 112
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "list",
+    "tokens": 228
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "section:Poster",
+    "tokens": 135
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "section:Control room",
+    "tokens": 133
+   },
+   {
+    "name": "frontend-engineering",
+    "part": "section:Stack decision",
+    "tokens": 318
+   }
+  ],
+  "helperTokens": 4022,
+  "scriptsRun": [
+   "scripts/uca-design-check.cjs",
+   "scripts/uca-read.cjs"
+  ],
+  "kitTokensRead": 24164
+ },
+ {
+  "build": "t3-kit-3",
+  "directFiles": [
+   ".agents/CORE.md",
+   ".agents/skills/design-taste-discovery/review.md",
+   ".claude/skills/anti-ai-slop/SKILL.md",
+   ".claude/skills/anti-hallucination/SKILL.md",
+   ".claude/skills/application-security/SKILL.md",
+   ".claude/skills/backend-api/SKILL.md",
+   ".claude/skills/cloudflare-operations/SKILL.md",
+   ".claude/skills/data-engineering-analytics/SKILL.md",
+   ".claude/skills/database-engineering/SKILL.md",
+   ".claude/skills/debugging/SKILL.md",
+   ".claude/skills/design-taste-discovery/SKILL.md",
+   ".claude/skills/frontend-engineering/SKILL.md",
+   ".claude/skills/frontend-visuals-and-3d/SKILL.md",
+   ".claude/skills/import-hygiene/SKILL.md",
+   ".claude/skills/language-engineering/SKILL.md",
+   ".claude/skills/performance-engineering/SKILL.md",
+   ".claude/skills/skill-gap-router/SKILL.md",
+   ".claude/skills/testing-and-code-review/SKILL.md",
+   ".uca/config.json",
+   "AGENTS.md",
+   "CLAUDE.md"
+  ],
+  "directTokens": 17926,
+  "helperReads": [
+   {
+    "name": "new-project",
+    "part": "read-first",
+    "tokens": 243
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "read-first",
+    "tokens": 301
+   },
+   {
+    "name": "new-project",
+    "part": "section:Size the plan first",
+    "tokens": 537
+   },
+   {
+    "name": "new-project",
+    "part": "section:Steps",
+    "tokens": 477
+   },
+   {
+    "name": "new-project",
+    "part": "section:Senior finish: the scorecard",
+    "tokens": 712
+   },
+   {
+    "name": "new-project",
+    "part": "section:Deliverables (medium or large build)",
+    "tokens": 106
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 3 \u2014 commit to a design brief",
+    "tokens": 397
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 5 \u2014 avoid generic AI-generated UI patterns",
+    "tokens": 89
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 7 \u2014 review like a product designer",
+    "tokens": 112
+   },
+   {
+    "name": "testing-and-code-review",
+    "part": "read-first",
+    "tokens": 238
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "list",
+    "tokens": 228
+   },
+   {
+    "name": "testing-and-code-review",
+    "part": "section:Check it like the user",
+    "tokens": 499
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "section:Poster",
+    "tokens": 135
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "section:Control room",
+    "tokens": 133
+   },
+   {
+    "name": "frontend-engineering",
+    "part": "section:Stack decision",
+    "tokens": 318
+   }
+  ],
+  "helperTokens": 4525,
+  "scriptsRun": [
+   "scripts/uca-design-check.cjs",
+   "scripts/uca-read.cjs"
+  ],
+  "kitTokensRead": 22451
+ },
+ {
+  "build": "t4-kit-1",
+  "directFiles": [
+   ".agents/CORE.md",
+   ".agents/skills/design-taste-discovery/review.md",
+   ".claude/skills/anti-ai-slop/SKILL.md",
+   ".claude/skills/anti-hallucination/SKILL.md",
+   ".claude/skills/application-security/SKILL.md",
+   ".claude/skills/backend-api/SKILL.md",
+   ".claude/skills/cloudflare-operations/SKILL.md",
+   ".claude/skills/data-engineering-analytics/SKILL.md",
+   ".claude/skills/database-engineering/SKILL.md",
+   ".claude/skills/debugging/SKILL.md",
+   ".claude/skills/design-taste-discovery/SKILL.md",
+   ".claude/skills/frontend-engineering/SKILL.md",
+   ".claude/skills/frontend-visuals-and-3d/SKILL.md",
+   ".claude/skills/import-hygiene/SKILL.md",
+   ".claude/skills/language-engineering/SKILL.md",
+   ".claude/skills/performance-engineering/SKILL.md",
+   ".claude/skills/skill-gap-router/SKILL.md",
+   ".claude/skills/testing-and-code-review/SKILL.md",
+   ".uca/config.json",
+   ".uca/manifest.json",
+   "AGENTS.md",
+   "CLAUDE.md"
+  ],
+  "directTokens": 20142,
+  "helperReads": [
+   {
+    "name": "new-project",
+    "part": "read-first",
+    "tokens": 243
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "read-first",
+    "tokens": 301
+   },
+   {
+    "name": "new-project",
+    "part": "section:Size the plan first",
+    "tokens": 537
+   },
+   {
+    "name": "new-project",
+    "part": "section:Intake: only the questions that change the build",
+    "tokens": 290
+   },
+   {
+    "name": "new-project",
+    "part": "section:Steps",
+    "tokens": 477
+   },
+   {
+    "name": "new-project",
+    "part": "section:Senior finish: the scorecard",
+    "tokens": 712
+   },
+   {
+    "name": "new-project",
+    "part": "section:Deliverables (medium or large build)",
+    "tokens": 106
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 1 \u2014 learn the domain, and what the user already told us",
+    "tokens": 234
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 3 \u2014 commit to a design brief",
+    "tokens": 397
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 5 \u2014 avoid generic AI-generated UI patterns",
+    "tokens": 89
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 7 \u2014 review like a product designer",
+    "tokens": 112
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Non-negotiable rules",
+    "tokens": 124
+   },
+   {
+    "name": "frontend-engineering",
+    "part": "section:Stack decision",
+    "tokens": 318
+   },
+   {
+    "name": "testing-and-code-review",
+    "part": "section:Check it like the user",
+    "tokens": 499
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "list",
+    "tokens": 228
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "section:Ticket rail",
+    "tokens": 142
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "section:Field notebook",
+    "tokens": 138
+   }
+  ],
+  "helperTokens": 4947,
+  "scriptsRun": [
+   "scripts/uca-design-check.cjs",
+   "scripts/uca-read.cjs"
+  ],
+  "kitTokensRead": 25089
+ },
+ {
+  "build": "t4-kit-2",
+  "directFiles": [
+   ".agents/CORE.md",
+   ".agents/skills/design-taste-discovery/review.md",
+   ".claude/skills/anti-ai-slop/SKILL.md",
+   ".claude/skills/anti-hallucination/SKILL.md",
+   ".claude/skills/application-security/SKILL.md",
+   ".claude/skills/backend-api/SKILL.md",
+   ".claude/skills/cloudflare-operations/SKILL.md",
+   ".claude/skills/data-engineering-analytics/SKILL.md",
+   ".claude/skills/database-engineering/SKILL.md",
+   ".claude/skills/debugging/SKILL.md",
+   ".claude/skills/design-taste-discovery/SKILL.md",
+   ".claude/skills/frontend-engineering/SKILL.md",
+   ".claude/skills/frontend-visuals-and-3d/SKILL.md",
+   ".claude/skills/import-hygiene/SKILL.md",
+   ".claude/skills/language-engineering/SKILL.md",
+   ".claude/skills/performance-engineering/SKILL.md",
+   ".claude/skills/skill-gap-router/SKILL.md",
+   ".claude/skills/testing-and-code-review/SKILL.md",
+   ".uca/config.json",
+   ".uca/manifest.json",
+   "AGENTS.md",
+   "CLAUDE.md"
+  ],
+  "directTokens": 20142,
+  "helperReads": [
+   {
+    "name": "new-project",
+    "part": "read-first",
+    "tokens": 243
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "read-first",
+    "tokens": 301
+   },
+   {
+    "name": "new-project",
+    "part": "section:Size the plan first",
+    "tokens": 537
+   },
+   {
+    "name": "new-project",
+    "part": "section:Intake: only the questions that change the build",
+    "tokens": 290
+   },
+   {
+    "name": "new-project",
+    "part": "section:Steps",
+    "tokens": 477
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 1 \u2014 learn the domain, and what the user already told us",
+    "tokens": 234
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 3 \u2014 commit to a design brief",
+    "tokens": 397
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 5 \u2014 avoid generic AI-generated UI patterns",
+    "tokens": 89
+   },
+   {
+    "name": "frontend-engineering",
+    "part": "section:Stack decision",
+    "tokens": 318
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "list",
+    "tokens": 228
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "section:Ticket rail",
+    "tokens": 142
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "section:Field notebook",
+    "tokens": 138
+   },
+   {
+    "name": "new-project",
+    "part": "section:Senior finish: the scorecard",
+    "tokens": 712
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 7 \u2014 review like a product designer",
+    "tokens": 112
+   },
+   {
+    "name": "testing-and-code-review",
+    "part": "section:Check it like the user",
+    "tokens": 499
+   }
+  ],
+  "helperTokens": 4717,
+  "scriptsRun": [
+   "scripts/uca-design-check.cjs",
+   "scripts/uca-read.cjs"
+  ],
+  "kitTokensRead": 24859
+ },
+ {
+  "build": "t4-kit-3",
+  "directFiles": [
+   ".agents/CORE.md",
+   ".agents/skills/design-taste-discovery/review.md",
+   ".claude/skills/anti-ai-slop/SKILL.md",
+   ".claude/skills/anti-hallucination/SKILL.md",
+   ".claude/skills/application-security/SKILL.md",
+   ".claude/skills/backend-api/SKILL.md",
+   ".claude/skills/cloudflare-operations/SKILL.md",
+   ".claude/skills/data-engineering-analytics/SKILL.md",
+   ".claude/skills/database-engineering/SKILL.md",
+   ".claude/skills/debugging/SKILL.md",
+   ".claude/skills/design-taste-discovery/SKILL.md",
+   ".claude/skills/frontend-engineering/SKILL.md",
+   ".claude/skills/frontend-visuals-and-3d/SKILL.md",
+   ".claude/skills/import-hygiene/SKILL.md",
+   ".claude/skills/language-engineering/SKILL.md",
+   ".claude/skills/performance-engineering/SKILL.md",
+   ".claude/skills/skill-gap-router/SKILL.md",
+   ".claude/skills/testing-and-code-review/SKILL.md",
+   ".uca/config.json",
+   "AGENTS.md",
+   "CLAUDE.md"
+  ],
+  "directTokens": 17926,
+  "helperReads": [
+   {
+    "name": "new-project",
+    "part": "read-first",
+    "tokens": 243
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "read-first",
+    "tokens": 301
+   },
+   {
+    "name": "new-project",
+    "part": "section:Size the plan first",
+    "tokens": 537
+   },
+   {
+    "name": "new-project",
+    "part": "section:Intake: only the questions that change the build",
+    "tokens": 290
+   },
+   {
+    "name": "new-project",
+    "part": "section:Steps",
+    "tokens": 477
+   },
+   {
+    "name": "new-project",
+    "part": "section:Senior finish: the scorecard",
+    "tokens": 712
+   },
+   {
+    "name": "new-project",
+    "part": "section:Deliverables (medium or large build)",
+    "tokens": 106
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 1 \u2014 learn the domain, and what the user already told us",
+    "tokens": 234
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 3 \u2014 commit to a design brief",
+    "tokens": 397
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 5 \u2014 avoid generic AI-generated UI patterns",
+    "tokens": 89
+   },
+   {
+    "name": "design-taste-discovery",
+    "part": "section:Step 7 \u2014 review like a product designer",
+    "tokens": 112
+   },
+   {
+    "name": "frontend-engineering",
+    "part": "section:Stack decision",
+    "tokens": 318
+   },
+   {
+    "name": "testing-and-code-review",
+    "part": "section:Check it like the user",
+    "tokens": 499
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "list",
+    "tokens": 228
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "section:Ticket rail",
+    "tokens": 142
+   },
+   {
+    "name": "design-taste-discovery/directions",
+    "part": "section:Field notebook",
+    "tokens": 138
+   }
+  ],
+  "helperTokens": 4823,
+  "scriptsRun": [
+   "scripts/uca-design-check.cjs",
+   "scripts/uca-read.cjs"
+  ],
+  "kitTokensRead": 22749
+ }
+]
