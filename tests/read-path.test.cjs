@@ -7,9 +7,10 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { readWithParts: readKitFile } = require("../scripts/uca-read.cjs");
 
 const ROOT = path.join(__dirname, "..");
-const read = (relative) => fs.readFileSync(path.join(ROOT, relative), "utf8");
+const read = (relative) => readKitFile(path.join(ROOT, relative));
 const skills = fs.readdirSync(path.join(ROOT, ".agents", "skills")).filter((name) => fs.existsSync(path.join(ROOT, ".agents", "skills", name, "SKILL.md")));
 const workflows = fs.readdirSync(path.join(ROOT, ".agents", "workflows")).filter((name) => name.endsWith(".md")).map((name) => name.slice(0, -3));
 
@@ -154,7 +155,7 @@ test("uca-read can log each read's name, part and size, never its text", (t) => 
   const log = path.join(dir, "reads.jsonl");
   runRead(["debugging"], { UCA_READ_LOG: log });
   runRead(["new-project", "--section", "Size the plan"], { UCA_READ_LOG: log });
-  const entries = fs.readFileSync(log, "utf8").trim().split("\n").map((line) => JSON.parse(line));
+  const entries = readKitFile(log).trim().split("\n").map((line) => JSON.parse(line));
   assert.deepEqual(entries.map((entry) => [entry.name, entry.part]), [["debugging", "read-first"], ["new-project", "section:Size the plan"]]);
   for (const entry of entries) {
     assert.deepEqual(Object.keys(entry).sort(), ["name", "part", "project", "time", "tokens"]);
@@ -219,7 +220,7 @@ test("uca-read logs to .uca/read-log.jsonl only when that file already exists", 
     fs.mkdirSync(path.join(dir, ".uca"));
     fs.writeFileSync(path.join(dir, ".uca", "read-log.jsonl"), "");
     assert.equal(readMain(["audit", "--section", "Limits"], quiet), 0);
-    const entry = JSON.parse(fs.readFileSync(path.join(dir, ".uca", "read-log.jsonl"), "utf8"));
+    const entry = JSON.parse(readKitFile(path.join(dir, ".uca", "read-log.jsonl")));
     assert.equal(entry.name, "audit");
     assert.equal(entry.part, "section:Limits");
     assert.equal(entry.project, path.basename(dir));
@@ -245,4 +246,45 @@ test("new-project sizes the closing message and never cuts Still unknown", () =>
   const finish = section(read(".agents/workflows/new-project.md"), "Senior finish: the scorecard");
   assert.match(finish, /closing message starts with the R-FINISH lines \(Changed, Checks, Still unknown\)/);
   assert.match(finish, /A small build's closing message is 300 words or less; never shorten Still unknown to fit\./);
+});
+
+const { partFiles, readWhole, resolve: resolveKit, withoutFrontmatter: stripFront } = require("../scripts/uca-read.cjs");
+const SPLIT = ["new-project", "audit", "stack-migration", "design-taste-discovery", "testing-and-code-review", "frontend-engineering", "design-taste-discovery/directions"];
+
+test("split skills and workflows list their parts in the first 25 lines, so a model without Node can find them", () => {
+  for (const name of SPLIT) {
+    const file = resolveKit(name, path.join(ROOT, ".agents"));
+    const head = fs.readFileSync(file, "utf8").split("\n").slice(0, 25).join("\n");
+    assert.match(head, /^## Parts$/m, `${name}: Parts list is not in the first 25 lines`);
+    const parts = partFiles(stripFront(fs.readFileSync(file, "utf8")), path.join(ROOT, ".agents"));
+    const listed = [...section(fs.readFileSync(file, "utf8"), "Parts").matchAll(/`(\.agents\/[^`]+\.md)`/g)];
+    assert.ok(parts.length >= 1 && parts.length === listed.length, `${name}: every listed part exists`);
+  }
+});
+
+test("every part file is listed by exactly one Parts list, so nothing in a parts folder is unreachable", () => {
+  const listed = new Set();
+  for (const name of SPLIT) {
+    const file = resolveKit(name, path.join(ROOT, ".agents"));
+    for (const part of partFiles(stripFront(fs.readFileSync(file, "utf8")), path.join(ROOT, ".agents"))) {
+      const relative = path.relative(ROOT, part).split(path.sep).join("/");
+      assert.ok(!listed.has(relative), `${relative} is listed twice`);
+      listed.add(relative);
+    }
+  }
+  const folders = [".agents/workflows/new-project", ".agents/workflows/audit", ".agents/workflows/stack-migration", ".agents/skills/design-taste-discovery/parts", ".agents/skills/design-taste-discovery/directions", ".agents/skills/testing-and-code-review/parts", ".agents/skills/frontend-engineering/parts"];
+  for (const folder of folders) for (const name of fs.readdirSync(path.join(ROOT, folder))) assert.ok(listed.has(`${folder}/${name}`), `${folder}/${name} is in no Parts list`);
+});
+
+test("uca-read finds a section that lives in a part, and refuses a part path outside .agents", () => {
+  const result = runRead(["new-project", "--section", "Senior finish"]);
+  assert.equal(result.code, 0);
+  assert.match(result.out, /^## Senior finish: the scorecard/);
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), "uca-parts-"));
+  const agents = path.join(outside, ".agents");
+  fs.mkdirSync(path.join(agents, "workflows"), { recursive: true });
+  fs.writeFileSync(path.join(outside, "secret.md"), "## Secret\nnot kit text\n");
+  fs.writeFileSync(path.join(agents, "workflows", "x.md"), "# X\n\n## Read first\nUse when: x.\n\n## Parts\n- Secret: `.agents/../secret.md`\n");
+  assert.equal(partFiles(stripFront(fs.readFileSync(path.join(agents, "workflows", "x.md"), "utf8")), agents).length, 0);
+  assert.doesNotMatch(readWhole(path.join(agents, "workflows", "x.md"), agents), /not kit text/);
 });

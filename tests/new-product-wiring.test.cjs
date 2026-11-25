@@ -11,6 +11,7 @@ const path = require("node:path");
 
 const root = path.join(__dirname, "..");
 const cli = require(path.join(root, "bin", "cli.cjs"));
+const { readWithParts: readKitFile } = require("../scripts/uca-read.cjs");
 
 const ENTRY = {
   generic: "AGENTS.md", codex: "AGENTS.md", opencode: "AGENTS.md",
@@ -29,7 +30,7 @@ function reachable(projectRoot, entry, maxHops) {
     const file = queue.shift();
     const hops = seen.get(file);
     if (hops >= maxHops) continue;
-    const text = fs.readFileSync(path.join(projectRoot, file), "utf8");
+    const text = readKitFile(path.join(projectRoot, file));
     for (const [, ref] of text.matchAll(/(?:@|`)?([A-Za-z0-9_.\-/]+\.(?:md|mdc))`?/g)) {
       const clean = ref.replace(/^\.\//, "");
       if (!seen.has(clean) && fs.existsSync(path.join(projectRoot, clean))) {
@@ -56,9 +57,9 @@ for (const tier of cli.TIER_NAMES) {
     for (const platform of Object.keys(ENTRY)) {
       withInstall(platform, tier, (dir) => {
         const visited = reachable(dir, ENTRY[platform], 2);
-        const hit = visited.filter((file) => TRIGGER.test(fs.readFileSync(path.join(dir, file), "utf8")));
+        const hit = visited.filter((file) => TRIGGER.test(readKitFile(path.join(dir, file))));
         assert.ok(hit.length > 0, `${platform}/${tier}: no file reached from ${ENTRY[platform]} carries R-NEW (visited: ${visited.join(", ")})`);
-        assert.ok(visited.some((file) => TRIGGER_TEXT.test(fs.readFileSync(path.join(dir, file), "utf8"))), `${platform}/${tier}: the rule text is missing`);
+        assert.ok(visited.some((file) => TRIGGER_TEXT.test(readKitFile(path.join(dir, file)))), `${platform}/${tier}: the rule text is missing`);
       });
     }
   });
@@ -67,7 +68,7 @@ for (const tier of cli.TIER_NAMES) {
 test("standard and full put the trigger in AGENTS.md itself, so it does not depend on the task looking substantial", () => {
   for (const tier of ["standard", "full"]) {
     withInstall("generic", tier, (dir) => {
-      const agents = fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8");
+      const agents = readKitFile(path.join(dir, "AGENTS.md"));
       assert.match(agents, /## New app, site, page or tool \(always-on\)/);
       assert.match(agents, /do not start coding/);
       assert.match(agents, /\.agents\/workflows\/new-project\.md/);
@@ -79,22 +80,22 @@ test("standard and full put the trigger in AGENTS.md itself, so it does not depe
 
 test("lite carries the plan rule in its core, which its entry file tells the model to read", () => {
   withInstall("generic", "lite", (dir) => {
-    assert.match(fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8"), /Read `\.agents\/CORE\.md` before every task/);
-    assert.match(fs.readFileSync(path.join(dir, ".agents", "CORE.md"), "utf8"), TRIGGER_TEXT);
+    assert.match(readKitFile(path.join(dir, "AGENTS.md")), /Read `\.agents\/CORE\.md` before every task/);
+    assert.match(readKitFile(path.join(dir, ".agents", "CORE.md")), TRIGGER_TEXT);
   });
 });
 
 test("the reachability check can fail: a core without the rule is not reached", () => {
   withInstall("generic", "lite", (dir) => {
     const core = path.join(dir, ".agents", "CORE.md");
-    fs.writeFileSync(core, fs.readFileSync(core, "utf8").replace(/^- \*\*R-NEW\*\*.*$/m, ""));
+    fs.writeFileSync(core, readKitFile(core).replace(/^- \*\*R-NEW\*\*.*$/m, ""));
     const visited = reachable(dir, "AGENTS.md", 2);
-    assert.equal(visited.some((file) => TRIGGER.test(fs.readFileSync(path.join(dir, file), "utf8"))), false);
+    assert.equal(visited.some((file) => TRIGGER.test(readKitFile(path.join(dir, file)))), false);
   });
 });
 
 test("new-project asks few, defaulted questions and ends with the Senior Bar check", () => {
-  const workflow = fs.readFileSync(path.join(root, ".agents", "workflows", "new-project.md"), "utf8");
+  const workflow = readKitFile(path.join(root, ".agents", "workflows", "new-project.md"));
   assert.match(workflow, /## Intake/);
   assert.match(workflow, /at most three questions/);
   assert.match(workflow, /uca-senior-check\.cjs/);
@@ -102,7 +103,7 @@ test("new-project asks few, defaulted questions and ends with the Senior Bar che
 });
 
 test("new-project ends with a scorecard that cannot mark unchecked lines Done", () => {
-  const workflow = fs.readFileSync(path.join(root, ".agents", "workflows", "new-project.md"), "utf8");
+  const workflow = readKitFile(path.join(root, ".agents", "workflows", "new-project.md"));
   assert.match(workflow, /## Senior finish/);
   assert.match(workflow, /Never mark a line Done without having looked/);
   assert.match(workflow, /Do not call the project production-ready/);
@@ -111,7 +112,7 @@ test("new-project ends with a scorecard that cannot mark unchecked lines Done", 
 
 // Sample 06: a "like Sejda" build left out page tools and its README said Sejda lacks features it has.
 test("new-project lists the named product's core features and checks the request before done", () => {
-  const workflow = fs.readFileSync(path.join(root, ".agents", "workflows", "new-project.md"), "utf8");
+  const workflow = readKitFile(path.join(root, ".agents", "workflows", "new-project.md"));
   assert.match(workflow, /\*\*"Like X" or "better than X"\.\*\*/);
   assert.match(workflow, /"in this build", "later" or "not planned"/);
   assert.match(workflow, /Never write in the README or the app that X lacks a feature unless you checked/);
@@ -120,7 +121,7 @@ test("new-project lists the named product's core features and checks the request
 });
 
 test("the audit compares the project with the request and checks its own claims", () => {
-  const workflow = fs.readFileSync(path.join(root, ".agents", "workflows", "audit.md"), "utf8");
+  const workflow = readKitFile(path.join(root, ".agents", "workflows", "audit.md"));
   assert.match(workflow, /\*\*The people who use it\.\*\* First the ordinary user: do the main task/);
   assert.match(workflow, /Then the person who asked/);
   assert.match(workflow, /\*\*What was asked against what exists:\*\*/);
@@ -130,8 +131,8 @@ test("the audit compares the project with the request and checks its own claims"
 
 // Sample 06, debug round: asked to "find what is missing or broken", neither run used the audit and both left its confirmed bugs in place.
 test("an open-ended 'find what is broken' request starts with the audit", () => {
-  const router = fs.readFileSync(path.join(root, ".agents", "router-rule.md"), "utf8");
-  const bugs = fs.readFileSync(path.join(root, ".agents", "workflows", "bug-investigation.md"), "utf8");
+  const router = readKitFile(path.join(root, ".agents", "router-rule.md"));
+  const bugs = readKitFile(path.join(root, ".agents", "workflows", "bug-investigation.md"));
   assert.match(router, /find what is missing or broken in existing code, with no single symptom/);
   assert.match(router, /starts `audit`/);
   assert.match(bugs, /No single symptom\?/);
@@ -142,7 +143,7 @@ test("an open-ended 'find what is broken' request starts with the audit", () => 
 // After Sample 06, a user found the main job (editing text) broken in ways every build's own tests missed:
 // the checks were written from the builder's assumptions, on inputs it made itself. One ladder, any model.
 test("testing-and-code-review checks the main task like the user, for any model", () => {
-  const skill = fs.readFileSync(path.join(root, ".agents", "skills", "testing-and-code-review", "SKILL.md"), "utf8");
+  const skill = readKitFile(path.join(root, ".agents", "skills", "testing-and-code-review", "SKILL.md"));
   assert.match(skill, /## Check it like the user/);
   assert.match(skill, /not from how the code happens to work/);
   assert.match(skill, /at least one hard input from the user's world/);
@@ -159,19 +160,19 @@ test("testing-and-code-review checks the main task like the user, for any model"
 });
 
 test("planning, scorecard, core rules, audit, design and debugging all use the same check", () => {
-  const plan = fs.readFileSync(path.join(root, ".agents", "workflows", "new-project.md"), "utf8");
+  const plan = readKitFile(path.join(root, ".agents", "workflows", "new-project.md"));
   assert.match(plan, /their main task as they would do it, in 3 to 6 steps in their words, each with a concrete input and the result they expect/);
   assert.match(plan, /confirmed by the user or marked assumed/);
   assert.match(plan, /with one line on how each behaves in X/);
   assert.match(plan, /\*\*Checked like the user\.\*\*/);
   assert.match(plan, /nothing collapsed, cut off, overflowing or changed that the user did not change/);
   for (const tier of ["lite", "standard", "full"]) {
-    const core = fs.readFileSync(path.join(root, ".agents", tier, "CORE.md"), "utf8");
+    const core = readKitFile(path.join(root, ".agents", tier, "CORE.md"));
     assert.match(core, /title, goal, users, main task steps with expected results/, tier);
     assert.match(core, /Checks per main step \(read, script run, image really read, or steps left for the user\)/, tier);
   }
   for (const file of [".agents/workflows/audit.md", ".agents/skills/design-taste-discovery/SKILL.md", ".agents/workflows/bug-investigation.md", ".agents/workflows/new-project.md"]) {
-    assert.match(fs.readFileSync(path.join(root, file), "utf8"), /"Check it like the user"/, file);
+    assert.match(readKitFile(path.join(root, file)), /"Check it like the user"/, file);
   }
 });
 
@@ -185,7 +186,7 @@ test("the project card notes a missing main task without failing the check", () 
   fs.writeFileSync(path.join(dir, "package.json"), "{}");
   const run = (args) => require("node:child_process").spawnSync(process.execPath, args, { cwd: dir, encoding: "utf8" });
   run([path.join(root, "scripts", "uca-project-discover.cjs"), "--write", "PROJECT.md"]);
-  const card = fs.readFileSync(path.join(dir, "PROJECT.md"), "utf8");
+  const card = readKitFile(path.join(dir, "PROJECT.md"));
   assert.match(card, /## Project brief \(the user's words; not generated\)\n- Not recorded yet/);
   assert.ok(card.indexOf("## Project brief") > card.lastIndexOf("<!-- /uca:generated -->"), "the main task sits outside the generated blocks");
   const checked = run([path.join(root, "scripts", "uca-project-check.cjs")]);
@@ -194,36 +195,36 @@ test("the project card notes a missing main task without failing the check", () 
 });
 
 test("a new project starts from a drafted brief, and attached documents or images are the spec", () => {
-  const plan = fs.readFileSync(path.join(root, ".agents", "workflows", "new-project.md"), "utf8");
+  const plan = readKitFile(path.join(root, ".agents", "workflows", "new-project.md"));
   assert.match(plan, /\*\*Project brief first\*\* \(an empty folder, or no clear direction\): draft four short lines yourself, each marked assumed: title, description \(one sentence\), goal/);
   assert.match(plan, /The user edits what is wrong; "go ahead" accepts them/);
   assert.match(plan, /\*\*Attached documents or images are the spec:\*\*/);
   assert.match(plan, /naming where each point came from/);
   assert.match(plan, /Plan the whole documented scope and build it slice by slice to the end/);
   assert.match(plan, /If you cannot read an image, say so and ask for a short description; never guess from its name/);
-  const skill = fs.readFileSync(path.join(root, ".agents", "skills", "testing-and-code-review", "SKILL.md"), "utf8");
+  const skill = readKitFile(path.join(root, ".agents", "skills", "testing-and-code-review", "SKILL.md"));
   assert.match(skill, /one Checks line per step as `step \| level \| result`/);
-  const template = fs.readFileSync(path.join(root, ".agents", "PROJECT-TEMPLATE.md"), "utf8");
+  const template = readKitFile(path.join(root, ".agents", "PROJECT-TEMPLATE.md"));
   for (const key of ["- title:", "- description:", "- goal:", "- task:"]) assert.ok(template.includes(key), key);
 });
 
 test("skill-gap-router is installed but no longer read on every task", () => {
-  const rule = fs.readFileSync(path.join(root, ".agents", "router-rule.md"), "utf8");
+  const rule = readKitFile(path.join(root, ".agents", "router-rule.md"));
   assert.match(rule, /\*\*Guardrails are always on\*\* \(`anti-ai-slop`, `anti-hallucination`\)/);
   assert.match(rule, /`skill-gap-router` is read only for the "Unclear, or spans many areas" row or a missing capability/);
   assert.match(rule, /search for outside skills only when the user asks; never install or run third-party skills or scripts without showing their contents and getting a yes/);
   const { GUARDRAILS } = require(path.join(root, "scripts", "uca-route.cjs"));
   assert.deepEqual(GUARDRAILS, ["anti-ai-slop", "anti-hallucination"]);
-  const profiles = JSON.parse(fs.readFileSync(path.join(root, ".agents", "profiles", "profiles.json"), "utf8"));
+  const profiles = JSON.parse(readKitFile(path.join(root, ".agents", "profiles", "profiles.json")));
   assert.ok(JSON.stringify(profiles).includes("skill-gap-router"), "still installed by the profiles");
 });
 
 // A user's snake-game test: the build with the kit was plainer, with fewer of the extras players expect.
 test("anti-slop cuts code, not the extras users expect, and new projects list those extras", () => {
-  const slop = fs.readFileSync(path.join(root, ".agents", "skills", "anti-ai-slop", "SKILL.md"), "utf8");
+  const slop = readKitFile(path.join(root, ".agents", "skills", "anti-ai-slop", "SKILL.md"));
   assert.match(slop, /These rules cut needless code, not features/);
   assert.match(slop, /never drop one to make the diff smaller/);
-  const plan = fs.readFileSync(path.join(root, ".agents", "workflows", "new-project.md"), "utf8");
+  const plan = readKitFile(path.join(root, ".agents", "workflows", "new-project.md"));
   assert.match(plan, /3 to 5 small extras a user of this kind of product would expect/);
   assert.match(plan, /each marked in or out/);
   assert.match(plan, /In an empty folder, skip R-PROJECT's discovery script/);

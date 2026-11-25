@@ -4,11 +4,12 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { readWithParts: readKitFile } = require("../scripts/uca-read.cjs");
 
 const root = path.resolve(__dirname, "..");
 
 function read(relativePath) {
-  return fs.readFileSync(path.join(root, relativePath), "utf8");
+  return readKitFile(path.join(root, relativePath));
 }
 
 test("stack migration workflow requires evidence, comparison, and scope definition", () => {

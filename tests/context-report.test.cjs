@@ -69,8 +69,11 @@ test("standard and full report four task paths, each lighter than reading the sa
     for (const task of ["bug", "feature", "newApp", "audit"]) {
       const p = rows[tier].taskPaths[task];
       assert.ok(p.readFirst > rows[tier].alwaysOnTokens && p.readFirst <= p.wholeFiles, `${tier} ${task}`);
+      assert.ok(p.readFirst <= p.noNode && p.noNode <= p.wholeFiles, `${tier} ${task}: without Node, a model opens no more than the files read whole`);
     }
     assert.equal(rows[tier].newAppTask, rows[tier].taskPaths.newApp.readFirst);
+    // Split files: without Node, the new-app path opens only the parts that hold its sections.
+    assert.ok(rows[tier].taskPaths.newApp.noNode < 0.8 * rows[tier].taskPaths.newApp.wholeFiles, `${tier}: new app without Node`);
   }
   assert.equal(rows.lite.taskPaths, null, "lite installs no workflows");
 });

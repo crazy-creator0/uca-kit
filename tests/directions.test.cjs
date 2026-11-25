@@ -4,14 +4,16 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { readWithParts: readKitFile } = require("../scripts/uca-read.cjs");
 
 const root = path.join(__dirname, "..");
-const text = fs.readFileSync(path.join(root, ".agents", "skills", "design-taste-discovery", "directions.md"), "utf8");
+const text = readKitFile(path.join(root, ".agents", "skills", "design-taste-discovery", "directions.md"));
 const FIELDS = ["Fits", "Type", "Color", "Shape", "Layout", "Signature idea", "Motion", "Avoid"];
 const GENERIC = new Set(["inter", "system-ui", "roboto", "arial", "helvetica", "sans-serif"]);
 
 function parse(source) {
-  return source.split(/^## /m).slice(1).map((block) => {
+  // "Parts" is the index of direction files, not a direction.
+  return source.split(/^## /m).slice(1).filter((block) => !block.startsWith("Parts\n")).map((block) => {
     const lines = block.split("\n");
     const fields = {};
     for (const line of lines.slice(1)) {
@@ -56,7 +58,7 @@ test("every direction gives real hex values and at least one named, non-default 
 test("the library tells the model to adapt a direction and never use it unchanged", () => {
   assert.match(text, /Using a direction unchanged is a failure of the brief/);
   assert.match(text, /signature element, and one deliberate departure/);
-  const skill = fs.readFileSync(path.join(root, ".agents", "skills", "design-taste-discovery", "SKILL.md"), "utf8");
+  const skill = readKitFile(path.join(root, ".agents", "skills", "design-taste-discovery", "SKILL.md"));
   assert.match(skill, /list the directions in `\.agents\/skills\/design-taste-discovery\/directions\.md`[^\n]*shortlist two that fit the domain/);
   assert.match(skill, /Never use a direction unchanged/);
   assert.match(skill, /Save the accepted brief as `DESIGN\.md`/);
