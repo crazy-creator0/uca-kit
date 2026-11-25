@@ -185,3 +185,21 @@ test("every section a workflow or skill points to exists, so a --section read fi
     assert.ok(plan.includes(skill) && plan.includes(heading), `new-project no longer points to ${skill} "${heading}"; update this list`);
   }
 });
+
+test("R-PROJECT applies to existing or ongoing projects, in the same words in every tier", () => {
+  for (const tier of ["lite", "standard", "full"]) {
+    assert.match(read(`.agents/${tier}/CORE.md`), /^- \*\*R-PROJECT\*\* — Existing or ongoing project: read PROJECT\.md/m, tier);
+  }
+});
+
+test("there is one finishing report, and a small build skips the heavy finish", () => {
+  assert.match(read(".agents/skills/anti-hallucination/SKILL.md"), /## Completion report\nReport with R-FINISH/);
+  assert.match(read(".agents/skills/anti-ai-slop/SKILL.md"), /## Completion\nReport with R-FINISH/);
+  const plan = read(".agents/workflows/new-project.md");
+  assert.match(plan, /\*\*A small build\*\* \(as in "Size the plan first"\) walks items 4 to 9 below/);
+  assert.match(plan, /no README, \.env\.example, readiness run, scorecard or deliverables list unless the user asked for them/);
+  assert.match(plan, /## Deliverables \(medium or large build\)/);
+  // Checking the main task like the user and checking the request are never skipped.
+  const items = plan.slice(plan.indexOf("## Senior finish"));
+  for (const item of ["4. **Real states.**", "7. **Checked like the user.**", "9. **Does what was asked.**"]) assert.ok(items.includes(item), item);
+});

@@ -2,7 +2,7 @@
 
 Read `.agents/CORE.md` before every task and obey it.
 
-Skills live in `.agents/skills/<name>/SKILL.md`. Open the one that fits the task and read it first:
+Skills live in `.agents/skills/<name>/SKILL.md`. Read the one that fits the task first:
 - `debugging` for bugs and errors
 - `import-hygiene` for import errors and circular imports
 - `anti-hallucination` before claiming a file, API, command, or result exists or passed

@@ -49,4 +49,4 @@ For every new abstraction, dependency, file, or service, answer: Which requireme
 Follow existing patterns, keep diffs focused, preserve compatibility unless told otherwise, add meaningful regression tests, run relevant checks, and inspect the final diff.
 
 ## Completion
-Summarize behavior changed, why the solution is sufficient, tests actually run, and remaining limitations. Never call something production-ready without a defined scope and evidence.
+Report with R-FINISH in `.agents/CORE.md`, adding in one line why the change is enough. Never call something production-ready without a defined scope and evidence.
