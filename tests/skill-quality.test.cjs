@@ -4,10 +4,11 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { readWithParts: readKitFile } = require("../scripts/uca-read.cjs");
 
 const skillsDir = path.join(__dirname, "..", ".agents", "skills");
 const MAX_BYTES = 9000;
-const skills = fs.readdirSync(skillsDir).sort().map((name) => ({ name, text: fs.readFileSync(path.join(skillsDir, name, "SKILL.md"), "utf8") }));
+const skills = fs.readdirSync(skillsDir).sort().map((name) => ({ name, text: readKitFile(path.join(skillsDir, name, "SKILL.md")) }));
 
 function body(text) {
   return text.replace(/^---\n[\s\S]*?\n---\n/, "");
@@ -98,7 +99,7 @@ test("the Read first block comes before any other section", () => {
 });
 
 test("the router rule tells the model to read that block first", () => {
-  const rule = fs.readFileSync(path.join(__dirname, "..", ".agents", "router-rule.md"), "utf8");
+  const rule = readKitFile(path.join(__dirname, "..", ".agents", "router-rule.md"));
   assert.match(rule, /## Read first/);
 });
 
@@ -119,7 +120,7 @@ test("every skill description, full and lite, says when to use it", () => {
     for (const name of fs.readdirSync(dir)) {
       const file = path.join(dir, name, "SKILL.md");
       if (!fs.existsSync(file)) continue;
-      const description = (fs.readFileSync(file, "utf8").match(/^description: (.*)$/m) || [])[1] || "";
+      const description = (readKitFile(file).match(/^description: (.*)$/m) || [])[1] || "";
       if (!/^Use (when|for) /.test(description)) bad.push(path.relative(path.join(__dirname, ".."), file));
     }
   }

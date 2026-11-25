@@ -5,6 +5,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { readWithParts: readKitFile } = require("../scripts/uca-read.cjs");
 
 const {
   PLATFORM_ENTRIES,
@@ -100,10 +101,10 @@ function withFixture(run) {
 
 test("documents Git as optional and preserves local-first project workflow", () => {
   const root = path.join(__dirname, "..");
-  const instructions = fs.readFileSync(path.join(root, "AGENTS.md"), "utf8");
-  const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
-  const workflow = fs.readFileSync(path.join(root, ".agents/workflows/new-project.md"), "utf8");
-  const map = fs.readFileSync(path.join(root, "AGENT-SKILL-MAP.md"), "utf8");
+  const instructions = readKitFile(path.join(root, "AGENTS.md"));
+  const readme = readKitFile(path.join(root, "README.md"));
+  const workflow = readKitFile(path.join(root, ".agents/workflows/new-project.md"));
+  const map = readKitFile(path.join(root, "AGENT-SKILL-MAP.md"));
 
   assert.match(instructions, /Git is recommended, not mandatory for local work/i);
   assert.match(instructions, /ask before initializing a repository/i);
@@ -261,15 +262,15 @@ test("installs shared core and selected Cursor adapter", () => {
     });
     assert.equal(summary.errors, 0);
     assert.equal(
-      fs.readFileSync(path.join(projectRoot, "AGENTS.md"), "utf8"),
+      readKitFile(path.join(projectRoot, "AGENTS.md")),
       "template:AGENTS.md\n"
     );
     assert.equal(
-      fs.readFileSync(path.join(projectRoot, ".cursor/rules/universal-coding-agent-kit.mdc"), "utf8"),
+      readKitFile(path.join(projectRoot, ".cursor/rules/universal-coding-agent-kit.mdc")),
       "template:.cursor/rules/universal-coding-agent-kit.mdc\n"
     );
     assert.equal(
-      fs.readFileSync(path.join(projectRoot, ".agents/skills/language-engineering/SKILL.md"), "utf8"),
+      readKitFile(path.join(projectRoot, ".agents/skills/language-engineering/SKILL.md")),
       "template:.agents/skills/language-engineering/SKILL.md\n"
     );
     for (const relative of ["AGENT-SKILL-MAP.md", "HOST-CAPABILITY-FALLBACK.md", ".agents/workflows/stack-migration.md", "USAGE-PRIVACY.md", "scripts/uca-usage.cjs", ".cursor/agents/designer.md", ".cursor/agents/service-strategist.md"]) {
@@ -290,12 +291,12 @@ test("preserves existing files and same-name user skills while adding non-confli
     const summary = installKit({ packageRoot: kitRoot, projectRoot, platform: "generic" });
     assert.equal(summary.errors, 0);
     assert.equal(
-      fs.readFileSync(path.join(projectRoot, "AGENTS.md"), "utf8"),
+      readKitFile(path.join(projectRoot, "AGENTS.md")),
       "my existing rules\n"
     );
     assert.ok(summary.skipped >= 2);
     assert.equal(
-      fs.readFileSync(path.join(projectRoot, ".agents/skills/language-engineering/SKILL.md"), "utf8"),
+      readKitFile(path.join(projectRoot, ".agents/skills/language-engineering/SKILL.md")),
       "my custom language skill\n"
     );
     assert.ok(fs.existsSync(path.join(projectRoot, ".agents/workflows/new-project.md")));
@@ -322,7 +323,7 @@ test("detects conflicts without changing the project", () => {
     assert.ok(conflicts.includes(".agents/skills/language-engineering/SKILL.md"));
     assert.equal(fs.existsSync(path.join(projectRoot, ".agents/workflows/new-project.md")), false);
     assert.equal(
-      fs.readFileSync(path.join(projectRoot, "AGENTS.md"), "utf8"),
+      readKitFile(path.join(projectRoot, "AGENTS.md")),
       "user-owned instructions\n"
     );
   });
@@ -342,7 +343,7 @@ test("cancel on conflict leaves existing files intact and creates no UCA Kit fil
     assert.equal(summary.errors, 0);
     assert.deepEqual(fs.readdirSync(projectRoot), ["AGENTS.md"]);
     assert.equal(
-      fs.readFileSync(path.join(projectRoot, "AGENTS.md"), "utf8"),
+      readKitFile(path.join(projectRoot, "AGENTS.md")),
       "user-owned instructions\n"
     );
     assert.equal(fs.existsSync(path.join(projectRoot, ".agents/skills/language-engineering/SKILL.md")), false);
@@ -363,9 +364,9 @@ test("explicit conflict override replaces matching files but keeps unrelated use
 
     assert.equal(summary.errors, 0);
     assert.equal(summary.overwritten, 1);
-    assert.equal(fs.readFileSync(path.join(projectRoot, "AGENTS.md"), "utf8"), "template:AGENTS.md\n");
+    assert.equal(readKitFile(path.join(projectRoot, "AGENTS.md")), "template:AGENTS.md\n");
     assert.equal(
-      fs.readFileSync(path.join(projectRoot, ".agents/skills/my-custom-skill/SKILL.md"), "utf8"),
+      readKitFile(path.join(projectRoot, ".agents/skills/my-custom-skill/SKILL.md")),
       "my own skill\n"
     );
   });
@@ -383,7 +384,7 @@ test("force updates existing files explicitly", () => {
     assert.equal(summary.errors, 0);
     assert.equal(summary.overwritten, 1);
     assert.equal(
-      fs.readFileSync(path.join(projectRoot, "AGENTS.md"), "utf8"),
+      readKitFile(path.join(projectRoot, "AGENTS.md")),
       "template:AGENTS.md\n"
     );
   });
@@ -425,7 +426,7 @@ test("refuses to write through a symlinked directory", (t) => {
 
     const summary = installKit({ packageRoot: kitRoot, projectRoot, platform: "generic" });
     assert.ok(summary.errors > 0);
-    assert.equal(fs.readFileSync(sentinel, "utf8"), "keep private rules\\n");
+    assert.equal(readKitFile(sentinel), "keep private rules\\n");
   });
 });
 
@@ -457,7 +458,7 @@ test("Claude profile copies skills into the native skill directory", () => {
     assert.equal(summary.errors, 0);
     assert.ok(fs.existsSync(path.join(projectRoot, "CLAUDE.md")));
     assert.equal(
-      fs.readFileSync(path.join(projectRoot, ".claude/skills/language-engineering/SKILL.md"), "utf8"),
+      readKitFile(path.join(projectRoot, ".claude/skills/language-engineering/SKILL.md")),
       "template:.agents/skills/language-engineering/SKILL.md\n"
     );
   });

@@ -10,7 +10,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const ROOT = path.join(__dirname, "..");
-const { pick, resolve, withoutFrontmatter } = require("./uca-read.cjs");
+const { partFiles, pick, readWhole, resolve, sections, withoutFrontmatter } = require("./uca-read.cjs");
 // skill-gap-router is installed everywhere but read only for unclear or many-area tasks (router-rule step 7).
 const GUARDRAILS = ["anti-ai-slop", "anti-hallucination"];
 
@@ -37,7 +37,7 @@ const TASK_PATHS = {
 function partTokens([name, how]) {
   const file = resolve(name, path.join(ROOT, ".agents"));
   if (!file) throw new Error(`context report: no skill or workflow named ${name}`);
-  const body = withoutFrontmatter(readText(path.relative(ROOT, file)));
+  const body = readWhole(file, path.join(ROOT, ".agents"));
   const options = how === "full" ? { full: true } : how === "list" ? { list: true } : how === "read-first" ? {} : { section: how };
   const result = pick(body, options);
   if (!result.ok) throw new Error(`context report: ${name} has no section "${how}"`);
@@ -50,9 +50,27 @@ function wholeFileTokens(parts) {
   return names.reduce((total, name) => total + partTokens([name, "full"]), 0);
 }
 
+// The same task for a model without Node: it opens files, not sections. A Read first block costs the main file;
+// a section costs the file that holds it (the main file, or the part its Parts list names). Each file counts once.
+function fileFor([name, how]) {
+  const main = resolve(name, path.join(ROOT, ".agents"));
+  if (how === "read-first" || how === "full" || how === "list") return how === "full" ? [main, ...partFiles(withoutFrontmatter(fs.readFileSync(main, "utf8")), path.join(ROOT, ".agents"))] : [main];
+  const wanted = how.trim().toLowerCase();
+  const holder = [main, ...partFiles(withoutFrontmatter(fs.readFileSync(main, "utf8")), path.join(ROOT, ".agents"))]
+    .find((file) => sections(withoutFrontmatter(fs.readFileSync(file, "utf8"))).some((item) => item.heading.toLowerCase().startsWith(wanted)));
+  if (!holder) throw new Error(`context report: ${name} has no section "${how}"`);
+  return [holder];
+}
+
+function noNodeTokens(parts) {
+  const files = [...new Set(parts.flatMap(fileFor))];
+  return files.reduce((total, file) => total + estimateTokens(withoutFrontmatter(fs.readFileSync(file, "utf8"))), 0);
+}
+
 function taskPaths(alwaysOn) {
   return Object.fromEntries(Object.entries(TASK_PATHS).map(([task, parts]) => [task, {
     readFirst: alwaysOn + parts.reduce((total, part) => total + partTokens(part), 0),
+    noNode: alwaysOn + noNodeTokens(parts),
     wholeFiles: alwaysOn + wholeFileTokens(parts)
   }]));
 }
@@ -60,6 +78,12 @@ const MIN_DUPLICATE_LENGTH = 25;
 
 const estimateTokens = (text) => Math.ceil(text.length / 4);
 const readText = (relative) => fs.readFileSync(path.join(ROOT, relative), "utf8");
+// A file as it sits on disk (frontmatter included, as hosts load it), plus every part its Parts list names.
+const withParts = (relative) => {
+  const text = readText(relative);
+  const parts = partFiles(withoutFrontmatter(text), path.join(ROOT, ".agents"));
+  return [text, ...parts.map((part) => fs.readFileSync(part, "utf8"))].join("\n\n");
+};
 const exists = (relative) => fs.existsSync(path.join(ROOT, relative));
 
 function skillNames(tier) {
@@ -108,7 +132,8 @@ function measureTier(name, tier) {
   });
   const skills = skillNames(tier).map((skill) => {
     const file = path.posix.join(tier.skillsRoot, skill, "SKILL.md");
-    const text = readText(file);
+    // A skill split into parts counts whole: the main file plus every part its Parts list names.
+    const text = withParts(file);
     files[file] = text;
     return { skill, file, tokens: estimateTokens(text), guardrail: GUARDRAILS.includes(skill) };
   });
@@ -123,7 +148,7 @@ function measureTier(name, tier) {
   const duplicates = duplicateOverhead(files);
   // Workflow tasks load a workflow file plus their skills; the two largest real paths are reported on their own.
   const skillTokens = (name) => (skills.find((skill) => skill.skill === name) || { tokens: 0 }).tokens;
-  const workflow = (name) => (tier.extras && exists(`.agents/workflows/${name}.md`) ? estimateTokens(readText(`.agents/workflows/${name}.md`)) : 0);
+  const workflow = (name) => (tier.extras && exists(`.agents/workflows/${name}.md`) ? estimateTokens(withParts(`.agents/workflows/${name}.md`)) : 0);
   // Standard and full: guardrail lines and the Route table are in CORE, so a clear task reads CORE plus the skill's
   // Read first block. Lite has no router and reads its short guardrail skills.
   const paths = tier.extras ? taskPaths(sum(alwaysOn)) : null;
@@ -190,11 +215,12 @@ function main(argv = process.argv.slice(2)) {
   }
   console.log("\nTypical task: lite = always on + its guardrail skills + a median skill; standard and full = always on (CORE carries the guardrail lines and the Route table) + a median skill's Read first block.");
   console.log("Worst case = always on + guardrail files + router + the two largest task skills read whole (an unclear task that opens everything).");
-  console.log("\nPer task (standard and full): what the instructions ask / the same files read whole.");
+  console.log("\nPer task (standard and full): what the instructions ask / the files that hold it, opened whole (no Node) / every file it touches, read whole.");
   for (const row of rows) {
     if (!row.taskPaths) continue;
     const p = row.taskPaths;
-    console.log(`${row.tier}: bug ${p.bug.readFirst} / ${p.bug.wholeFiles}; feature ${p.feature.readFirst} / ${p.feature.wholeFiles}; new app with a screen ${p.newApp.readFirst} / ${p.newApp.wholeFiles}; audit ${p.audit.readFirst} / ${p.audit.wholeFiles}`);
+    const cell = (item) => `${item.readFirst} / ${item.noNode} / ${item.wholeFiles}`;
+    console.log(`${row.tier}: bug ${cell(p.bug)}; feature ${cell(p.feature)}; new app with a screen ${cell(p.newApp)}; audit ${cell(p.audit)}`);
   }
   console.log("Whether a model stops at a Read first block or a section is not measured here; evaluation runs with read logs show it.");
   console.log("Task success per token: not measured. It needs the benchmark runs.");

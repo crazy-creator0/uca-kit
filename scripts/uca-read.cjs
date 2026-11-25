@@ -15,9 +15,27 @@ const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/;
 function resolve(name, agentsDir = AGENTS_DIR) {
   if (!NAME.test(name)) return null;
   const candidates = name.includes("/")
-    ? [path.join(agentsDir, "skills", ...name.split("/")) + ".md"]
+    ? [path.join(agentsDir, "skills", ...name.split("/")) + ".md", path.join(agentsDir, "workflows", ...name.split("/")) + ".md"]
     : [path.join(agentsDir, "skills", name, "SKILL.md"), path.join(agentsDir, "workflows", `${name}.md`)];
   return candidates.find((file) => fs.existsSync(file) && fs.statSync(file).isFile()) || null;
+}
+
+// A large skill or workflow keeps its Read first block in the main file and lists its other sections, each with
+// its own file, under "## Parts". Only files inside the kit's .agents folder are followed.
+function partFiles(body, agentsDir = AGENTS_DIR) {
+  const parts = sections(body).find((item) => item.heading === "Parts");
+  if (!parts) return [];
+  const root = path.resolve(agentsDir);
+  return [...parts.text.matchAll(/`(\.agents\/[^`]+\.md)`/g)]
+    .map((match) => path.resolve(path.dirname(root), match[1]))
+    .filter((file) => file.startsWith(root + path.sep) && fs.existsSync(file) && fs.statSync(file).isFile());
+}
+
+// The whole skill or workflow: the main file, then each part in the order its Parts list gives.
+function readWhole(file, agentsDir = AGENTS_DIR) {
+  const body = withoutFrontmatter(fs.readFileSync(file, "utf8"));
+  const parts = partFiles(body, agentsDir).map((part) => withoutFrontmatter(fs.readFileSync(part, "utf8")));
+  return [body, ...parts].join("\n\n");
 }
 
 function withoutFrontmatter(text) {
@@ -145,7 +163,7 @@ function main(argv = process.argv.slice(2), { agentsDir = AGENTS_DIR, out = cons
     err(`Error: no skill or workflow named "${options.name}".`);
     return 1;
   }
-  const result = pick(withoutFrontmatter(fs.readFileSync(file, "utf8")), options);
+  const result = pick(readWhole(file, agentsDir), options);
   if (!result.ok) {
     err(`Error: ${result.text}`);
     return 1;
@@ -158,4 +176,16 @@ function main(argv = process.argv.slice(2), { agentsDir = AGENTS_DIR, out = cons
 
 if (require.main === module) process.exitCode = main();
 
-module.exports = { main, pick, resolve, sections, withoutFrontmatter };
+// For checks and reports: a file as it sits on disk, followed by its parts as they sit on disk. Works on an
+// installed copy too: the kit folder is the nearest ".agents" above the file.
+function readWithParts(file) {
+  const text = fs.readFileSync(file, "utf8");
+  if (!file.endsWith(".md")) return text;
+  let dir = path.dirname(path.resolve(file));
+  while (path.basename(dir) !== ".agents" && path.dirname(dir) !== dir) dir = path.dirname(dir);
+  if (path.basename(dir) !== ".agents") return text;
+  const parts = partFiles(withoutFrontmatter(text), dir);
+  return [text, ...parts.map((part) => fs.readFileSync(part, "utf8"))].join("\n\n");
+}
+
+module.exports = { main, partFiles, pick, readWhole, readWithParts, resolve, sections, withoutFrontmatter };

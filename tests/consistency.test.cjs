@@ -3,10 +3,11 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { readWithParts: readKitFile } = require("../scripts/uca-read.cjs");
 
 const root = path.resolve(__dirname, "..");
 const skillsDir = path.join(root, ".agents", "skills");
-const read = (p) => fs.readFileSync(path.join(root, p), "utf8");
+const read = (p) => readKitFile(path.join(root, p));
 const skills = fs.readdirSync(skillsDir).filter((n) => fs.statSync(path.join(skillsDir, n)).isDirectory());
 
 function textFiles(dir, out = []) {
@@ -94,9 +95,9 @@ test("publishing docs point at the same repository as package.json", () => {
 // The hand-offs between the planning workflow and the skills it names must point at things that exist and say the same thing.
 test("new-project hands off to the design and front-end skills, and each hand-off target exists", () => {
   const root = path.join(__dirname, "..");
-  const workflow = fs.readFileSync(path.join(root, ".agents", "workflows", "new-project.md"), "utf8");
-  const frontend = fs.readFileSync(path.join(root, ".agents", "skills", "frontend-engineering", "SKILL.md"), "utf8");
-  const design = fs.readFileSync(path.join(root, ".agents", "skills", "design-taste-discovery", "SKILL.md"), "utf8");
+  const workflow = readKitFile(path.join(root, ".agents", "workflows", "new-project.md"));
+  const frontend = readKitFile(path.join(root, ".agents", "skills", "frontend-engineering", "SKILL.md"));
+  const design = readKitFile(path.join(root, ".agents", "skills", "design-taste-discovery", "SKILL.md"));
   assert.match(workflow, /## Size the plan first/);
   assert.match(workflow, /\*\*Plan block/);
   assert.match(workflow, /`design-taste-discovery` Step 1/);
@@ -113,8 +114,8 @@ test("new-project hands off to the design and front-end skills, and each hand-of
   assert.ok(fs.existsSync(path.join(root, "scripts", "uca-design-check.cjs")));
   // Every skill name in backticks inside a workflow is a real skill.
   const skills = new Set(fs.readdirSync(path.join(root, ".agents", "skills")));
-  for (const file of fs.readdirSync(path.join(root, ".agents", "workflows"))) {
-    const text = fs.readFileSync(path.join(root, ".agents", "workflows", file), "utf8");
+  for (const file of fs.readdirSync(path.join(root, ".agents", "workflows")).filter((name) => name.endsWith(".md"))) {
+    const text = readKitFile(path.join(root, ".agents", "workflows", file));
     for (const [, name] of text.matchAll(/`([a-z0-9]+(?:-[a-z0-9]+)+)`/g)) {
       if (/-(engineering|review|hallucination|slop|discovery|router|hygiene|api|operations|analytics|3d)$/.test(name)) assert.ok(skills.has(name), `${file} names ${name}, which is not a skill`);
     }

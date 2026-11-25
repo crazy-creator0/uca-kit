@@ -4,13 +4,14 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { readWithParts: readKitFile } = require("../scripts/uca-read.cjs");
 
 const skillPath = path.resolve(__dirname, "../.agents/skills/design-taste-discovery/SKILL.md");
-const skill = fs.readFileSync(skillPath, "utf8");
+const skill = readKitFile(skillPath);
 // Detail moved into reference files that load only when a step points to them (to keep SKILL.md small).
 // Rules that moved are checked in the skill together with those files.
-const review = fs.readFileSync(path.join(path.dirname(skillPath), "review.md"), "utf8");
-const techniques = fs.readFileSync(path.join(path.dirname(skillPath), "techniques.md"), "utf8");
+const review = readKitFile(path.join(path.dirname(skillPath), "review.md"));
+const techniques = readKitFile(path.join(path.dirname(skillPath), "techniques.md"));
 const withRefs = `${skill}\n${review}\n${techniques}`;
 
 test("design taste skill has valid metadata and relevant activation scope", () => {
@@ -26,7 +27,7 @@ test("skill warns against generic AI-generated UI patterns without banning style
 });
 
 test("skill treats advanced motion as a first-class design goal, with the detail in motion.md", () => {
-  const motion = fs.readFileSync(path.join(path.dirname(skillPath), "motion.md"), "utf8");
+  const motion = readKitFile(path.join(path.dirname(skillPath), "motion.md"));
   assert.match(skill, /## Step 6 — design intentional, distinctive motion when requested/);
   assert.match(skill, /page transitions/);
   assert.match(skill, /follow `\.agents\/skills\/design-taste-discovery\/motion\.md`/);
@@ -56,7 +57,7 @@ test("skill keeps design choices intentional rather than equating minimalism wit
 });
 
 test("the design skill makes the model learn the domain and use real data before choosing a look", () => {
-  const skill = fs.readFileSync(path.join(__dirname, "..", ".agents", "skills", "design-taste-discovery", "SKILL.md"), "utf8");
+  const skill = readKitFile(path.join(__dirname, "..", ".agents", "skills", "design-taste-discovery", "SKILL.md"));
   assert.match(skill, /## Step 1 — learn the domain/);
   assert.match(skill, /create a cafe management file/);
   assert.match(skill, /Real objects and states/);
