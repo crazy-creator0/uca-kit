@@ -14,6 +14,7 @@ This is the canonical core policy. Read `.agents/CORE.md` before every task and 
 Even from a one-line request such as "create a cafe management file", do not start coding. Follow R-NEW in `.agents/CORE.md`: open `.agents/workflows/new-project.md` and `.agents/skills/design-taste-discovery/SKILL.md`, show the plan block, then build.
 
 ## Evergreen guardrails
+Always on through their lines under "Guardrails" in `.agents/CORE.md`; open the full files only when those lines say so.
 - **anti-ai-slop** — prevent unnecessary abstractions, boilerplate, overengineering
 - **anti-hallucination** — ground claims in evidence, explicit uncertainty
 

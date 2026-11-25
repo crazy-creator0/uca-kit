@@ -9,7 +9,7 @@ Other files (`AGENTS.md`, `AGENT-SKILL-MAP.md`, platform adapters) point here. T
 4. **Add at most ONE companion skill**, and only when the task clearly crosses two areas (for example, login code inside an API: `backend-api` + `application-security`).
 5. **Say why in one line.** Tell the user which skills you chose and why. If the user names a skill or asks you to skip one, follow that instead, unless it would break a safety rule.
 6. **Open the file.** Read `.agents/skills/<name>/SKILL.md` before relying on it. Naming a skill is not loading it. If it starts with a `## Read first` block, read that block first; keep reading only when the task needs more than its "Must do" and "Done when" lines, or a "Read on only for" condition applies.
-7. **Guardrails are always on** (`anti-ai-slop`, `anti-hallucination`) and do not count toward the limit. `skill-gap-router` is read only for the "Unclear, or spans many areas" row or a missing capability.
+7. **Guardrails are always on** (`anti-ai-slop`, `anti-hallucination`) through their lines under "Guardrails" in `.agents/CORE.md`, and do not count toward the limit. Open a guardrail file only when its line there says so. `skill-gap-router` is read only for the "Unclear, or spans many areas" row or a missing capability.
 
 ## Intent table
 | The task is about… | Tag | Primary skill |
