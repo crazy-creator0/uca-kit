@@ -1,6 +1,6 @@
 ---
 name: design-taste-discovery
-description: Use when building or restyling a site, page, component, animation, canvas or 3D view where looks matter; learns the user's taste and commits to a specific brief first.
+description: Use when building or restyling a site, page, component, animation, canvas or 3D view where looks matter.
 metadata:
   domain: ui-design
   triggers: look and feel, style choice, make it beautiful, new UI
