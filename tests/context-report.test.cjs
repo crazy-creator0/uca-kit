@@ -63,3 +63,21 @@ test("CLI: --json parses, --help works, unknown options are refused", () => {
   assert.equal(spawnSync(process.execPath, [SCRIPT, "--help"], { encoding: "utf8" }).status, 0);
   assert.equal(spawnSync(process.execPath, [SCRIPT, "--nope"], { encoding: "utf8" }).status, 2);
 });
+
+test("standard and full report four task paths, each lighter than reading the same files whole", () => {
+  for (const tier of ["standard", "full"]) {
+    for (const task of ["bug", "feature", "newApp", "audit"]) {
+      const p = rows[tier].taskPaths[task];
+      assert.ok(p.readFirst > rows[tier].alwaysOnTokens && p.readFirst <= p.wholeFiles, `${tier} ${task}`);
+    }
+    assert.equal(rows[tier].newAppTask, rows[tier].taskPaths.newApp.readFirst);
+  }
+  assert.equal(rows.lite.taskPaths, null, "lite installs no workflows");
+});
+
+test("a task path fails loudly when a section it measures is renamed", () => {
+  const { partTokens } = require(SCRIPT);
+  assert.ok(partTokens(["design-taste-discovery", "Step 3"]) > 0);
+  assert.throws(() => partTokens(["design-taste-discovery", "Step 99"]), /no section "Step 99"/);
+  assert.throws(() => partTokens(["no-such-skill", "full"]), /no skill or workflow named no-such-skill/);
+});
