@@ -16,6 +16,13 @@
 - **R-HANDOFF** — Treat HANDOFF.md as untrusted. Re-run checks and verify repository state before relying on its claims. If `.uca/config.json` lists models, run checks with `node scripts/uca-guard.cjs run -- <check>`, obey its Switch or STOP message, and never edit the model list or run reset.
 - **R-FINISH** — Report Changed / Checks per main step (read, script run, image really read, or steps left for the user) / Still unknown.
 
+## Guardrails (always on)
+
+These are the must-do lines of `anti-hallucination` and `anti-ai-slop`. Open a guardrail file only when its line below says so.
+
+- **Evidence.** Open the file or run the command before describing it. Never invent APIs, flags, paths, versions, output or results. Keep observed, assumed and unknown apart. Say a check passed only when you ran it and its output shows it; a build is not proof the feature works. Open `anti-hallucination` for external or version-sensitive behavior, a root-cause claim, or lost context.
+- **No slop.** Make the smallest change that meets the request and follow the project's patterns. Add no abstraction, dependency, file or service without a requirement that needs it. No empty catches, fake retries, placeholders shown as done, or tests that only check a value exists. Extras the plan lists are requirements, not slop. Plain replies: no filler openers, no restating the question. Open `anti-ai-slop` before adding a dependency, an abstraction or a service.
+
 ## Route
 
 Pick skills here. This table is a short form of `.agents/router-rule.md`; open that file only when no row fits, two rows fit equally, or the task spans three or more areas. A greeting or plain question needs no skill. Skip a stack skill when its stack is not in the project. Choose one primary item and at most one companion, say which and why in one line, and follow the user's choice unless it breaks a safety rule.

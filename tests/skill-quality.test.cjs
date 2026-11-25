@@ -70,10 +70,10 @@ test("the design skill commits to concrete choices and ends with a pass/fail rev
 
 // Skills with a "Read first" block let a model decide early what to read. Checked here: the block exists,
 // is short, and carries the fields. Whether models obey it is a benchmark question, not tested here.
-// Every task skill opens with the block (it started as a pilot on four). The always-on guardrails (metadata
-// "priority: guardrail") are left out: they are read on every task, so a "stop here" line saves least there and
-// costs on every task. Lite keeps its own condensed skills.
-const READ_FIRST_PILOT = skills.filter((skill) => !/^\s*priority: guardrail\s*$/m.test(skill.text)).map((skill) => skill.name);
+// Every skill opens with the block (it started as a pilot on four). The guardrails have it too since their
+// must-do lines moved into the standard and full cores and the full files are opened only when needed.
+// Lite keeps its own condensed skills.
+const READ_FIRST_PILOT = skills.map((skill) => skill.name);
 const READ_FIRST_FIELDS = ["Use when:", "Not when:", "Must do:", "Done when:", "Stop here if:", "Read on only for:"];
 
 function readFirstBlock(text) {

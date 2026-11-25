@@ -11,6 +11,14 @@ metadata:
 
 # Anti-Hallucination Engineering
 
+## Read first
+Use when: describing external or version-sensitive behavior, claiming a root cause, or recovering lost context.
+Not when: an ordinary claim about a file you opened or a check you ran; the Evidence line in `.agents/CORE.md` covers it.
+Must do: Evidence, in the core's guardrails (`.agents/CORE.md`).
+Done when: every claim points to a file, a command's output or a source, and the unknowns are named.
+Stop here if: the Evidence line answers the question.
+Read on only for: "Context recovery", "Verification" or "Debugging language" when the task is one of those.
+
 ## Order of work
 1. Open the file or run the command before describing it.
 2. Label each claim as observed, assumed, or unknown.

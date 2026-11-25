@@ -11,6 +11,14 @@ metadata:
 
 # Anti-AI-Slop Engineering
 
+## Read first
+Use when: about to add a dependency, an abstraction, a new file or a service.
+Not when: a focused edit that follows the project's patterns; the No slop line in `.agents/CORE.md` covers it.
+Must do: No slop, in the core's guardrails (`.agents/CORE.md`); it sits there so every task reads it.
+Done when: each new dependency, abstraction, file or service passes the "Decision test" below.
+Stop here if: the change adds none of those.
+Read on only for: "Reject" and "Decision test" before adding one.
+
 Code quality means satisfying real requirements with understandable, verifiable code—not maximizing code volume or architectural complexity.
 
 These rules cut needless code, not features. The small extras a user of this kind of product expects (a best score and a sound switch in a game, undo in an editor, a clear empty state) are requirements once the plan lists them; build them simply, and never drop one to make the diff smaller.

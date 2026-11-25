@@ -82,3 +82,15 @@ test("the entry file sends the model to CORE first and to the router only when n
   assert.doesNotMatch(agents, /AGENT-SKILL-MAP\.md/, "the skill map is reference reading, not an every-task pointer");
   assert.doesNotMatch(agents, /skill-catalog\.md/, "the catalog is reference reading, not an every-task pointer");
 });
+
+test("the guardrails' must-do lines live in the standard and full cores, once", () => {
+  const standard = section(read(".agents/standard/CORE.md"), "Guardrails (always on)");
+  assert.ok(standard, "standard/CORE.md has no Guardrails section");
+  assert.equal(section(read(".agents/full/CORE.md"), "Guardrails (always on)"), standard);
+  assert.match(standard, /\*\*Evidence\.\*\*[^\n]*Open `anti-hallucination` for/);
+  assert.match(standard, /\*\*No slop\.\*\*[^\n]*Open `anti-ai-slop` before/);
+  // The guardrail files point at those lines instead of repeating them, so the duplicate-line check stays at zero.
+  assert.match(read(".agents/skills/anti-hallucination/SKILL.md"), /^Must do: Evidence, in the core's guardrails \(`\.agents\/CORE\.md`\)/m);
+  assert.match(read(".agents/skills/anti-ai-slop/SKILL.md"), /^Must do: No slop, in the core's guardrails \(`\.agents\/CORE\.md`\)/m);
+  assert.match(read(".agents/router-rule.md"), /through their lines under "Guardrails" in `\.agents\/CORE\.md`/);
+});
