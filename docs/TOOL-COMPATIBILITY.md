@@ -29,6 +29,15 @@ For every exact product/version and relevant plan/surface:
 6. Repeat after meaningful product updates; do not generalize one version's result to all versions.
 7. Mark unsupported or inconclusive checks **untested** or **unknown**, not supported.
 
+## Fixed cost per host
+
+`node scripts/uca-host-cost.cjs [--tier standard|lite|full]` installs the kit for each platform in a temporary folder and measures what the host is meant to load on every session: its entry files, `AGENTS.md` and `.agents/CORE.md`, and the names and descriptions of the skills in the folder it is meant to list. Every row says "intended, from install files, not run" until a person checks that host with the steps above and also records:
+
+- whether skills are listed by name and description only, or read whole, and which folder the host listed;
+- the context or token figure the host shows for an empty session with the kit, and without it.
+
+A checked host is added to `HOST_CHECKED` in that script with the version and date, in the same change that fills its row in the matrix.
+
 ## Reporting rule
 
 A path listed in this table means “candidate entry point to test,” not “guaranteed automatic loading.” Web search may depend on product, version, account/plan, extensions, connectors, or workspace policy. The agent must inspect actual host capabilities and use a documented fallback rather than inventing support.
