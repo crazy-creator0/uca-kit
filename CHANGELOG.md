@@ -6,9 +6,29 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 Nothing yet.
 
-## 0.3.6 (not yet released)
+## 0.3.7-pre.1 (2026-11-25)
 
-Cuts what the kit asks a model to read on every task, for every task type. Round 3 below measured it: the kit builds read less, but cost no less, and the protocol's rollback rule was triggered by a one-point snake drop. The release waits on the maintainer's decision.
+Pre-release. Instruction-only changes aimed at the extra work round 3 measured (more tool calls, a skipped user check, long closing messages, a stray bookkeeping read). Not measured yet: round 4 tests them.
+
+Changed
+- **R-LOOP**, same words in every tier: also stops after two failed tries at one step, and the handover reports facts, not guesses. The line is no longer than before; lite stays at 1,600 estimated tokens worst case.
+- **New project, Read first** names "Check it like the user" in `testing-and-code-review`, with the command that prints it. One round 3 kit build never opened that section and lost the snake point.
+- **New project, closing message** starts with the R-FINISH lines (Changed, Checks, Still unknown) and leaves out recaps of what the files show. A small build's closing is 300 words or less; Still unknown is never shortened to fit. Round 3 kit closings ran 601 to 1,054 words.
+- **Kit bookkeeping**: the standard and full cores say not to open files in `.uca/` unless a rule names one. Three of six round 3 kit builds read `.uca/manifest.json` (about 2,200 tokens). Lite unchanged.
+- Sizes, estimated tokens: lite 851 always on, 1,600 worst case (unchanged); standard always on 2,217 (was 2,200); new app with a screen 7,769 (was 7,636); bug 2,446 (was 2,429).
+
+Fixed
+- The 0.3.6 entry said "not yet released"; it was published on 2026-11-25.
+
+Checked before release
+- What ran: `node tests/verify.cjs` (7 checks, all passed) before each commit; uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, and a hand review of this release's diff.
+- Readiness: Gold, 25 of 26, unchanged; the one item to confirm is the orphan page `demo/docs/index.html`, also on 0.3.6. The audit check read 197 files with no findings.
+- Hand review: R-LOOP appears only in the three cores and matches word for word; found the stale 0.3.6 heading above and fixed it.
+- Not covered: whether models now make fewer tool calls or write shorter closings; that needs round 4.
+
+## 0.3.6 (2026-11-25)
+
+Cuts what the kit asks a model to read on every task, for every task type. Round 3 below measured it: the kit builds read less, but cost no less, and the protocol's rollback rule was triggered by a one-point snake drop. It was published as a release; 0.3.7 reworks the change linked to the lost point instead of rolling 0.3.6 back.
 
 Changed
 - **Route table in the core.** Standard and full pick a skill from a short table in `.agents/CORE.md`. `router-rule.md` stays the source of truth and is read only when no row fits, two rows fit equally, or the task spans three or more areas. `AGENTS.md` now sends the model to the core before every task, and no longer to the skill map and catalog. A test keeps the table in step with the router.
