@@ -1,0 +1,5 @@
+"Make me a simple app to run my small home bakery's orders."
+
+If you would normally ask questions, use these answers: I take 5 to 20 orders a week by WhatsApp, mostly cakes for birthdays; I use my phone; I am not technical.
+
+Build it with index.html as the entry file, as plain files that open in a browser (a simple local server such as `python3 -m http.server` is fine).

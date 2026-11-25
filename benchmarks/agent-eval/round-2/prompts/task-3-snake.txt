@@ -1,0 +1,33 @@
+Create a simple, fun, and visually appealing Snake Game using HTML, CSS, and JavaScript.
+
+Game Requirements
+Gameplay
+A snake moves continuously around a game board.
+The player controls the snake using arrow keys (↑ ↓ ← →).
+The snake grows longer whenever it eats food.
+The game ends if the snake hits a wall or its own body.
+Food should appear randomly on the game board.
+User Interface
+Create a clean, modern, and colorful design.
+Display the game title: "SNAKE GAME".
+Show the current score.
+Include a Start Game button.
+Include a Restart button.
+Display a Game Over message when the player loses.
+Add a Pause/Resume feature.
+Game Features
+Increase the snake's speed gradually as the score increases.
+Prevent the snake from immediately reversing direction.
+Make the game responsive for different screen sizes.
+Add simple sound effects when eating food and when the game ends.
+Design
+Use a dark background with a green snake and red food.
+Add smooth animations and rounded corners.
+Keep the interface simple and beginner-friendly.
+Technical Requirements
+Use pure HTML, CSS, and JavaScript.
+No external libraries or frameworks.
+Keep the code clean, organized, and easy to understand.
+Make sure the game works directly in a web browser.
+
+Goal: Build a fully playable, lightweight Snake Game with smooth controls, a scoring system, and an attractive user interface.
