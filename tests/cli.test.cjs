@@ -124,6 +124,7 @@ test("parses platform, directory, and safety flags", () => {
     tier: null,
     context: null,
     autoTier: false,
+    model: null,
     yes: false,
     force: false,
     dryRun: true,
@@ -499,4 +500,32 @@ test("Windsurf profile copies its own adapter, not the Devin adapter", () => {
     assert.ok(fs.existsSync(path.join(projectRoot, ".windsurf/rules/universal-coding-agent-kit.md")));
     assert.equal(fs.existsSync(path.join(projectRoot, ".devin/rules/universal-coding-agent-kit.md")), false);
   });
+});
+
+test("--model small, mid or large is a plain-words preset for --context, and an explicit --tier still wins", () => {
+  const cli = require("../bin/cli.cjs");
+  assert.deepEqual(cli.MODEL_CONTEXT, { small: 8000, mid: 32000, large: 128000 });
+  assert.equal(cli.parseArgs(["init", ".", "--model", "small"]).context, 8000);
+  assert.equal(cli.suggestTier(cli.parseArgs(["init", ".", "--model", "small"]).context), "lite");
+  assert.equal(cli.suggestTier(cli.parseArgs(["init", ".", "--model", "mid"]).context), "standard");
+  assert.equal(cli.suggestTier(cli.parseArgs(["init", ".", "--model", "large"]).context), "full");
+  assert.throws(() => cli.parseArgs(["init", ".", "--model", "huge"]), /--model requires one of: small, mid, large/);
+  assert.throws(() => cli.parseArgs(["init", ".", "--model", "mid", "--context", "9000"]), /Use --model or --context, not both/);
+  const options = cli.parseArgs(["init", ".", "--model", "small", "--auto-tier", "--tier", "full"]);
+  assert.equal(options.tier, "full", "--tier is kept as given");
+  assert.match(cli.printHelp(), /--model <size>\s+small, mid or large/);
+});
+
+test("--model with --auto-tier installs the suggested tier, and doctor reports it", () => {
+  const { spawnSync } = require("node:child_process");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "uca-model-"));
+  const cliPath = path.join(__dirname, "..", "bin", "cli.cjs");
+  const install = spawnSync(process.execPath, [cliPath, "init", dir, "--platform", "generic", "--model", "small", "--auto-tier"], { encoding: "utf8" });
+  assert.equal(install.status, 0, install.stderr);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, ".uca", "config.json"), "utf8")).tier, "lite");
+  const doctor = spawnSync(process.execPath, [cliPath, "doctor", dir], { encoding: "utf8" });
+  assert.match(doctor.stdout, /tier lite/);
+  const explicit = fs.mkdtempSync(path.join(os.tmpdir(), "uca-model-"));
+  spawnSync(process.execPath, [cliPath, "init", explicit, "--platform", "generic", "--model", "small", "--auto-tier", "--tier", "standard"], { encoding: "utf8" });
+  assert.equal(JSON.parse(fs.readFileSync(path.join(explicit, ".uca", "config.json"), "utf8")).tier, "standard");
 });
