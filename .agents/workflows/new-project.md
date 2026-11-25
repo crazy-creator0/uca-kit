@@ -6,7 +6,7 @@ Not when: a feature in a project that already has code (`feature-development`).
 Must do: read "Size the plan first" now; show the plan block before any code; build slice by slice with real data from the domain; check the main task like the user; never drop a feature the user named.
 Done when: the finish for the build's size is done, every plan item is marked Done or Left with a reason, and the closing message is truthful.
 Stop here if: the user only wants the plan; then "Size the plan first" is enough.
-Read on only for: "Intake" before asking questions or when documents or images are attached; "Steps" and "Senior finish" for a medium or large build.
+Read on only for: "Intake" before asking questions or when documents or images are attached; "Steps" before building; "Senior finish" before saying it is done.
 
 ## Goal
 Turn an idea into a small, verifiable, maintainable application without overengineering.
@@ -14,7 +14,7 @@ Turn an idea into a small, verifiable, maintainable application without overengi
 ## Size the plan first
 A small request (one file, one screen, one person using it, for example "create a cafe management file") gets a short plan, not an interview: write the plan block below in about six lines, state your assumptions, ask at most one question and only if a wrong guess would be costly, then build. A larger or riskier request gets the full steps and your plan is approved before you build.
 
-**Project brief first** (an empty folder, or no clear direction): draft four short lines yourself, each marked assumed: title, description (one sentence), goal (what "done" means for the user), and the main task below. The user edits what is wrong; "go ahead" accepts them. Keep them in PROJECT.md under "Project brief". In an empty folder, skip R-PROJECT's discovery script (there is no code to read yet): start PROJECT.md with the brief, and run discovery once the first slice exists.
+**Project brief first** (an empty folder, or no clear direction): draft four short lines yourself, each marked assumed: title, description (one sentence), goal (what "done" means for the user), and the main task below. The user edits what is wrong; "go ahead" accepts them. Keep them in PROJECT.md under "Project brief" when the project will go on past this session; for a small one-off build the brief in the plan is enough. In an empty folder, skip R-PROJECT's discovery script (there is no code to read yet): a kept PROJECT.md starts with the brief, and run discovery once the first slice exists.
 
 **Plan block (show it before any code):** who uses it; their main task as they would do it, in 3 to 6 steps in their words, each with a concrete input and the result they expect (one input hard: long, real-tool file, another language or the largest size), confirmed by the user or marked assumed; 3 to 5 small extras a user of this kind of product would expect (for a game: best score, sound on/off, a pause key), each marked in or out; the main objects and states; the stack decision (choice, why, cost, what would make you switch); the files you will create; the first slice; how you will check it.
 
@@ -39,11 +39,13 @@ Where a step names one section of a skill, read that section only: `node scripts
 6. Identify security boundaries and test strategy.
 7. Create a prioritized backlog; define a small MVP.
 8. Implement the first vertical slice end-to-end, with realistic data from the domain. For a screen, review it with `design-taste-discovery` Step 7 and run `node scripts/uca-design-check.cjs` on the UI files when it exists.
-9. Add tests and verify the slice. When `scripts/uca-readiness.cjs` is installed, run `node scripts/uca-readiness.cjs .` (it includes the Senior Bar, `scripts/uca-senior-check.cjs`, plus the audit and link checks), fix the failing basics that are in scope (README, .gitignore, .env.example, test command), and report the result honestly; it is a static checklist, not proof of quality.
-10. Document setup, decisions, and next milestone.
+9. Add tests and verify the slice. For a medium or large build, when `scripts/uca-readiness.cjs` is installed, run `node scripts/uca-readiness.cjs .` (it includes the Senior Bar, `scripts/uca-senior-check.cjs`, plus the audit and link checks), fix the failing basics that are in scope (README, .gitignore, .env.example, test command), and report the result honestly; it is a static checklist, not proof of quality.
+10. Medium or large build: document setup, decisions, and next milestone.
 11. Check whether the project is already under Git. If not, explain the benefits of Git and ask whether the user wants to initialize it; if they decline, continue locally without blocking project work.
 
 ## Senior finish: the scorecard
+Scale it to the build. **A small build** (as in "Size the plan first") walks items 4 to 9 below, fixes what they find, and reports with R-FINISH in a few lines: no README, .env.example, readiness run, scorecard or deliverables list unless the user asked for them. **A medium or large build** walks every item and ends with the scorecard.
+
 Do this once the first slice works, before you say it is done. Walk the list, fix what is in scope, and mark each line Done, Not applicable (say why) or Left (say why). Never mark a line Done without having looked at the file or run the command.
 
 1. **Runs from the README.** README says what it is and the exact steps to install and start it. Follow them yourself.
@@ -59,7 +61,7 @@ Do this once the first slice works, before you say it is done. Walk the list, fi
 
 Then give the user a scorecard of at most 12 lines in plain words: the readiness level and checks passed against the target, what is Done, what is Left and why, what you could not check (for example "not opened in a real browser"), and one next step. Do not call the project production-ready: say what was checked, not how good it is.
 
-## Deliverables
+## Deliverables (medium or large build)
 - Requirements and acceptance criteria.
 - The plan block, with the stack rationale and architecture sketch.
 - For a screen: the design brief and what the design check reported.

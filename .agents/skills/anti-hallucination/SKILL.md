@@ -46,4 +46,4 @@ If the conversation or prior session summary is incomplete, follow the root `AGE
 Rank hypotheses, explain what evidence would distinguish them, and avoid declaring a root cause before it is confirmed. Correct earlier claims when new evidence contradicts them.
 
 ## Completion report
-State what changed, commands/checks actually run, verified outcomes, remaining unknowns, and the next useful step.
+Report with R-FINISH in `.agents/CORE.md`: only checks you ran count as run, and every unknown is named.
