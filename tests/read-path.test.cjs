@@ -204,3 +204,26 @@ test("there is one finishing report, and a small build skips the heavy finish", 
   const items = plan.slice(plan.indexOf("## Senior finish"));
   for (const item of ["4. **Real states.**", "7. **Checked like the user.**", "9. **Does what was asked.**"]) assert.ok(items.includes(item), item);
 });
+
+test("uca-read logs to .uca/read-log.jsonl only when that file already exists", (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "uca-read-local-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  fs.cpSync(path.join(ROOT, ".agents", "workflows"), path.join(dir, ".agents", "workflows"), { recursive: true });
+  const agentsDir = path.join(dir, ".agents");
+  const saved = process.env.UCA_READ_LOG;
+  delete process.env.UCA_READ_LOG;
+  try {
+    const quiet = { agentsDir, out: () => {}, err: () => {} };
+    assert.equal(readMain(["audit"], quiet), 0);
+    assert.equal(fs.existsSync(path.join(dir, ".uca")), false, "no log and no folder are created by default");
+    fs.mkdirSync(path.join(dir, ".uca"));
+    fs.writeFileSync(path.join(dir, ".uca", "read-log.jsonl"), "");
+    assert.equal(readMain(["audit", "--section", "Limits"], quiet), 0);
+    const entry = JSON.parse(fs.readFileSync(path.join(dir, ".uca", "read-log.jsonl"), "utf8"));
+    assert.equal(entry.name, "audit");
+    assert.equal(entry.part, "section:Limits");
+    assert.equal(entry.project, path.basename(dir));
+  } finally {
+    if (saved === undefined) delete process.env.UCA_READ_LOG; else process.env.UCA_READ_LOG = saved;
+  }
+});

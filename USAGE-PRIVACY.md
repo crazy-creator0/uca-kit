@@ -26,7 +26,7 @@
 Two logs exist for measuring what the kit costs per step. Both stay on your machine, are written only when you set the variable, and never hold prompts, replies or file contents.
 
 - `UCA_USAGE_STEPS=<file>` (OpenCode plugin): one line per finished assistant message with its token counts (input, output, reasoning, cache read and write, estimated cost), and one line per tool call that opens a kit file, naming only the kit part of the path (from `.agents/` on) or the arguments of a `scripts/uca-read.cjs` call. Other files and commands are not logged. Simulated in tests; not yet tried in a real OpenCode session.
-- `UCA_READ_LOG=<file>` (`scripts/uca-read.cjs`): one line per read with the time, the kit's folder name, the skill or workflow name, which part was printed and its estimated tokens.
+- `UCA_READ_LOG=<file>`, or an empty `.uca/read-log.jsonl` you create in the project (`scripts/uca-read.cjs`; it never creates the file): one line per read with the time, the kit's folder name, the skill or workflow name, which part was printed and its estimated tokens.
 
 ## Commands
 

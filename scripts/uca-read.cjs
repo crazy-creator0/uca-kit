@@ -76,8 +76,16 @@ function estimateTokens(text) {
 }
 
 // Optional measurement for evaluations: one JSON line per read, with the name, section and size, never the text.
-function logRead(entry) {
-  const file = process.env.UCA_READ_LOG;
+// Off unless UCA_READ_LOG names a file, or the file .uca/read-log.jsonl already exists in the project
+// (an evaluation creates it empty before a run; this script never creates it).
+function logTarget(agentsDir) {
+  if (process.env.UCA_READ_LOG) return process.env.UCA_READ_LOG;
+  const local = path.join(path.dirname(agentsDir), ".uca", "read-log.jsonl");
+  return fs.existsSync(local) ? local : null;
+}
+
+function logRead(entry, agentsDir) {
+  const file = logTarget(agentsDir);
   if (!file) return;
   try {
     fs.appendFileSync(file, `${JSON.stringify(entry)}\n`, "utf8");
@@ -97,7 +105,8 @@ Usage:
 
 <name> is a skill (debugging), a workflow (new-project) or a skill's reference file
 (design-taste-discovery/directions). Paths are not accepted.
-Set UCA_READ_LOG to a file to log each read's name, section and estimated tokens (no text).
+Set UCA_READ_LOG to a file, or create an empty .uca/read-log.jsonl in the project, to log each
+read's name, section and estimated tokens (no text). Off by default.
 `;
 }
 
@@ -143,7 +152,7 @@ function main(argv = process.argv.slice(2), { agentsDir = AGENTS_DIR, out = cons
   }
   out(result.text);
   // "project" is the name of the folder the kit is installed in, so runs side by side can be told apart.
-  logRead({ time: new Date().toISOString(), project: path.basename(path.dirname(agentsDir)), name: options.name, part: options.section ? `section:${options.section}` : options.full ? "full" : options.list ? "list" : "read-first", tokens: estimateTokens(result.text) });
+  logRead({ time: new Date().toISOString(), project: path.basename(path.dirname(agentsDir)), name: options.name, part: options.section ? `section:${options.section}` : options.full ? "full" : options.list ? "list" : "read-first", tokens: estimateTokens(result.text) }, agentsDir);
   return 0;
 }
 
