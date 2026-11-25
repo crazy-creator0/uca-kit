@@ -87,4 +87,4 @@ Round 1 could not separate the arms: every build scored 29 or 30 of 30. Round 2 
 3. A start time after your usage limit resets.
 
 ## Deviations
-None yet.
+None. Results are in `RESULTS.md`.
