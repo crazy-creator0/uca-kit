@@ -6,6 +6,36 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 Nothing yet.
 
+## 0.3.6 (not yet released)
+
+Cuts what the kit asks a model to read on every task, for every task type. Round 3 below measured it: the kit builds read less, but cost no less, and the protocol's rollback rule was triggered by a one-point snake drop. The release waits on the maintainer's decision.
+
+Changed
+- **Route table in the core.** Standard and full pick a skill from a short table in `.agents/CORE.md`. `router-rule.md` stays the source of truth and is read only when no row fits, two rows fit equally, or the task spans three or more areas. `AGENTS.md` now sends the model to the core before every task, and no longer to the skill map and catalog. A test keeps the table in step with the router.
+- **Guardrail lines in the core.** The must-do lines of `anti-hallucination` and `anti-ai-slop` are in the standard and full cores. The full files open only when those lines say so; both now start with a Read first block.
+- **Removed the repeated "Expanded guidance"** from the standard and full cores. Its one unique line moved to the PROJECT.md template.
+- **Read in parts.** `new-project`, `audit` and `stack-migration` open with a Read first block. A new read-only helper, `scripts/uca-read.cjs` (standard and full), prints a skill's or workflow's Read first block, one section, or each heading with its first line. It takes names, never paths. A pointer to one section of a skill now means that section only, and the design step lists the directions before reading the two it shortlists.
+- **R-PROJECT** applies to an existing or ongoing project, in the same words in every tier. Lite stays at 1,600 estimated tokens through a shorter line in lite's own `AGENTS.md`.
+- **One finishing report.** R-FINISH is the report; the guardrails' completion sections point to it. A small new build walks scorecard items 4 to 9 and skips the README, readiness run, scorecard and deliverables list unless asked.
+- **Measurement.** `scripts/uca-context-report.cjs` measures four task paths (bug, feature, new app with a screen, audit) against the same files read whole. The new-app figure now counts `directions.md` and `review.md`, which the old one left out. Opt-in step logs: `UCA_USAGE_STEPS` in the OpenCode plugin (per-message tokens and kit files opened; simulated in tests, not yet tried in a real OpenCode) and a read log in the helper. Neither logs prompts, replies or file contents; see `USAGE-PRIVACY.md`.
+- Sizes, estimated tokens (standard): always on 1,832 to 2,168. Per task, what the instructions ask: bug 2,397 (was 5,251 with the router, guardrails and skill read whole), new app with a screen 7,604 (was about 11,500 counting the design references), audit 5,003 (was 7,687). Lite unchanged at 851 always on, 1,600 worst case.
+
+Fixed
+- `package.json` and `CITATION.cff` read 0.3.6. The v0.3.5 tag points at the round 2 results commit (`e65699d`), whose `package.json` still read 0.3.4.
+- Round 2's results listed a `tokens.log` that was never committed; the line is removed. Its per-task averages are in its cost table.
+
+Evaluation round 3 (`benchmarks/agent-eval/round-3/`)
+- Same tasks and prompts as round 2, three runs per arm on one model, blind scorers, protocol pushed first.
+- Scores: snake kit median 29, no kit 29 (round 2 kit: 30). Bakery kit median 29, no kit 28 (round 2 kit: 26). Verdict under the rule: no clear difference.
+- Cost: the kit used 30% (snake) and 28% (bakery) more tokens than no kit; round 2 measured 12% and 24%. Not cheaper.
+- Reads, measured: every kit build read its skills in parts, and none opened the router or a guardrail file. Kit instructions came to about 7,600 to 10,200 estimated tokens per build. Most of the cost gap was extra checking work: about 9 more tool calls per build.
+- Rollback rule: triggered by the snake median, 29 against 30. The lost point is a pause or restart bug in the scripted session, which two no-kit builds also had. One kit build that lost it never opened the testing section; the results say what that does and does not show.
+
+Checked before release
+- What ran: the full test suite (`node tests/verify.cjs`, 7 checks), and the readiness, audit and link checks on the whole repository.
+- Readiness: Gold, 25 of 26, unchanged. The audit check read 197 files with no findings. The link check found nothing new: the one orphan page (`demo/docs/index.html`) is also on main.
+- Not covered: Model B (OpenCode) for round 3, and any host other than the one used for round 3.
+
 ## 0.3.4 (2026-11-25)
 
 The kit changes meant for 0.3.3, which missed that tag. Not measured yet: whether they help.

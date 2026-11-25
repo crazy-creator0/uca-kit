@@ -62,4 +62,3 @@ Cost rule: because the kit side scored higher, the cost increase is reported nex
 - `code-key.json`: code to run.
 - `scorer-evidence/`: both scorers' tables and the evidence for every score.
 - `closing-messages/`: each build's `CLOSING.md`, with local paths shortened.
-- `tokens.log`: tokens, tool calls and time per build session.
