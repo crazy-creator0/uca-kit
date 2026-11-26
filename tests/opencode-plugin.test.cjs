@@ -90,7 +90,7 @@ test("OpenCode adapter records final usage once and consults local subagent budg
   }
 });
 
-test("OpenCode adapter: the opt-in step log names token counts and kit files only", async (t) => {
+test("OpenCode adapter: the opt-in step log names token counts, tool kinds and kit files only", async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "uca-opencode-steps-"));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   fs.mkdirSync(path.join(dir, "scripts"), { recursive: true });
@@ -102,21 +102,35 @@ test("OpenCode adapter: the opt-in step log names token counts and kit files onl
   try {
     const { UcaUsagePlugin } = await import(pathToFileURL(PLUGIN).href + "?steps");
     const hooks = await UcaUsagePlugin({ directory: dir, client: {} });
-    const message = (id, input) => ({ type: "message.updated", properties: { info: { id, role: "assistant", time: { completed: Date.now() }, cost: 0, tokens: { input, output: 7, reasoning: 0, cache: { read: 3, write: 0 } } } } });
-    await hooks.event({ event: message("m1", 100) });
+    const message = (id, input, finish) => ({ type: "message.updated", properties: { info: { id, role: "assistant", finish, time: { completed: Date.now() }, cost: 0, tokens: { input, output: 7, reasoning: 0, cache: { read: 3, write: 0 } } } } });
+    await hooks.event({ event: message("m1", 100, "tool-calls") });
     await hooks["tool.execute.before"]({ tool: "read" }, { args: { filePath: "C:\\proj\\.agents\\skills\\debugging\\SKILL.md" } });
     await hooks["tool.execute.before"]({ tool: "bash" }, { args: { command: "node scripts/uca-read.cjs design-taste-discovery --section \"Step 3\"" } });
     await hooks["tool.execute.before"]({ tool: "read" }, { args: { filePath: "/home/me/secret-project/src/app.js" } });
     await hooks["tool.execute.before"]({ tool: "bash" }, { args: { command: "cat .env" } });
-    await hooks.event({ event: message("m2", 250) });
-    await hooks.event({ event: message("m2", 250) });
-    const lines = fs.readFileSync(stepsFile, "utf8").trim().split("\n").map((line) => JSON.parse(line));
+    await hooks["tool.execute.before"]({ tool: "write" }, { args: { filePath: "/home/me/secret-project/index.html", content: "SECRET-CONTENT" } });
+    await hooks["tool.execute.before"]({ tool: "bash" }, { args: { command: "node scripts/uca-page-check.cjs index.html --steps .uca-workspace/s.txt" } });
+    await hooks["tool.execute.before"]({ tool: "bash" }, { args: { command: "npm test -- --token=SECRET-TOKEN" } });
+    await hooks.event({ event: message("m2", 250, "stop") });
+    await hooks.event({ event: message("m2", 250, "stop") });
+    const text = fs.readFileSync(stepsFile, "utf8");
+    for (const secret of ["secret-project", ".env", "SECRET-CONTENT", "SECRET-TOKEN", "page-check"]) assert.equal(text.includes(secret), false, secret);
+    const lines = text.trim().split("\n").map((line) => JSON.parse(line));
     assert.deepEqual(lines.map(({ time, ...rest }) => rest), [
-      { step: 1, input: 100, output: 7, reasoning: 0, cacheRead: 3, cacheWrite: 0, cost: 0 },
-      { afterStep: 1, tool: "read", kit: ".agents/skills/debugging/SKILL.md" },
-      { afterStep: 1, tool: "bash", kit: "uca-read design-taste-discovery --section \"Step 3\"" },
-      { step: 2, input: 250, output: 7, reasoning: 0, cacheRead: 3, cacheWrite: 0, cost: 0 }
+      { step: 1, input: 100, output: 7, reasoning: 0, cacheRead: 3, cacheWrite: 0, cost: 0, finish: "tool-calls" },
+      { afterStep: 1, tool: "read", kind: "read", kit: ".agents/skills/debugging/SKILL.md" },
+      { afterStep: 1, tool: "bash", kind: "shell", kit: "uca-read design-taste-discovery --section \"Step 3\"" },
+      { afterStep: 1, tool: "read", kind: "read" },
+      { afterStep: 1, tool: "bash", kind: "shell" },
+      { afterStep: 1, tool: "write", kind: "write" },
+      { afterStep: 1, tool: "bash", kind: "check" },
+      { afterStep: 1, tool: "bash", kind: "check" },
+      { step: 2, input: 250, output: 7, reasoning: 0, cacheRead: 3, cacheWrite: 0, cost: 0, finish: "stop" }
     ]);
+    // The summary reads what the plugin writes.
+    const { readStepLog, runFigures } = require(SCRIPT);
+    const figures = runFigures(readStepLog(text));
+    assert.deepEqual([figures.requests, figures.replies, figures.reads, figures.writes, figures.checks, figures.shell, figures.readsBeforeFirstWrite], [2, 1, 2, 1, 2, 2, 2]);
   } finally {
     for (const [key, value] of [["UCA_USAGE_FILE", saved.file], ["UCA_USAGE_STEPS", saved.steps]]) {
       if (value === undefined) delete process.env[key]; else process.env[key] = value;

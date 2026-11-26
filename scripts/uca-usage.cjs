@@ -290,6 +290,267 @@ function printSummary(ledger) {
   }
   for (const message of warnings(ledger)) console.log(message);
 }
+// ---- Run summary: totals a step log (OpenCode plugin, UCA_USAGE_STEPS) or a filled run sheet (benchmarks/agent-eval/RUN-SHEET.md).
+// Reads the file only; the ledger is not touched. A number the file does not hold is printed as unknown, never 0.
+const MAX_STEPS_BYTES = 20 * 1024 * 1024;
+const KINDS = ["read", "write", "check", "shell", "agent", "other", "unknown"];
+const SHEET_COLUMNS = ["request", "count", "time", "input", "cache_read", "cache_write", "output", "context", "ended", "tools", "source"];
+
+function blankRun(format) {
+  return {
+    format, rows: 0, requests: 0, requestsKnown: true, ended: { "tool-calls": 0, stop: 0, length: 0, unknown: 0 },
+    sums: { input: 0, cacheRead: 0, cacheWrite: 0, output: 0, reasoning: 0, cost: 0 }, unknownRows: { input: 0, cacheRead: 0, cacheWrite: 0, output: 0, reasoning: 0, cost: 0 },
+    peak: null, peakAt: null, first: null, wallMs: null, tools: Object.fromEntries(KINDS.map((k) => [k, 0])), toolsKnown: false,
+    readsBeforeWrite: null, kitOpened: 0, kitDistinct: new Set(), gaps: { one: 0, many: 0 }, skipped: 0, sources: new Set()
+  };
+}
+function addContext(run, context, at) {
+  if (!Number.isFinite(context)) return;
+  if (run.first === null && at !== "all") run.first = context;
+  if (run.peak === null || context > run.peak) { run.peak = context; run.peakAt = at; }
+}
+function countTool(run, kind, state) {
+  const k = KINDS.includes(kind) ? kind : "unknown";
+  run.tools[k] += 1;
+  run.toolsKnown = true;
+  if (k === "write") state.sawWrite = true;
+  if (k === "read" && !state.sawWrite) state.reads += 1;
+}
+function finishTools(run, state, gaps) {
+  run.readsBeforeWrite = run.toolsKnown ? state.reads : null;
+  for (const n of gaps.values()) { if (n === 1) run.gaps.one += 1; else if (n > 1) run.gaps.many += 1; }
+}
+const num = (value) => (typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null);
+
+function readStepLog(text) {
+  const run = blankRun("OpenCode step log");
+  run.sources.add("exact (host-reported)");
+  const seen = new Set();
+  const gaps = new Map();
+  const state = { reads: 0, sawWrite: false };
+  let firstTime = null;
+  let lastTime = null;
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    let entry;
+    try { entry = JSON.parse(line); } catch { run.skipped += 1; continue; }
+    if (!isObject(entry)) { run.skipped += 1; continue; }
+    const time = typeof entry.time === "string" ? Date.parse(entry.time) : NaN;
+    if (Number.isSafeInteger(entry.step) && entry.step > 0) {
+      if (seen.has(entry.step)) continue;
+      seen.add(entry.step);
+      run.requests += 1;
+      run.rows += 1;
+      run.ended[["tool-calls", "stop", "length"].includes(entry.finish) ? entry.finish : "unknown"] += 1;
+      for (const key of Object.keys(run.sums)) {
+        const n = num(entry[key]);
+        if (n === null) run.unknownRows[key] += 1; else run.sums[key] += n;
+      }
+      const parts = [entry.input, entry.cacheRead, entry.cacheWrite].map(num);
+      if (parts.every((n) => n !== null)) addContext(run, parts[0] + parts[1] + parts[2], entry.step);
+    } else if (Number.isSafeInteger(entry.afterStep) && typeof entry.tool === "string") {
+      countTool(run, typeof entry.kind === "string" ? entry.kind : "unknown", state);
+      gaps.set(entry.afterStep, (gaps.get(entry.afterStep) || 0) + 1);
+      if (typeof entry.kit === "string") { run.kitOpened += 1; run.kitDistinct.add(entry.kit); }
+    } else { run.skipped += 1; continue; }
+    if (Number.isFinite(time)) { if (firstTime === null || time < firstTime) firstTime = time; if (lastTime === null || time > lastTime) lastTime = time; }
+  }
+  if (firstTime !== null && lastTime !== null) run.wallMs = lastTime - firstTime;
+  finishTools(run, state, gaps);
+  return run;
+}
+
+function splitCsvLine(line) {
+  const cells = [];
+  let cell = "";
+  let quoted = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (quoted) {
+      if (ch === "\"" && line[i + 1] === "\"") { cell += "\""; i += 1; }
+      else if (ch === "\"") quoted = false;
+      else cell += ch;
+    } else if (ch === "\"") quoted = true;
+    else if (ch === ",") { cells.push(cell.trim()); cell = ""; }
+    else cell += ch;
+  }
+  cells.push(cell.trim());
+  return cells;
+}
+// "6m", "6m30s", "390s", "1h2m" -> milliseconds; a clock time "14:05", "14:05:30" or an ISO time -> ms of the day or epoch.
+function parseDuration(text) {
+  const match = /^(?:(\d+)h)?\s*(?:(\d+)m)?\s*(?:(\d+)s)?$/i.exec(text);
+  if (!match || !text) return null;
+  return ((Number(match[1] || 0) * 60 + Number(match[2] || 0)) * 60 + Number(match[3] || 0)) * 1000;
+}
+function parseClock(text) {
+  const clock = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(text);
+  if (clock) return ((Number(clock[1]) * 60 + Number(clock[2])) * 60 + Number(clock[3] || 0)) * 1000;
+  const iso = /^\d{4}-\d{2}-\d{2}T/.test(text) ? Date.parse(text) : NaN;
+  return Number.isFinite(iso) ? iso : null;
+}
+function sheetNumber(text) {
+  if (!text || /^unknown$/i.test(text)) return null;
+  const n = Number(text.replace(/[_\s]/g, "").replace(/,(?=\d{3}\b)/g, ""));
+  return Number.isFinite(n) && n >= 0 ? n : NaN;
+}
+
+function readRunSheet(text) {
+  const run = blankRun("run sheet");
+  const rows = text.split(/\r?\n/).filter((line) => line.trim() && !line.trim().startsWith("#"));
+  if (!rows.length) throw new Error("The run sheet is empty.");
+  const header = splitCsvLine(rows[0]).map((cell) => cell.toLowerCase());
+  const unknownColumns = header.filter((name) => !SHEET_COLUMNS.includes(name));
+  if (unknownColumns.length || !header.includes("request")) {
+    throw new Error("Run sheet header must use these columns (request is required): " + SHEET_COLUMNS.join(",") + (unknownColumns.length ? ". Unknown: " + unknownColumns.join(", ") : ""));
+  }
+  const at = (cells, name) => { const i = header.indexOf(name); return i < 0 ? "" : (cells[i] || ""); };
+  const gaps = new Map();
+  const state = { reads: 0, sawWrite: false };
+  const fields = { input: "input", cacheRead: "cache_read", cacheWrite: "cache_write", output: "output" };
+  let firstTime = null;
+  let lastTime = null;
+  let index = 0;
+  for (const line of rows.slice(1)) {
+    const cells = splitCsvLine(line);
+    const request = at(cells, "request").toLowerCase();
+    const all = request === "all";
+    if (!all && !/^\d+$/.test(request)) { run.skipped += 1; continue; }
+    const count = all ? sheetNumber(at(cells, "count")) : 1;
+    if (all && count === null) run.requestsKnown = false;
+    else if (!Number.isSafeInteger(count)) { run.skipped += 1; continue; }
+    else run.requests += count;
+    index += 1;
+    run.rows += 1;
+    const values = {};
+    let bad = false;
+    for (const [key, column] of Object.entries(fields)) { values[key] = sheetNumber(at(cells, column)); if (Number.isNaN(values[key])) bad = true; }
+    const context = sheetNumber(at(cells, "context"));
+    if (bad || Number.isNaN(context)) { run.skipped += 1; continue; }
+    for (const key of Object.keys(fields)) { if (values[key] === null) run.unknownRows[key] += 1; else run.sums[key] += values[key]; }
+    run.unknownRows.reasoning += 1;
+    run.unknownRows.cost += 1;
+    const label = all ? "all" : Number(request);
+    if (context !== null) addContext(run, context, label);
+    else if (!all && [values.input, values.cacheRead, values.cacheWrite].every((n) => n !== null)) addContext(run, values.input + values.cacheRead + values.cacheWrite, label);
+    const ended = at(cells, "ended").toLowerCase();
+    if (!all) run.ended[["tool-calls", "stop", "length"].includes(ended) ? ended : "unknown"] += 1;
+    else if (count !== null) run.ended.unknown += count;
+    const tools = at(cells, "tools").toLowerCase().split(/\s+/).filter(Boolean);
+    for (const kind of tools) countTool(run, kind, state);
+    if (tools.length) gaps.set(index, tools.length);
+    const source = at(cells, "source").toLowerCase();
+    run.sources.add(["exact", "estimated"].includes(source) ? source : "unknown");
+    const time = at(cells, "time");
+    if (all) { const ms = parseDuration(time); if (ms !== null) run.wallMs = ms; }
+    else { const ms = parseClock(time); if (ms !== null) { if (firstTime === null) firstTime = ms; lastTime = ms; } }
+  }
+  if (run.wallMs === null && firstTime !== null && lastTime !== null && lastTime >= firstTime) run.wallMs = lastTime - firstTime;
+  finishTools(run, state, gaps);
+  return run;
+}
+
+function readRun(file) {
+  const resolved = path.resolve(file);
+  let stat;
+  try { stat = fs.statSync(resolved); } catch { throw new Error("No such file: " + file); }
+  if (!stat.isFile()) throw new Error("Not a file: " + file);
+  if (stat.size > MAX_STEPS_BYTES) throw new Error(file + " is larger than " + MAX_STEPS_BYTES + " bytes.");
+  const text = fs.readFileSync(resolved, "utf8").replace(/^﻿/, "");
+  const firstLine = (text.split(/\r?\n/).find((line) => line.trim() && !line.trim().startsWith("#")) || "").trim();
+  const run = /\.csv$/i.test(resolved) || /^request\b/i.test(firstLine) ? readRunSheet(text) : readStepLog(text);
+  run.file = path.basename(resolved);
+  return run;
+}
+
+const group = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+function summed(run, key) {
+  const n = run.unknownRows[key];
+  if (run.rows === 0 || n >= run.rows) return { value: null, complete: false, text: "unknown" };
+  return { value: run.sums[key], complete: n === 0, text: group(run.sums[key]) + (n ? " (at least; " + n + " row(s) unknown)" : "") };
+}
+function wall(ms) {
+  if (ms === null) return "unknown";
+  const s = Math.round(ms / 1000);
+  return (s >= 60 ? Math.floor(s / 60) + "m " : "") + String(s % 60).padStart(s >= 60 ? 2 : 1, "0") + "s";
+}
+function runFigures(run) {
+  const input = summed(run, "input");
+  const cacheRead = summed(run, "cacheRead");
+  const cacheWrite = summed(run, "cacheWrite");
+  const parts = [input, cacheRead, cacheWrite];
+  const allInput = parts.some((x) => x.value !== null) ? parts.reduce((sum, x) => sum + (x.value || 0), 0) : null;
+  return {
+    requests: run.requestsKnown ? run.requests : null,
+    inputAll: allInput, inputAllComplete: parts.every((x) => x.complete), input: input.value, cacheRead: cacheRead.value, cacheWrite: cacheWrite.value,
+    output: summed(run, "output").value, reasoning: summed(run, "reasoning").value, cost: summed(run, "cost").value,
+    peakContext: run.peak, firstContext: run.first, wallSeconds: run.wallMs === null ? null : Math.round(run.wallMs / 1000),
+    toolCalls: run.toolsKnown ? KINDS.reduce((sum, k) => sum + run.tools[k], 0) : null,
+    reads: run.toolsKnown ? run.tools.read : null, writes: run.toolsKnown ? run.tools.write : null,
+    checks: run.toolsKnown ? run.tools.check : null, shell: run.toolsKnown ? run.tools.shell : null,
+    readsBeforeFirstWrite: run.readsBeforeWrite, replies: run.ended.stop, kitFilesOpened: run.kitOpened
+  };
+}
+function printRun(run, out) {
+  const f = runFigures(run);
+  out("UCA Kit — run summary: " + run.file + " (" + run.format + ")");
+  const ended = run.ended;
+  out("Requests: " + (f.requests === null ? "unknown" : group(f.requests)) + "  (ended in tool calls " + ended["tool-calls"] + ", replies " + ended.stop + ", cut off " + ended.length + ", not recorded " + ended.unknown + ")");
+  out("Input tokens, summed over requests: " + (f.inputAll === null ? "unknown" : (f.inputAllComplete ? "" : "at least ") + group(f.inputAll)) + "  (new " + summed(run, "input").text + ", cache read " + summed(run, "cacheRead").text + ", cache write " + summed(run, "cacheWrite").text + ")");
+  out("Output tokens, summed: " + summed(run, "output").text + "  (reasoning " + summed(run, "reasoning").text + ")");
+  out("Peak context: " + (f.peakContext === null ? "unknown" : group(f.peakContext) + (run.peakAt === "all" ? " (as the host showed it)" : " (request " + run.peakAt + ")")) + "; first request: " + (f.firstContext === null ? "unknown" : group(f.firstContext)));
+  out("Wall time: " + wall(run.wallMs));
+  if (run.toolsKnown) {
+    out("Tool calls: " + f.toolCalls + "  (" + KINDS.filter((k) => run.tools[k] || ["read", "write", "check", "shell"].includes(k)).map((k) => k + " " + run.tools[k]).join(", ") + ")");
+    out("Reads before the first write: " + f.readsBeforeFirstWrite + (run.tools.write ? "" : " (no write recorded)"));
+    out("Tool calls between two requests: 1 in " + run.gaps.one + " gap(s), 2 or more in " + run.gaps.many);
+  } else out("Tool calls: unknown (none recorded in this file)");
+  if (run.format === "OpenCode step log") out("Kit files opened: " + run.kitOpened + " (" + run.kitDistinct.size + " different)");
+  if (run.sums.cost > 0) out("Cost the host estimated: $" + fmt(run.sums.cost) + " (an estimate, not an invoice)");
+  if (run.skipped) out("Skipped " + run.skipped + " line(s) that were not a request or a tool call.");
+  out("Source: " + [...run.sources].join(", ") + ". Peak context = new input + cache read + cache write of one request.");
+}
+const COMPARE_ROWS = [
+  ["Requests", "requests"], ["Input tokens, summed", "inputAll"], ["Output tokens, summed", "output"], ["Peak context", "peakContext"],
+  ["Wall time (s)", "wallSeconds"], ["Tool calls", "toolCalls"], ["Reads", "reads"], ["Writes", "writes"], ["Check runs", "checks"],
+  ["Other shell", "shell"], ["Reads before first write", "readsBeforeFirstWrite"], ["Replies", "replies"]
+];
+function printCompare(a, b, out) {
+  const fa = runFigures(a);
+  const fb = runFigures(b);
+  const cell = (n, key, f) => (n === null ? "unknown" : (key === "inputAll" && !f.inputAllComplete ? ">=" : "") + group(n));
+  const rows = [["", a.file, b.file, "difference"]];
+  for (const [label, key] of COMPARE_ROWS) {
+    const x = fa[key];
+    const y = fb[key];
+    let diff = "unknown";
+    if (x !== null && y !== null) diff = (x - y >= 0 ? "+" : "-") + group(Math.abs(x - y)) + (y > 0 ? " (" + (x - y >= 0 ? "+" : "-") + Math.round(Math.abs(x - y) / y * 100) + "%)" : "");
+    if (key === "inputAll" && !(fa.inputAllComplete && fb.inputAllComplete) && x !== null && y !== null) diff += " (a total is partial)";
+    rows.push([label, cell(x, key, fa), cell(y, key, fb), diff]);
+  }
+  const widths = rows[0].map((_, i) => Math.max(...rows.map((row) => row[i].length)));
+  out("UCA Kit — run comparison (first file minus second)");
+  for (const row of rows) out(row.map((c, i) => (i === 0 ? c.padEnd(widths[i]) : c.padStart(widths[i]))).join("  "));
+  if (a.skipped || b.skipped) out("Skipped lines: " + a.file + " " + a.skipped + ", " + b.file + " " + b.skipped + ".");
+}
+function stepsCommand(args, out = console.log) {
+  const json = args.includes("--json");
+  const files = args.filter((arg) => arg !== "--json");
+  const bad = files.filter((arg) => arg.startsWith("--"));
+  if (bad.length) throw new Error("Unknown option(s): " + bad.join(", ") + ". Usage: steps <file> [second file] [--json]");
+  if (files.length < 1 || files.length > 2) throw new Error("Usage: steps <file> [second file] [--json]. Give a step log or a run sheet; a second file prints a comparison.");
+  const runs = files.map(readRun);
+  if (runs.every((run) => run.requests === 0 && !run.toolsKnown && run.requestsKnown)) {
+    console.error("Nothing to summarize: no request or tool-call lines found in " + files.join(" or ") + ".");
+    return 1;
+  }
+  if (json) { out(JSON.stringify(runs.map((run) => ({ file: run.file, format: run.format, ...runFigures(run), skippedLines: run.skipped })), null, 2)); return 0; }
+  if (runs.length === 2) printCompare(runs[0], runs[1], out);
+  else printRun(runs[0], out);
+  return 0;
+}
+
 function help() {
   console.log("UCA Kit local usage ledger — no network or login\n\n" +
     "Commands:\n" +
@@ -297,10 +558,13 @@ function help() {
     "  node scripts/uca-usage.cjs record --source exact|estimated [metrics]\n" +
     "  node scripts/uca-usage.cjs show\n" +
     "  node scripts/uca-usage.cjs guard [planned metrics]\n" +
-    "  node scripts/uca-usage.cjs reset\n\n" +
+    "  node scripts/uca-usage.cjs reset\n" +
+    "  node scripts/uca-usage.cjs steps <file> [second file] [--json]\n\n" +
     "Budget: --max-total-tokens <integer|off> --max-agent-calls <integer|off> --max-cost-usd <number|off> --planned-agent-tokens <integer|off> --planned-agent-cost-usd <number|off>\n" +
     "Record: --source exact|estimated [--cost-source exact|estimated] --input-tokens N --output-tokens N --reasoning-tokens N --cache-read-tokens N --cache-write-tokens N --agent-calls N --skill-reads N --tool-calls N --cost-usd N\n" +
-    "Guard: --planned-tokens N --planned-agent-calls N --planned-cost-usd N\n\n" +
+    "Guard: --planned-tokens N --planned-agent-calls N --planned-cost-usd N\n" +
+    "Steps: totals a step log (UCA_USAGE_STEPS) or a run sheet (benchmarks/agent-eval/RUN-SHEET.md in the kit repo): requests, summed tokens,\n" +
+    "peak context, wall time, tool calls by kind. A second file prints a side-by-side comparison. Read only.\n\n" +
     "Default file: ~/.uca-kit/usage.json; override with UCA_USAGE_FILE.\n" +
     "Exact describes the reported/entered source; UCA Kit does not independently verify it.\n" +
     "Budget checks add exact and estimated counters. Do not record the same usage twice.\n" +
@@ -310,6 +574,7 @@ function help() {
 function main(argv) {
   const command = argv[0] || "show";
   if (["--help", "-h", "help"].includes(command)) { help(); return 0; }
+  if (command === "steps") return stepsCommand(argv.slice(1));
   if (!["budget", "record", "show", "guard", "reset"].includes(command)) throw new Error("Unknown command: " + command + ". Run with --help.");
   const opts = parseOptions(argv.slice(1));
   if (["budget", "record", "reset"].includes(command)) return withLock(() => run(command, opts, readLedger()));
@@ -421,5 +686,9 @@ function run(command, opts, ledger) {
   }
   return 0;
 }
-try { process.exitCode = main(process.argv.slice(2)); }
-catch (error) { console.error("Error: " + error.message); process.exitCode = 1; }
+if (require.main === module) {
+  try { process.exitCode = main(process.argv.slice(2)); }
+  catch (error) { console.error("Error: " + error.message); process.exitCode = 1; }
+}
+
+module.exports = { readStepLog, readRunSheet, runFigures, stepsCommand };

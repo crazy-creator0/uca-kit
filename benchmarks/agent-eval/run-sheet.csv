@@ -1,0 +1,2 @@
+# One row per model request; or one row with request=all for a host that shows only totals. Empty cell = unknown.
+request,count,time,input,cache_read,cache_write,output,context,ended,tools,source

@@ -6,8 +6,11 @@ import { spawnSync } from "node:child_process";
 // provider-reported message usage; prompt, output, tool results and source code
 // are never read by this plugin or passed to the usage ledger.
 // Opt-in step log: when UCA_USAGE_STEPS names a file, each finished assistant
-// message adds one line with its token counts, and each tool call that opens a
-// kit file adds one line naming that file. No prompt, output or file content.
+// message (one model request) adds one line with its token counts and how it
+// ended (tool calls or a reply), and each tool call adds one line with the tool's
+// name and a kind (read, write, check, shell, agent, other). A tool call that
+// opens a kit file also names that file. No prompt, output, other path, command
+// text or file content is written.
 export const UcaUsagePlugin = async ({ directory, client }) => {
   const script = path.join(directory, "scripts", "uca-usage.cjs");
   const seenMessageIds = new Set();
@@ -76,6 +79,16 @@ export const UcaUsagePlugin = async ({ directory, client }) => {
     const read = command.match(/uca-read\.cjs\s+([^|;&<>]{1,120})/);
     return read ? "uca-read " + read[1].trim() : null;
   };
+  // A coarse kind for each tool call, worked out here so the command itself is never written.
+  const CHECK_COMMAND = /uca-[a-z-]*check\.cjs|\b(?:npm|pnpm|yarn|bun)\s+(?:run\s+)?test\b|node\s+--test\b|\b(?:pytest|vitest|jest|playwright\s+test|go\s+test|cargo\s+test)\b/i;
+  const toolKind = (tool, args) => {
+    const name = String(tool || "").toLowerCase();
+    if (["read", "glob", "grep", "list", "ls", "skill", "webfetch"].includes(name)) return "read";
+    if (["write", "edit", "patch", "multiedit"].includes(name)) return "write";
+    if (["task", "subagent"].includes(name)) return "agent";
+    if (["bash", "shell"].includes(name)) return CHECK_COMMAND.test(String(args?.command || "")) ? "check" : "shell";
+    return "other";
+  };
 
   const requireSuccess = (result, action) => {
     if (result.error) {
@@ -117,7 +130,8 @@ export const UcaUsagePlugin = async ({ directory, client }) => {
       ];
       if (cost > 0) args.push("--cost-source", "estimated", "--cost-usd", String(cost));
       stepNumber += 1;
-      logStep({ step: stepNumber, input, output, reasoning, cacheRead, cacheWrite, cost });
+      const finish = ["tool-calls", "stop", "length"].includes(info.finish) ? info.finish : undefined;
+      logStep({ step: stepNumber, input, output, reasoning, cacheRead, cacheWrite, cost, ...(finish ? { finish } : {}) });
       const result = ledgerCall(args);
       requireSuccess(result, "recording");
       await notifyThresholds(result.stdout);
@@ -128,7 +142,8 @@ export const UcaUsagePlugin = async ({ directory, client }) => {
     // A configured budget is respected; an unconfigured guard reports inactive.
     "tool.execute.before": async (input, output) => {
       const target = kitTarget(output?.args);
-      if (target) logStep({ afterStep: stepNumber, tool: String(input?.tool || ""), kit: target });
+      const toolName = String(input?.tool || "").slice(0, 40);
+      logStep({ afterStep: stepNumber, tool: toolName, kind: toolKind(toolName, output?.args), ...(target ? { kit: target } : {}) });
       if (!["task", "subagent"].includes(String(input?.tool || ""))) return;
 
       const check = ledgerCall(["guard", "--planned-agent-calls", "1"]);
