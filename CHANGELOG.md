@@ -6,134 +6,58 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 Nothing yet.
 
-## 0.3.8-pre.4 (2026-11-26)
+## 0.3.7 (2026-11-26)
 
-Pre-release. The start of a written flow between skills: each skill that hands work to another says which one, and the kit checks and measures the flow. No orchestration and no new always-on text.
+Everything since 0.3.6, in one release. The kit now counts what a run cost in model requests, and what every request carries is lighter on every host than in 0.3.6. Real runs still show the kit making more requests than no kit: a real OpenCode run on 26 Nov (Big Pickle, snake prompt, one run per arm) made 43 requests with the kit against 24 without, both games passing 8 of 8 browser checks. Cost is about requests times context per request, and 0.3.6 cut only what is read. This release measures requests and fixes the defects that run found; cutting requests comes next, aimed by the step log.
 
-Added
-- **Next lines** in ten Read first blocks, for real handoffs only: `backend-api` and `database-engineering` to each other when the other side changes; `design-taste-discovery` to `frontend-engineering`; `frontend-visuals-and-3d` to `performance-engineering` if frames drop; `import-hygiene` and `testing-and-code-review` to `debugging`; `cloudflare-operations` to `production-deployment`; `stack-migration` to `testing-and-code-review`; `audit`'s approved findings to `debugging`; `skill-gap-router` to its choice. Every other skill ends at R-FINISH.
-- **Flow checks** (`tests/flow.test.cjs`): every name exists, a cycle has only conditional edges (the backend and database pair), and a chain is at most four skills; the test shows each check can fail.
-- **Chain cost** in the context report and the cost baseline: two-skill chains read 381 to 512 estimated tokens of Read first blocks; `stack-migration > testing-and-code-review > debugging` reads 766.
-
-Changed
-- Trimmed lines in the same blocks pay for most of the Next lines: blocks with a Next line rose 2 to 11 estimated tokens per call, others fell 2 to 11 (debugging dropped a line that repeated R-LOOP). The baseline records the reason for each rise.
-
-Not done, by decision
-- A five-line handoff between skills is not added to CORE: within one session the earlier work is already in context, so it would cost about 30 tokens on every call for no gain yet. It belongs where separate agents hand work to each other.
-- No Next line that only points to the user check: R-FINISH's Checks field already holds those levels, and the same line in five skills broke the kit's rule against duplicated lines.
-
-Checked before release
-- What ran: `node tests/verify.cjs` (7 checks, all passed) before each commit; uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, `node scripts/uca-wiring-check.cjs .`, and a hand review of this release's diff.
-- Readiness: Gold, 25 of 26, unchanged (the orphan `demo/docs/index.html`). The audit check read 200 files with no findings; the wiring check passed.
-- Hand review: each removed line is covered elsewhere (R-LOOP for debugging's two-failure stop, the Not-when line for frontend's look); the cost ratchet holds 71 numbers, with a reason on each rise.
-- Not covered: whether models follow a Next line; round 4 traces it.
-
-## 0.3.8-pre.3 (2026-11-26)
-
-Pre-release. Cuts what every call pays, on every host and tier, and adds a ratchet so the cost cannot creep back. Compared with 0.3.6, 0.3.7 and 0.3.8 had made bug, feature, audit and medium builds slightly dearer (+1% to +5%) and left lite and generic hosts no cheaper; this release corrects that.
-
-Changed
-- **AGENTS.md** (loaded by itself on generic hosts, every call) keeps what a model needs if it never opens CORE: read CORE first, the Safe Vibe Loop with its ask-before list, the new-app trigger, Git optional, the migration workflow, the licence. 538 to 357 estimated tokens.
-- **Route paragraph** says the same in fewer words, taking back the 35 tokens 0.3.7 added to every task.
-- **Read first blocks** for `project-notes` (663 to 228 per call), `bug-investigation` (385 to 167) and `production-deployment` (375 to 163), which had none and printed whole. `feature-development` keeps none: a feature needs all its steps.
-- **Host entry files** (Claude Code, Gemini, Copilot, Cursor, Devin, Windsurf, Junie, JetBrains) carry only what each call needs: 25 to 52 fewer tokens per call per host. Removed: notes that OpenCode agents do not apply on other hosts, and repeated general advice.
-- **A file the user did not build is not audited.** Audit and application-security say, for an APK, EXE or installer, that they cannot tell whether it is safe, and to name a malware scanner, instead of risking a false all-clear. Per call: audit 221 to 236, application-security 212 to 230.
+The pre-release tags 0.3.7-pre.1 to 0.3.8-pre.4 were withdrawn; every change they held is here.
 
 Added
-- **Cost ratchet**: `scripts/uca-cost-baseline.cjs` and `tests/cost-baseline.test.cjs` hold 61 numbers (always-on per tier, fixed cost per host in lite and standard, every Read first block, every task path). The build fails when one rises without a written reason, or falls without the baseline being lowered.
-
-Sizes against 0.3.6, estimated tokens
-- Always-on, standard: 2,035 (2,200). Fixed per host, standard: generic 2,035 (2,200), Claude Code 2,645 (3,139), Gemini 2,650 (3,145), Codex and OpenCode 2,554 (2,999), Cursor 2,183 (2,400). Lite: generic 851 (851), Claude Code 1,059 (1,108), Gemini 1,064 (1,114).
-- Task paths, standard: bug 2,264 (2,429), feature 2,508 (2,673), audit 4,967 (5,035), small build 4,315 (7,636 on the full path), medium or large new build 7,842 (7,636).
-- Reason for the one rise, the medium or large new build (+206): the routing line to "Small build", the page-check line in "Check it like the user", and the text-first evidence rule in the design review, all added in 0.3.7 and 0.3.8 on purpose.
-
-Checked before release
-- What ran: `node tests/verify.cjs` (7 checks, all passed) before each commit; uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, `node scripts/uca-wiring-check.cjs .`, and a hand review of this release's diff.
-- Readiness: Gold, 25 of 26, unchanged (the orphan `demo/docs/index.html`). The audit check read 200 files with no findings; the wiring check passed.
-- Hand review: every line removed from AGENTS.md is in CORE, or was a pointer only; the tests that pin AGENTS.md's safety lines still pass unchanged; the baseline script writes only its own file, and only with `--write`.
-- Not covered: whether models open CORE when only AGENTS.md is loaded; round 4 traces it.
-
-## 0.3.8-pre.2 (2026-11-26)
-
-Pre-release. A short path for small builds, and lite's small-build cost reported. Instruction changes for small builds only; not measured with models yet: round 4 tests them against 0.3.5 and no kit on the design, testing and truthfulness points, and they are rolled back if those drop.
+- **Run summary**: `node scripts/uca-usage.cjs steps <file> [second file] [--json]` totals a run: requests and how each ended (tool calls, reply, cut off), input summed over all requests (new, cache read, cache write), output, peak context, wall time, tool calls by kind, reads before the first write, and kit files opened. A second file prints two runs side by side. A number the file does not hold prints as unknown, a partial total as "at least"; it reads only.
+- **Run sheet for every host without a step log**: `benchmarks/agent-eval/RUN-SHEET.md` and `run-sheet.csv`, one row per request or one totals row, each figure marked exact or estimated, with requests counted from the transcript where a host shows none. `steps` reads it like a step log.
+- **Page check** (standard and full): `scripts/uca-page-check.cjs` runs the user's steps, written by the agent one per line, on a local page, and reports page and console errors, overflow, images without alt, unnamed controls, and a note when a clicked button keeps keyboard focus (the pause or restart bug behind round 3's lost snake point). Steps: `click`, `type`, `press`, `wait`, `expect text <text>`, `expect text <selector> <text>`, `expect visible`, `expect count`, `expect focus`. Local files and localhost only; uses Playwright if installed and never installs it; without a browser it runs static checks and says the steps were not run.
+- **Fixed cost per host**: `scripts/uca-host-cost.cjs` installs the kit for each of the 11 platforms in a temporary folder and measures what the host is meant to load every session. Every row says "intended, from install files, not run": no host has been checked in a real session yet; `docs/TOOL-COMPATIBILITY.md` says what to record when one is.
+- **Cost ratchet**: `scripts/uca-cost-baseline.cjs` and `tests/cost-baseline.test.cjs` hold 71 numbers (always-on per tier, fixed cost per host, every Read first block, every task path, skill chains). The build fails when one rises without a written reason, or falls without the baseline being lowered.
+- **Next lines** in ten Read first blocks, for real handoffs only (for example `design-taste-discovery` to `frontend-engineering`, `import-hygiene` and `testing-and-code-review` to `debugging`); every other skill ends at R-FINISH. `tests/flow.test.cjs` checks that names exist, that a cycle has only conditional edges, and that a chain is at most four skills. Two-skill chains read 381 to 512 estimated tokens of Read first blocks.
+- **`init --model small|mid|large`**: a plain-words preset for `--context` (8,000, 32,000 or 128,000 tokens); a suggestion, or applied with `--auto-tier`; an explicit `--tier` wins.
 
 Changed
-- **Small build path.** A small request (one file or one screen, one person using it) follows "Small build" in `new-project`: a six-line plan, a one-file stack, the design skill's own "Small build", "Check it like the user" read in full, finish items 4 to 9 in one pass, and a closing message of 300 words or less. The design "Small build" holds the essentials of design Steps 1, 3, 5 and 7, and still reads the one direction it picks so the brief keeps real fonts and colors. Medium and large builds, or any doubt about the size, keep every step. Tests pin what the short path keeps: the hard input, the user check, the focus check, Done or Left for every requested item, Still unknown never shortened, the brief's fonts and hex colors, the template patterns to avoid, and evidence before a claimed look.
-- **Context report** adds a small-build path for standard and full, and a line for lite.
-- Sizes, estimated tokens, standard: a small build reads 4,515 with the read helper and 4,825 without Node, against 7,970 for the same request on the full path in 0.3.7-pre.2 (-43%). The full new-app path reads 8,042. Lite's small build is 1,175: lite installs no workflow or design skill, so R-NEW's plan is its whole path. Lite worst case unchanged at 1,600.
-
-Not reached
-- The plan's target of 4,000 for a small build: always-on text alone is 2,235, and cutting it would change shared rules.
-
-Not done, by decision
-- Lite is not split into parts: its four skills total 749 tokens and lite sits at its 1,600 limit, so Parts lists would cost more than they save.
-
-Checked before release
-- What ran: `node tests/verify.cjs` (7 checks, all passed) before each commit; uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, `node scripts/uca-wiring-check.cjs .`, and a hand review of this release's diff.
-- Readiness: Gold, 25 of 26, unchanged (the orphan `demo/docs/index.html`). The audit check read 199 files with no findings; the wiring check passed.
-- Hand review: the small design path agrees with the design skill's rule against coding a substantial new direction without asking about taste (a small build is not one, and it asks when the look is the point); medium and large paths changed only by the routing line in new-project's Read first.
-- Limits found: `design-taste-discovery` is now at its 9,000-byte limit, so its next addition must remove as much as it adds.
-- Not covered: whether small builds score as well as before; round 4 measures it.
-
-## 0.3.8-pre.1 (2026-11-25)
-
-Pre-release. Measures what each host loads before any task, cuts the part the kit controls, and lets a user pick a tier by model size. No change to how the kit tells a model to work, apart from shorter skill descriptions.
-
-Added
-- **Fixed cost per host**: `scripts/uca-host-cost.cjs` installs the kit for each of the 11 platforms in a temporary folder and measures what the host is meant to load every session (its entry files, `AGENTS.md` and `.agents/CORE.md`, and the names and descriptions of the skills it is meant to list). Estimated tokens, standard: generic 2,235, Devin 2,362, Junie 2,341, JetBrains 2,384, Cursor 2,435, Codex and OpenCode 2,754, Copilot 2,876, Windsurf 2,888, Claude Code 2,894, Gemini 2,900. Lite: 851 to 1,114. Every row says "intended, from install files, not run": no host has been checked in a real session yet. `docs/TOOL-COMPATIBILITY.md` says what to record when one is.
-- **`init --model small|mid|large`**: a plain-words preset for `--context` (8,000, 32,000 or 128,000 tokens), with the same rules: a suggestion, or applied with `--auto-tier`; an explicit `--tier` wins; `--model` with `--context` is refused. `doctor` already reports the tier.
-
-Changed
-- **Skill descriptions** name their triggers only. On the six hosts meant to list skills, the list falls from 799 to 519 estimated tokens per session. A test caps each description at 130 characters and the list at 550. The routing cases still pass. Lite's own descriptions are unchanged.
-
-Not done, by decision
-- No reading budget in `.uca/config.json`, which the plan proposed: no rule in any tier reads it, so it would be data nothing uses.
-
-Checked before release
-- What ran: `node tests/verify.cjs` (7 checks, all passed) before each commit; uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, `node scripts/uca-wiring-check.cjs .`, and a hand review of this release's diff.
-- Readiness: Gold, 25 of 26, unchanged (the orphan `demo/docs/index.html`). The audit check read 199 files with no findings.
-- Hand review: the host script deletes only the temporary folder it created, runs no other programs, and reports no host as checked (tested). One commit was made after a failed check, because the command that ran the check did not stop on its failure; it was fixed and amended before being pushed.
-- Not covered: whether any host really loads what it is meant to. Claude Code and OpenCode are to be checked by the maintainer.
-
-## 0.3.7-pre.2 (2026-11-25)
-
-Pre-release. Structure and tooling changes for the rest of round 3's extra cost: models without the read helper reading whole files, and a test script written from scratch in every build. Not measured yet with models: round 4 tests them.
-
-Changed
-- **Split into parts.** `new-project`, `audit`, `stack-migration`, `design-taste-discovery`, `testing-and-code-review`, `frontend-engineering` and the design directions keep their Read first block in the main file and list every other section, with its own file, under `## Parts` in the first 25 lines. A model without Node opens the main file and only the part it needs. `uca-read` follows the Parts list, so every `--section` pointer works as before. Audit's limits and mindset stay in `audit.md`. A check showed no line of text was lost.
-- **Design review evidence**: text checks first (the design check, then printed sizes, positions and overflow at two widths); one look at the main screen and a second only at phone width for a model that can read images; a text-only model marks the item "read, not looked" and hands the look to the user.
-- **Page check**, new in standard and full: `scripts/uca-page-check.cjs` runs the user's steps, written by the agent from the plan one per line, on a local page, and reports page and console errors, overflow, images without alt, unnamed controls, and a note when a clicked button keeps keyboard focus (the pause or restart bug behind round 3's lost snake point). Local files and localhost only; uses Playwright if installed and never installs it; without a browser it runs static checks and says the steps were not run. "Check it like the user" points to it.
-- **Context report** adds a column for a model without Node: the files that hold each section, opened whole. Split files count whole in the other columns.
-- Sizes, estimated tokens, standard: new app with a screen 7,970 with the read helper (7,769 in pre.1: the Parts lists and the longer review item), 8,996 without Node (was 10,736: every file whole), 11,701 every file whole. Worst case 8,519 (was 8,187). Lite unchanged: 1,600 worst case.
-
-Not reached
-- The plan's target of 4,000 estimated tokens or less for a small build. Most of the new-app path is design steps and review; the small-build design path (E11) is planned for 0.3.8.
-
-Checked before release
-- What ran: `node tests/verify.cjs` (7 checks, all passed) before each commit; `npm test` 523 tests; uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, `node scripts/uca-wiring-check.cjs .`, and a hand review of this release's diff.
-- Readiness: Gold, 25 of 26, unchanged (the orphan `demo/docs/index.html`, also on 0.3.6). The audit check read 198 files with no findings.
-- Hand review: the new scripts run no other programs and use no `eval`; a Parts list cannot reach files outside `.agents` (tested); the page check refuses non-local hosts (tested); install and uninstall carry and remove the part folders.
-- Page check in a browser: run on Linux with Playwright and Chrome. In CI, Playwright is not installed, so that test is skipped there; the static path and the parser run on Linux and Windows. Not covered: the browser path on Windows and macOS, and anything on macOS.
-
-## 0.3.7-pre.1 (2026-11-25)
-
-Pre-release. Instruction-only changes aimed at the extra work round 3 measured (more tool calls, a skipped user check, long closing messages, a stray bookkeeping read). Not measured yet: round 4 tests them.
-
-Changed
-- **R-LOOP**, same words in every tier: also stops after two failed tries at one step, and the handover reports facts, not guesses. The line is no longer than before; lite stays at 1,600 estimated tokens worst case.
-- **New project, Read first** names "Check it like the user" in `testing-and-code-review`, with the command that prints it. One round 3 kit build never opened that section and lost the snake point.
-- **New project, closing message** starts with the R-FINISH lines (Changed, Checks, Still unknown) and leaves out recaps of what the files show. A small build's closing is 300 words or less; Still unknown is never shortened to fit. Round 3 kit closings ran 601 to 1,054 words.
-- **Kit bookkeeping**: the standard and full cores say not to open files in `.uca/` unless a rule names one. Three of six round 3 kit builds read `.uca/manifest.json` (about 2,200 tokens). Lite unchanged.
-- Sizes, estimated tokens: lite 851 always on, 1,600 worst case (unchanged); standard always on 2,217 (was 2,200); new app with a screen 7,769 (was 7,636); bug 2,446 (was 2,429).
+- **Small build path.** A small request (one file or one screen, one person using it) follows "Small build" in `new-project`: a six-line plan, a one-file stack, the design skill's own "Small build", "Check it like the user" read in full, finish items 4 to 9 in one pass, and a closing message of 300 words or less. Medium and large builds, or any doubt about the size, keep every step. Lite's small build is its always-on text (1,175).
+- **Split into parts.** `new-project`, `audit`, `stack-migration`, `design-taste-discovery`, `testing-and-code-review`, `frontend-engineering` and the design directions keep their Read first block in the main file and list every other section, with its own file, under `## Parts`; a model without Node opens only the part it needs, and `uca-read` follows the list.
+- **What every call carries.** `AGENTS.md` keeps what a model needs if it never opens CORE (538 to 357 estimated tokens); the Route paragraph is shorter; the host entry files carry only what each call needs (25 to 52 fewer tokens per host); skill descriptions name their triggers only (the listed skills fall from 799 to 519 tokens on the six hosts that list them).
+- **Read first blocks** for `project-notes`, `bug-investigation` and `production-deployment`, which printed whole before.
+- **R-LOOP**, same words in every tier: also stops after two failed tries at one step, and the handover reports facts, not guesses.
+- **New project**: its Read first names "Check it like the user"; the closing message starts with the R-FINISH lines and leaves out recaps of what the files show.
+- **Kit bookkeeping**: standard and full say not to open files in `.uca/` unless a rule names one (three of six round 3 kit builds read the manifest, about 2,200 tokens).
+- **Design review evidence**: text checks first; at most two looks, for a model that can read images; a text-only model marks the item "read, not looked" and hands the look to the user.
+- **Tier by model.** On OpenCode, `full` installs the same files as `standard` and adds only the subagent rule to the core (about 154 estimated tokens per request); each subagent it starts is a whole extra run of requests. Large models are now suggested `standard`, like mid and free-tier models; `full` is chosen with `--tier full`. `--profile` without `--tier` now narrows `standard`, not `full`. `init` prints what each tier puts on every request on the chosen host. README, the demo page and the OpenCode, generic and platform setup docs say which tier fits which model.
+- **The OpenCode step log** (`UCA_USAGE_STEPS`) names every tool call with its tool name and a kind worked out on the machine (read, write, check, shell, agent, other), and how each request ended. Paths other than the kit's, command text, arguments and file contents are never written (`USAGE-PRIVACY.md`). The OpenCode setup doc shows how to turn it on and total it.
+- **A file the user did not build is not audited.** Audit and application-security say, for an APK, EXE or installer, that they cannot tell whether it is safe, and to name a malware scanner.
 
 Fixed
+- **The page check took every text check as page text**, so `expect text #score 00` looked for the words "#score 00". That is how a model wrote all five of its text checks on 26 Nov, and the file failed 5 of 5 on the build it was written for. Now a first word starting with #, . or [ names an element; a missing element fails as "no element matches"; a failed element check shows up to 40 characters of that element's text; a difference in letter case only (CSS `text-transform`) passes and says so; every unknown line is named in one error that lists every accepted form. The 26 Nov steps file is a test fixture and passes 26 of 26 on that build.
 - The 0.3.6 entry said "not yet released"; it was published on 2026-11-25.
 
+Sizes against 0.3.6, estimated tokens (characters / 4)
+- Always-on: standard 2,035 (2,200); lite 851 (851), worst case 1,600 (1,600).
+- Fixed per host, standard: generic 2,035 (2,200), Codex and OpenCode 2,554 (2,999), Claude Code 2,645 (3,139), Gemini 2,650 (3,145), Cursor 2,183 (2,400). Lite: Claude Code 1,059 (1,108), Gemini 1,064 (1,114).
+- Task paths, standard: bug 2,253 (2,429), feature 2,510 (2,673), audit 4,977 (5,035), small build 4,315 (7,636 on the full path), medium or large new build 7,844 (7,636).
+- Reason for the one rise, the medium or large new build (+208): the routing line to "Small build", the page-check line in "Check it like the user", the text-first evidence rule in the design review, and the Next line to frontend, all added on purpose.
+
+Not done, by decision
+- No reading budget in `.uca/config.json`: no rule in any tier would read it.
+- Lite is not split into parts: its four skills total 749 tokens and lite sits at its 1,600 limit, so Parts lists would cost more than they save.
+- No five-line handoff between skills in CORE: within one session the earlier work is already in context; it belongs where separate agents hand work to each other.
+
+Not reached
+- A small build at 4,000 estimated tokens or less (4,315): always-on text alone is 2,035, and cutting further would change shared rules.
+
 Checked before release
-- What ran: `node tests/verify.cjs` (7 checks, all passed) before each commit; uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, and a hand review of this release's diff.
-- Readiness: Gold, 25 of 26, unchanged; the one item to confirm is the orphan page `demo/docs/index.html`, also on 0.3.6. The audit check read 197 files with no findings.
-- Hand review: R-LOOP appears only in the three cores and matches word for word; found the stale 0.3.6 heading above and fixed it.
-- Not covered: whether models now make fewer tool calls or write shorter closings; that needs round 4.
+- What ran: `node tests/verify.cjs` (7 checks, all passed, exit code checked) before each commit; `node scripts/uca-cost-baseline.cjs` (all 71 numbers match); the 26 Nov steps file on the 26 Nov kit build with Playwright (5 failed with the earlier script; 26 passed, 0 failed now); uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, `node scripts/uca-wiring-check.cjs .`, and a hand review of each change.
+- Readiness: Gold, 25 of 26, unchanged from 0.3.6 (the orphan `demo/docs/index.html`). The audit check read 200 files with no findings; the wiring check passed.
+- Hand review: every line removed from AGENTS.md is in CORE, or was a pointer only, and the tests that pin its safety lines pass unchanged; R-LOOP matches word for word in the three cores; a Parts list cannot reach files outside `.agents` (tested); the page check and host-cost scripts run no other programs and refuse non-local pages (tested); the step log writes no path outside the kit, no command text and no arguments (a test plants a secret path, file content and token); the summary reads at most 20 MB and writes nothing.
+- Limits found: `design-taste-discovery` is at its 9,000-byte limit, so its next addition must remove as much as it adds.
+- Not covered: the step log has not yet run in a real OpenCode session, so whether OpenCode reports a tool call before or after the request that asked for it is unconfirmed (the summary counts tool calls between two requests and does not assign them); wall time starts at the first logged event; no host has been checked in a real session; the page check's browser path ran on Linux only (Playwright is not installed in CI); whether models follow the small-build path, the Next lines and the shorter closing, and whether scores hold, is for round 4.
 
 ## 0.3.6 (2026-11-25)
 

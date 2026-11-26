@@ -34,7 +34,7 @@ It is designed to help developers plan before coding, understand unfamiliar code
    ```
 2. Pin a release if you want a fixed version. Without a tag you get the current `main`. Releases are listed in [CHANGELOG.md](CHANGELOG.md):
    ```bash
-   npx --yes github:crazy-creator0/uca-kit#v0.3.8-pre.4 init . --platform generic
+   npx --yes github:crazy-creator0/uca-kit#v0.3.7 init . --platform generic
    ```
 3. Know what it does. The installer copies files into the folder you give it, prints each one, and records a hash of each in `.uca/manifest.json`. It makes no network requests and starts no other programs. `npx` downloads the package from GitHub before the installer runs. `uninstall` removes only the files it installed and never one you edited.
 4. Know what the scripts do. Two helper scripts call read-only `git` commands to list files. The handoff guard runs only the check command you configure, and the project scanner runs a command only when you name it with `--verify`. Nothing is sent anywhere. The package has no dependencies and no install-time scripts. `tests/package-boundary.test.cjs` checks this while the code runs, not only by reading it.
@@ -94,7 +94,7 @@ npx --yes github:crazy-creator0/uca-kit init . --auto-tier --model small    # th
 
 You choose the tier; the agent never changes it. Without `--tier`, a terminal run asks one question, and a non-interactive run uses `standard`. `--context <tokens>` only prints a suggestion (8,000 or fewer: lite; above: standard) and never selects a tier; `full` is never suggested. The choice is saved to `.uca/config.json`. The token sizes quoted here are estimates (characters divided by 4), not tokenizer measurements, and have not yet been benchmarked against real models. If you do not know the number, `--model small`, `--model mid` or `--model large` stands for 8,000, 32,000 or 128,000 tokens (a small local model, a mid or free-tier model, a large one) and follows the same rules; give one of `--model` and `--context`, not both. `--auto-tier` applies the suggestion from `--context` (unknown context means `standard`), prints the machine it saw (read-only, nothing stored or sent) and the reason, never overrides an explicit `--tier`, and keeps the tier of an existing install. Memory and CPU are shown for information only; they cannot tell the model's context size. After every real install the installer checks its own work: planned files present, manifest valid, tier consistent, and your own files that were in the way untouched. It prints `Verification: PASS` or `FAIL` with the exact files, exits 1 on failure, and deletes nothing.
 
-Pick a skill profile to narrow which skills the tier installs (default installs all of the tier's skills). Without `--tier`, a profile narrows the standard tier, as a run without `--profile` would (before 0.3.8-pre.5 it installed the full tier):
+Pick a skill profile to narrow which skills the tier installs (default installs all of the tier's skills). Without `--tier`, a profile narrows the standard tier, as a run without `--profile` would (before 0.3.7 it installed the full tier):
 
 ```bash
 npx --yes github:crazy-creator0/uca-kit init . --profile minimal
