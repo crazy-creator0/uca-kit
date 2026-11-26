@@ -68,8 +68,10 @@ function recommendTier({ context = null } = {}) {
       reason: "The model's context size is unknown, so the safe default is used. Pass --context <tokens> if you know it."
     };
   }
-  const tier = context <= 8000 ? "lite" : context <= 32000 ? "standard" : "full";
-  return { tier, basis: "known", reason: `You said the model has about ${context} tokens of context.` };
+  // Large models get standard as well: full adds only the subagent rule, and each subagent is a whole extra run.
+  const tier = context <= 8000 ? "lite" : "standard";
+  const note = context > 32000 ? " full adds only the rule for starting subagents; choose it with --tier full if you want them." : "";
+  return { tier, basis: "known", reason: `You said the model has about ${context} tokens of context.${note}` };
 }
 
 function describeEnvironment(environment) {

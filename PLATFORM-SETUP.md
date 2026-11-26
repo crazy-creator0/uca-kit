@@ -41,6 +41,18 @@ npx --yes github:crazy-creator0/uca-kit init . --platform cursor --dry-run
 
 Add `--profile minimal|fullstack|frontend|security-focused` to install only that profile's skills (default installs all; see `.agents/profiles/profiles.json`).
 
+### Which tier for which model
+
+| Model | Tier | Why |
+|---|---|---|
+| Small local model (about 8k tokens of context) | `lite` | Shortest text on every request; four condensed skills |
+| Mid or free-tier model | `standard` | Every skill, opened one at a time |
+| Large model | `standard` | The same; `full` only when you want subagents |
+| Any model, when you want the agent to start subagents | `full` | Standard plus the subagent rule; each subagent is a whole extra run of requests |
+
+`init` prints what each tier puts on every request for your tool. `--model small|mid|large` suggests a tier (`--auto-tier` applies it), and an explicit `--tier` always wins.
+
+
 The installer preserves existing files by default. Use `--force` only when you explicitly want to overwrite them. npm documents that `npx` supports package specifiers from Git repositories; see its [Git package specifiers](https://docs.npmjs.com/cli/v11/commands/npm-install/#installing-a-package-from-a-git-repository) documentation.
 
 The shorter package-name command will be available after the package owner confirms that the name is available and publishes the verified package to the registry:

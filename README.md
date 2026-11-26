@@ -75,7 +75,7 @@ npx --yes github:crazy-creator0/uca-kit init . --platform windsurf
 npx --yes github:crazy-creator0/uca-kit init . --platform devin
 ```
 
-Choose a tier to match your model's context size. The tier controls how much guidance is installed:
+Choose a tier to match your model. The tier controls how much guidance is installed, and the installer prints what each tier puts on every request for your tool:
 
 ```bash
 npx --yes github:crazy-creator0/uca-kit init . --platform generic --tier lite
@@ -89,12 +89,12 @@ npx --yes github:crazy-creator0/uca-kit init . --auto-tier --model small    # th
 | Tier | For | Installs |
 |---|---|---|
 | `lite` | Small local models (about 8k tokens of context) | A short core and four condensed skills: anti-hallucination, debugging, anti-ai-slop, import-hygiene |
-| `standard` (default) | Most models | The standard core with its Route table and guardrail lines, every skill (opened one at a time, Read first block first, with `scripts/uca-read.cjs`), the full router for unclear tasks, and workflows |
-| `full` | Large-context models | Everything: all skills, workflows, and subagent dispatch notes |
+| `standard` (default) | Mid, free-tier and large models | The standard core with its Route table and guardrail lines, every skill (opened one at a time, Read first block first, with `scripts/uca-read.cjs`), the full router for unclear tasks, and workflows |
+| `full` | When you want the agent to start subagents | The same files as `standard`, plus the rule for starting subagents in the core. Each subagent is a whole extra run of model requests, so choose it on purpose |
 
-You choose the tier; the agent never changes it. Without `--tier`, a terminal run asks one question, and a non-interactive run uses `standard`. `--context <tokens>` only prints a suggestion (8,000 or fewer: lite; up to 32,000: standard; above: full) and never selects a tier. The choice is saved to `.uca/config.json`. The token sizes quoted here are estimates (characters divided by 4), not tokenizer measurements, and have not yet been benchmarked against real models. If you do not know the number, `--model small`, `--model mid` or `--model large` stands for 8,000, 32,000 or 128,000 tokens (a small local model, a mid or free-tier model, a large one) and follows the same rules; give one of `--model` and `--context`, not both. `--auto-tier` applies the suggestion from `--context` (unknown context means `standard`), prints the machine it saw (read-only, nothing stored or sent) and the reason, never overrides an explicit `--tier`, and keeps the tier of an existing install. Memory and CPU are shown for information only; they cannot tell the model's context size. After every real install the installer checks its own work: planned files present, manifest valid, tier consistent, and your own files that were in the way untouched. It prints `Verification: PASS` or `FAIL` with the exact files, exits 1 on failure, and deletes nothing.
+You choose the tier; the agent never changes it. Without `--tier`, a terminal run asks one question, and a non-interactive run uses `standard`. `--context <tokens>` only prints a suggestion (8,000 or fewer: lite; above: standard) and never selects a tier; `full` is never suggested. The choice is saved to `.uca/config.json`. The token sizes quoted here are estimates (characters divided by 4), not tokenizer measurements, and have not yet been benchmarked against real models. If you do not know the number, `--model small`, `--model mid` or `--model large` stands for 8,000, 32,000 or 128,000 tokens (a small local model, a mid or free-tier model, a large one) and follows the same rules; give one of `--model` and `--context`, not both. `--auto-tier` applies the suggestion from `--context` (unknown context means `standard`), prints the machine it saw (read-only, nothing stored or sent) and the reason, never overrides an explicit `--tier`, and keeps the tier of an existing install. Memory and CPU are shown for information only; they cannot tell the model's context size. After every real install the installer checks its own work: planned files present, manifest valid, tier consistent, and your own files that were in the way untouched. It prints `Verification: PASS` or `FAIL` with the exact files, exits 1 on failure, and deletes nothing.
 
-Pick a skill profile to narrow which skills the tier installs (default installs all of the tier's skills). Using `--profile` without `--tier` keeps the earlier behavior and installs the full tier files:
+Pick a skill profile to narrow which skills the tier installs (default installs all of the tier's skills). Without `--tier`, a profile narrows the standard tier, as a run without `--profile` would (before 0.3.8-pre.5 it installed the full tier):
 
 ```bash
 npx --yes github:crazy-creator0/uca-kit init . --profile minimal

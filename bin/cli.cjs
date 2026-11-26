@@ -106,11 +106,28 @@ function assertTierName(value) {
   }
 }
 
-// Display-only: the installer never applies this suggestion by itself.
+// Display-only: the installer never applies this suggestion by itself. Large models get standard too: full adds only
+// the subagent-dispatch rule, and every subagent is a whole extra run of requests, so it is a choice, never a default.
 function suggestTier(contextTokens) {
-  if (contextTokens <= 8000) return "lite";
-  if (contextTokens <= 32000) return "standard";
-  return "full";
+  return contextTokens <= 8000 ? "lite" : "standard";
+}
+
+// What each tier puts on every request on one host, in estimated tokens (characters / 4), measured from the install
+// files. null when it cannot be measured; the install never depends on it.
+function tierCosts(platform) {
+  try {
+    const { measureHost } = require(path.join(__dirname, "..", "scripts", "uca-host-cost.cjs"));
+    return Object.fromEntries(TIER_NAMES.map((tier) => [tier, measureHost(platform, tier).fixed]));
+  } catch {
+    return null;
+  }
+}
+function tierCostLine(platform, chosen) {
+  const costs = tierCosts(platform);
+  if (!costs) return null;
+  const others = TIER_NAMES.filter((tier) => tier !== chosen).map((tier) => `${tier} ${costs[tier]}`).join(", ");
+  return `Every request on ${platform} carries about ${costs[chosen]} estimated tokens of kit text with ${chosen} (${others}). ` +
+    "full adds the subagent rule; each subagent it starts is a whole extra run.";
 }
 
 // Skill names a tier installs, narrowed by an optional profile. null means every skill in the tier's root.
@@ -227,11 +244,13 @@ Options:
   --tier <name>                  lite, standard, full
                                  Controls how much guidance is installed. Without
                                  --tier you are asked in a terminal; non-interactive
-                                 runs use standard. With --profile and no --tier,
-                                 the full tier files are used.
+                                 runs use standard. Small local model: lite. Mid,
+                                 free-tier or large model: standard. full adds only
+                                 the rule for starting subagents, and each subagent
+                                 is a whole extra run, so choose it on purpose.
   --context <tokens>             Print a suggested tier for your model's context
-                                 size (<= 8000 lite, <= 32000 standard, above: full).
-                                 Display only, unless --auto-tier is also given.
+                                 size (<= 8000 lite, above: standard). Display
+                                 only, unless --auto-tier is also given.
   --model <size>                 small, mid or large: a preset for --context
                                  (8000, 32000, 128000 tokens), so you need not
                                  know the number. Same rules as --context.
@@ -705,16 +724,18 @@ function recordedTier(projectRoot) {
   }
 }
 
-async function chooseTier() {
+async function chooseTier(platform) {
+  const costs = tierCosts(platform);
+  const cost = (tier) => (costs ? ` (about ${costs[tier]} tokens on every request on ${platform})` : "");
   const terminal = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
   try {
     console.log("\nHow much guidance should the agent load?");
-    console.log("  1. lite     - smallest; for small local models (about 8k tokens of context)");
-    console.log("  2. standard - balanced default for most models");
-    console.log("  3. full     - everything, for large-context models");
+    console.log(`  1. lite     - smallest; for small local models (about 8k tokens of context)${cost("lite")}`);
+    console.log(`  2. standard - for mid, free-tier and large models${cost("standard")}`);
+    console.log(`  3. full     - standard plus the rule for starting subagents; each subagent is a whole extra run${cost("full")}`);
     while (true) {
       const answer = (await terminal.question("Choose 1, 2, or 3 [2]: ")).trim();
       if (!answer || answer === "2") return "standard";
@@ -786,10 +807,8 @@ async function main(argv = process.argv.slice(2)) {
         console.log(`Recommended tier: ${recommendation.tier} (${recommendation.basis} context). ${recommendation.reason}`);
         console.log("Choose another tier with --tier <lite|standard|full>.");
       }
-    } else if (options.profile) {
-      options.tier = "full";
     } else if (process.stdin.isTTY && process.stdout.isTTY && !options.yes) {
-      options.tier = await chooseTier();
+      options.tier = await chooseTier(options.platform);
     } else {
       options.tier = DEFAULT_TIER;
     }
@@ -820,6 +839,8 @@ async function main(argv = process.argv.slice(2)) {
   console.log(`\nInstalling UCA Kit (Universal Coding Agent Kit) into: ${projectRoot}`);
   console.log(`Platform profile: ${options.platform}`);
   console.log(`Tier: ${options.tier}`);
+  const costLine = tierCostLine(options.platform, options.tier);
+  if (costLine) console.log(costLine);
   console.log(`Skill profile: ${options.profile || "all (default)"}`);
   if (options.force) {
     console.warn("Warning: --force may overwrite existing instruction and skill files.");
@@ -911,6 +932,7 @@ module.exports = {
   resolveEntries,
   safeResolve,
   suggestTier,
+  tierCostLine,
   tierSkillNames
 };
 

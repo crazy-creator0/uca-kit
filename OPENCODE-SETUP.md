@@ -2,6 +2,17 @@
 
 > Written for the full kit. In the lite and standard tiers some skills, `AGENT-SKILL-MAP.md` and usage files named here are not installed; skip any path that does not exist and use only the skills in `.agents/`.
 
+## Which tier for which model
+
+| Model | Tier | Why |
+|---|---|---|
+| Small local model (about 8k tokens of context) | `lite` | Shortest text on every request; four condensed skills |
+| Mid or free-tier model | `standard` | Every skill, opened one at a time |
+| Large model | `standard` | The same; `full` only when you want subagents |
+| Any model, when you want the agent to start subagents | `full` | Standard plus the subagent rule; each subagent is a whole extra run of requests |
+
+`init` prints what each tier puts on every request for your tool. `--model small|mid|large` suggests a tier (`--auto-tier` applies it), and an explicit `--tier` always wins.
+
 ## Discovery
 - Root AGENTS.md provides repository instructions.
 - .agents/skills/<name>/SKILL.md is a supported project-local skill location. Skills load on demand; they are not all executed for every message.
@@ -23,6 +34,29 @@ node scripts/uca-usage.cjs show
 ```
 
 OpenCode may report token usage and a cost value; the plugin keeps token counters as host-reported and cost as estimated rather than treating it as an invoice. The plugin's CI test simulates the event payload and budget block; it does not replace a real test in your installed OpenCode version. After installation, reload OpenCode, run a short test task, then confirm that `node scripts/uca-usage.cjs show` changes as expected. If the host's event/hook shapes differ, disable the plugin and report the mismatch rather than trusting incomplete numbers.
+
+### Step log: what each request cost
+
+To see where a run's requests go, turn on the opt-in step log before you start OpenCode, one file per run:
+
+```powershell
+# Windows PowerShell
+$env:UCA_USAGE_STEPS = "D:\runs\task-1.jsonl"; opencode
+```
+
+```bash
+# macOS or Linux
+UCA_USAGE_STEPS=~/runs/task-1.jsonl opencode
+```
+
+Then total it, or compare two runs side by side:
+
+```bash
+node scripts/uca-usage.cjs steps ~/runs/task-1.jsonl
+node scripts/uca-usage.cjs steps ~/runs/task-1.jsonl ~/runs/task-1-no-kit.jsonl
+```
+
+It prints the requests and how each ended, input summed over all requests, output, peak context, wall time, tool calls by kind (read, write, check, shell, agent) and reads before the first write. OpenCode's own token total shows the context of the last request, not what the run spent. What the log holds is in `USAGE-PRIVACY.md`; it never holds prompts, replies, file contents or command text.
 
 **Limitations:** this is an OpenCode-specific adapter, not a universal interceptor. Other IDEs remain manual/unmetered until their own supported usage/hook adapters are implemented. The ledger is local by default; hosted model providers still receive the request needed to generate answers. Full privacy from the model provider requires a suitably configured local/self-hosted model. See `USAGE-PRIVACY.md`.
 
