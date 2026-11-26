@@ -2,6 +2,4 @@
 
 @AGENTS.md
 
-Skills are in `.agents/skills/<name>/SKILL.md`, and Claude Code also reads `.claude/skills/` (the installer fills it; otherwise run `python scripts/sync_skills.py --target claude --project-root .`). Open only the skill the task needs.
-
-If a Claude Code feature is missing, read the needed `SKILL.md` directly and do specialist work one step at a time; `HOST-CAPABILITY-FALLBACK.md` has details when it is installed. OpenCode agents under `.opencode/agents/` do not apply here. Do not claim usage metering without a tested integration.
+Skills: `.agents/skills/<name>/SKILL.md`, also in `.claude/skills/` (refill: `python scripts/sync_skills.py --target claude --project-root .`); open only the one the task needs. A missing Claude Code feature: work one step at a time (`HOST-CAPABILITY-FALLBACK.md` when it is installed). Never claim usage metering without verified support.

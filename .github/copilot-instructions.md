@@ -2,6 +2,4 @@
 
 Follow root `AGENTS.md`.
 
-Skills are in `.agents/skills/<name>/SKILL.md`. Copilot supports that location in some surfaces; confirm discovery in your Copilot version, and read a skill file directly if it is not loaded. Open only the skill the task needs.
-
-If a Copilot feature is missing, do specialist work one step at a time; `HOST-CAPABILITY-FALLBACK.md` has details when it is installed. OpenCode agents, Cursor subagents, and usage hooks do not apply here unless verified.
+Skills: `.agents/skills/<name>/SKILL.md`; if Copilot does not load one, read the file directly; open only the one the task needs. A missing Copilot feature: work one step at a time (`HOST-CAPABILITY-FALLBACK.md` when it is installed). Never claim usage metering without verified support.

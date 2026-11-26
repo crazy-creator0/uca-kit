@@ -2,6 +2,4 @@
 
 Follow root `AGENTS.md`.
 
-Skills are in `.agents/skills/<name>/SKILL.md`. If Junie does not load them, read the needed file directly. Open only the skill the task needs.
-
-If a Junie feature is missing, do specialist work one step at a time; `HOST-CAPABILITY-FALLBACK.md` has details when it is installed. OpenCode commands and subagents do not apply here. Never claim automatic metering without verified support.
+Skills: `.agents/skills/<name>/SKILL.md`; if Junie does not load one, read the file directly; open only the one the task needs. A missing Junie feature: work one step at a time (`HOST-CAPABILITY-FALLBACK.md` when it is installed). Never claim usage metering without verified support.
