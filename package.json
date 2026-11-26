@@ -1,6 +1,6 @@
 {
   "name": "create-universal-coding-agent-kit",
-  "version": "0.3.8-pre.2",
+  "version": "0.3.8-pre.3",
   "description": "Install UCA Kit, an IDE-agnostic AI coding-agent toolkit with reusable skills, workflows, and engineering guidance.",
   "author": "Crazy Creators",
   "license": "Apache-2.0",
