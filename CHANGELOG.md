@@ -6,6 +6,31 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 Nothing yet.
 
+## 0.3.8-pre.3 (2026-11-26)
+
+Pre-release. Cuts what every call pays, on every host and tier, and adds a ratchet so the cost cannot creep back. Compared with 0.3.6, 0.3.7 and 0.3.8 had made bug, feature, audit and medium builds slightly dearer (+1% to +5%) and left lite and generic hosts no cheaper; this release corrects that.
+
+Changed
+- **AGENTS.md** (loaded by itself on generic hosts, every call) keeps what a model needs if it never opens CORE: read CORE first, the Safe Vibe Loop with its ask-before list, the new-app trigger, Git optional, the migration workflow, the licence. 538 to 357 estimated tokens.
+- **Route paragraph** says the same in fewer words, taking back the 35 tokens 0.3.7 added to every task.
+- **Read first blocks** for `project-notes` (663 to 228 per call), `bug-investigation` (385 to 167) and `production-deployment` (375 to 163), which had none and printed whole. `feature-development` keeps none: a feature needs all its steps.
+- **Host entry files** (Claude Code, Gemini, Copilot, Cursor, Devin, Windsurf, Junie, JetBrains) carry only what each call needs: 25 to 52 fewer tokens per call per host. Removed: notes that OpenCode agents do not apply on other hosts, and repeated general advice.
+- **A file the user did not build is not audited.** Audit and application-security say, for an APK, EXE or installer, that they cannot tell whether it is safe, and to name a malware scanner, instead of risking a false all-clear. Per call: audit 221 to 236, application-security 212 to 230.
+
+Added
+- **Cost ratchet**: `scripts/uca-cost-baseline.cjs` and `tests/cost-baseline.test.cjs` hold 61 numbers (always-on per tier, fixed cost per host in lite and standard, every Read first block, every task path). The build fails when one rises without a written reason, or falls without the baseline being lowered.
+
+Sizes against 0.3.6, estimated tokens
+- Always-on, standard: 2,035 (2,200). Fixed per host, standard: generic 2,035 (2,200), Claude Code 2,645 (3,139), Gemini 2,650 (3,145), Codex and OpenCode 2,554 (2,999), Cursor 2,183 (2,400). Lite: generic 851 (851), Claude Code 1,059 (1,108), Gemini 1,064 (1,114).
+- Task paths, standard: bug 2,264 (2,429), feature 2,508 (2,673), audit 4,967 (5,035), small build 4,315 (7,636 on the full path), medium or large new build 7,842 (7,636).
+- Reason for the one rise, the medium or large new build (+206): the routing line to "Small build", the page-check line in "Check it like the user", and the text-first evidence rule in the design review, all added in 0.3.7 and 0.3.8 on purpose.
+
+Checked before release
+- What ran: `node tests/verify.cjs` (7 checks, all passed) before each commit; uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, `node scripts/uca-wiring-check.cjs .`, and a hand review of this release's diff.
+- Readiness: Gold, 25 of 26, unchanged (the orphan `demo/docs/index.html`). The audit check read 200 files with no findings; the wiring check passed.
+- Hand review: every line removed from AGENTS.md is in CORE, or was a pointer only; the tests that pin AGENTS.md's safety lines still pass unchanged; the baseline script writes only its own file, and only with `--write`.
+- Not covered: whether models open CORE when only AGENTS.md is loaded; round 4 traces it.
+
 ## 0.3.8-pre.2 (2026-11-26)
 
 Pre-release. A short path for small builds, and lite's small-build cost reported. Instruction changes for small builds only; not measured with models yet: round 4 tests them against 0.3.5 and no kit on the design, testing and truthfulness points, and they are rolled back if those drop.
