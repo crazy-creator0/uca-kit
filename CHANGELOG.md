@@ -6,6 +6,28 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 Nothing yet.
 
+## 0.3.8-pre.4 (2026-11-26)
+
+Pre-release. The start of a written flow between skills: each skill that hands work to another says which one, and the kit checks and measures the flow. No orchestration and no new always-on text.
+
+Added
+- **Next lines** in ten Read first blocks, for real handoffs only: `backend-api` and `database-engineering` to each other when the other side changes; `design-taste-discovery` to `frontend-engineering`; `frontend-visuals-and-3d` to `performance-engineering` if frames drop; `import-hygiene` and `testing-and-code-review` to `debugging`; `cloudflare-operations` to `production-deployment`; `stack-migration` to `testing-and-code-review`; `audit`'s approved findings to `debugging`; `skill-gap-router` to its choice. Every other skill ends at R-FINISH.
+- **Flow checks** (`tests/flow.test.cjs`): every name exists, a cycle has only conditional edges (the backend and database pair), and a chain is at most four skills; the test shows each check can fail.
+- **Chain cost** in the context report and the cost baseline: two-skill chains read 381 to 512 estimated tokens of Read first blocks; `stack-migration > testing-and-code-review > debugging` reads 766.
+
+Changed
+- Trimmed lines in the same blocks pay for most of the Next lines: blocks with a Next line rose 2 to 11 estimated tokens per call, others fell 2 to 11 (debugging dropped a line that repeated R-LOOP). The baseline records the reason for each rise.
+
+Not done, by decision
+- A five-line handoff between skills is not added to CORE: within one session the earlier work is already in context, so it would cost about 30 tokens on every call for no gain yet. It belongs where separate agents hand work to each other.
+- No Next line that only points to the user check: R-FINISH's Checks field already holds those levels, and the same line in five skills broke the kit's rule against duplicated lines.
+
+Checked before release
+- What ran: `node tests/verify.cjs` (7 checks, all passed) before each commit; uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, `node scripts/uca-wiring-check.cjs .`, and a hand review of this release's diff.
+- Readiness: Gold, 25 of 26, unchanged (the orphan `demo/docs/index.html`). The audit check read 200 files with no findings; the wiring check passed.
+- Hand review: each removed line is covered elsewhere (R-LOOP for debugging's two-failure stop, the Not-when line for frontend's look); the cost ratchet holds 71 numbers, with a reason on each rise.
+- Not covered: whether models follow a Next line; round 4 traces it.
+
 ## 0.3.8-pre.3 (2026-11-26)
 
 Pre-release. Cuts what every call pays, on every host and tier, and adds a ratchet so the cost cannot creep back. Compared with 0.3.6, 0.3.7 and 0.3.8 had made bug, feature, audit and medium builds slightly dearer (+1% to +5%) and left lite and generic hosts no cheaper; this release corrects that.
