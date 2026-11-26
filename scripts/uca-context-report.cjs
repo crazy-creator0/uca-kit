@@ -29,6 +29,14 @@ const TASK_PATHS = {
     ["frontend-engineering", "read-first"], ["frontend-engineering", "Stack decision"],
     ["testing-and-code-review", "read-first"], ["testing-and-code-review", "Check it like the user"]
   ],
+  // A small build (one file or screen, one person): new-project's "Small build", which names the exact sections it
+  // needs, so the design and testing skills' Read first blocks are not read; the one direction picked.
+  smallBuild: [
+    ["new-project", "read-first"], ["new-project", "Small build"],
+    ["design-taste-discovery", "Small build"],
+    ["design-taste-discovery/directions", "list"], ["design-taste-discovery/directions", "Ledger"],
+    ["testing-and-code-review", "Check it like the user"]
+  ],
   audit: [["audit", "full"], ["testing-and-code-review", "read-first"], ["testing-and-code-review", "Check it like the user"]]
 };
 
@@ -220,7 +228,7 @@ function main(argv = process.argv.slice(2)) {
     if (!row.taskPaths) continue;
     const p = row.taskPaths;
     const cell = (item) => `${item.readFirst} / ${item.noNode} / ${item.wholeFiles}`;
-    console.log(`${row.tier}: bug ${cell(p.bug)}; feature ${cell(p.feature)}; new app with a screen ${cell(p.newApp)}; audit ${cell(p.audit)}`);
+    console.log(`${row.tier}: bug ${cell(p.bug)}; feature ${cell(p.feature)}; new app with a screen ${cell(p.newApp)}; small build ${cell(p.smallBuild)}; audit ${cell(p.audit)}`);
   }
   console.log("Whether a model stops at a Read first block or a section is not measured here; evaluation runs with read logs show it.");
   console.log("Task success per token: not measured. It needs the benchmark runs.");

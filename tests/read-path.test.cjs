@@ -288,3 +288,25 @@ test("uca-read finds a section that lives in a part, and refuses a part path out
   assert.equal(partFiles(stripFront(fs.readFileSync(path.join(agents, "workflows", "x.md"), "utf8")), agents).length, 0);
   assert.doesNotMatch(readWhole(path.join(agents, "workflows", "x.md"), agents), /not kit text/);
 });
+
+test("a small build has its own short path, and it keeps what the full path checks", () => {
+  const readFirst = section(read(".agents/workflows/new-project.md"), "Read first");
+  assert.match(readFirst, /for a small request \(one file or one screen, one person using it\) read "Small build" now and follow it; otherwise read "Size the plan first" now/);
+  const small = read(".agents/workflows/new-project/small.md");
+  assert.match(small, /Anything larger, or any doubt about the size, follows "Size the plan first" and the full Steps\./);
+  for (const kept of [
+    /one input hard/, /each in or out/, /ask at most one question/, /Never drop a feature the user named\./,
+    /--section "Check it like the user"/, /the hard input included/,
+    /loading, empty and error states/, /focus does not stay on a button that a key would press again/,
+    /no eval or raw HTML from input/, /at least one check of a failure/, /Done or Left with a reason/,
+    /Mark nothing Done without opening the file or running it\./,
+    /300 words or less:\*\* the R-FINISH lines first \(Changed, Checks, Still unknown\)/, /never shorten Still unknown to fit/
+  ]) assert.match(small, kept);
+  const design = read(".agents/skills/design-taste-discovery/parts/small.md");
+  assert.match(design, /A substantial new UI gets Steps 1 to 8\./);
+  for (const kept of [
+    /never "Item 1" or lorem ipsum/, /read only that one \(`--section "<name>"`\)/, /one signature element from the domain/,
+    /named typefaces, not the framework default/, /hex for background, text, one accent and status colors/,
+    /no hero with a headline and two buttons/, /uca-design-check\.cjs/, /Evidence is text first/, /Never claim a look you did not take\./
+  ]) assert.match(design, kept);
+});

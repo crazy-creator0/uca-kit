@@ -72,6 +72,9 @@ test("standard and full report four task paths, each lighter than reading the sa
       assert.ok(p.readFirst <= p.noNode && p.noNode <= p.wholeFiles, `${tier} ${task}: without Node, a model opens no more than the files read whole`);
     }
     assert.equal(rows[tier].newAppTask, rows[tier].taskPaths.newApp.readFirst);
+    // A small build reads far less than the full new-app path; 4,000 is the plan's target, not yet reached.
+    assert.ok(rows[tier].taskPaths.smallBuild.readFirst < 0.6 * rows[tier].taskPaths.newApp.readFirst, `${tier}: small build`);
+    if (tier === "standard") assert.ok(rows[tier].taskPaths.smallBuild.readFirst <= 4700, `standard small build: ${rows[tier].taskPaths.smallBuild.readFirst}`);
     // Split files: without Node, the new-app path opens only the parts that hold its sections.
     assert.ok(rows[tier].taskPaths.newApp.noNode < 0.8 * rows[tier].taskPaths.newApp.wholeFiles, `${tier}: new app without Node`);
   }
