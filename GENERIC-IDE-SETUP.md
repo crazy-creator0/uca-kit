@@ -6,6 +6,17 @@ This guide is the fallback for an IDE, editor, extension, terminal agent, or hos
 
 **The IDE does not need to be listed here.** The shared instructions and skills are plain text. What varies is whether the tool automatically reads project instruction files or supports Agent Skills. Start with [HOST-CAPABILITY-FALLBACK.md](HOST-CAPABILITY-FALLBACK.md): inspect what this host actually supports, use its documented native format, then fall back safely instead of assuming features exist.
 
+## Which tier for which model
+
+| Model | Tier | Why |
+|---|---|---|
+| Small local model (about 8k tokens of context) | `lite` | Shortest text on every request; four condensed skills |
+| Mid or free-tier model | `standard` | Every skill, opened one at a time |
+| Large model | `standard` | The same; `full` only when you want subagents |
+| Any model, when you want the agent to start subagents | `full` | Standard plus the subagent rule; each subagent is a whole extra run of requests |
+
+`init` prints what each tier puts on every request for your tool. `--model small|mid|large` suggests a tier (`--auto-tier` applies it), and an explicit `--tier` always wins.
+
 ## Option 1: The tool reads project instruction files
 
 1. Copy the shared kit files into your project root, or keep this kit accessible to the coding agent.

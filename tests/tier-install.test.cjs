@@ -54,7 +54,8 @@ test("suggestTier uses the planned boundaries", () => {
   assert.equal(suggestTier(8000), "lite");
   assert.equal(suggestTier(8001), "standard");
   assert.equal(suggestTier(32000), "standard");
-  assert.equal(suggestTier(32001), "full");
+  assert.equal(suggestTier(32001), "standard");
+  assert.equal(suggestTier(1000000), "standard", "full is chosen on purpose, never suggested");
 });
 
 test("--context only prints a suggestion and never changes the selected tier", () => {
@@ -166,11 +167,11 @@ test("a profile that shares no skills with the tier is an error, not an empty in
   });
 });
 
-test("without a tier, --profile keeps the previous behavior and uses the full tier files", () => {
+test("without a tier, --profile narrows the standard tier, as a run without --profile would (full only on purpose)", () => {
   withProject((root) => {
     const result = runCli(["init", root, "--platform", "claude", "--profile", "minimal", "--yes"], root);
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /Tier: full/);
+    assert.match(result.stdout, /Tier: standard/);
     assert.deepEqual(list(root, ".agents/skills"), ["anti-ai-slop", "anti-hallucination", "skill-gap-router"]);
   });
 });

@@ -508,7 +508,7 @@ test("--model small, mid or large is a plain-words preset for --context, and an 
   assert.equal(cli.parseArgs(["init", ".", "--model", "small"]).context, 8000);
   assert.equal(cli.suggestTier(cli.parseArgs(["init", ".", "--model", "small"]).context), "lite");
   assert.equal(cli.suggestTier(cli.parseArgs(["init", ".", "--model", "mid"]).context), "standard");
-  assert.equal(cli.suggestTier(cli.parseArgs(["init", ".", "--model", "large"]).context), "full");
+  assert.equal(cli.suggestTier(cli.parseArgs(["init", ".", "--model", "large"]).context), "standard", "full is chosen on purpose, never suggested");
   assert.throws(() => cli.parseArgs(["init", ".", "--model", "huge"]), /--model requires one of: small, mid, large/);
   assert.throws(() => cli.parseArgs(["init", ".", "--model", "mid", "--context", "9000"]), /Use --model or --context, not both/);
   const options = cli.parseArgs(["init", ".", "--model", "small", "--auto-tier", "--tier", "full"]);
@@ -528,4 +528,24 @@ test("--model with --auto-tier installs the suggested tier, and doctor reports i
   const explicit = fs.mkdtempSync(path.join(os.tmpdir(), "uca-model-"));
   spawnSync(process.execPath, [cliPath, "init", explicit, "--platform", "generic", "--model", "small", "--auto-tier", "--tier", "standard"], { encoding: "utf8" });
   assert.equal(JSON.parse(fs.readFileSync(path.join(explicit, ".uca", "config.json"), "utf8")).tier, "standard");
+});
+
+test("--profile without --tier installs standard, and init prints what each tier puts on every request", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "uca-profile-tier-"));
+  try {
+    const { spawnSync } = require("node:child_process");
+    const cliPath = path.join(__dirname, "..", "bin", "cli.cjs");
+    const result = spawnSync(process.execPath, [cliPath, "init", dir, "--platform", "opencode", "--profile", "minimal", "--yes"], { encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(dir, ".uca", "config.json"), "utf8")).tier, "standard");
+    assert.match(result.stdout, /Every request on opencode carries about \d+ estimated tokens of kit text with standard \(lite \d+, full \d+\)\. full adds the subagent rule; each subagent it starts is a whole extra run\./);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the per-tier cost line uses the same numbers as the host cost report", () => {
+  const { measureHost } = require("../scripts/uca-host-cost.cjs");
+  const line = require("../bin/cli.cjs").tierCostLine("claude", "lite");
+  for (const tier of ["lite", "standard", "full"]) assert.ok(line.includes(String(measureHost("claude", tier).fixed)), tier);
 });

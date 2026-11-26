@@ -55,7 +55,9 @@ test("the recommendation follows the stated context only, and unknown means stan
   assert.equal(detect.recommendTier({ context: 8000 }).tier, "lite");
   assert.equal(detect.recommendTier({ context: 8001 }).tier, "standard");
   assert.equal(detect.recommendTier({ context: 32000 }).tier, "standard");
-  assert.equal(detect.recommendTier({ context: 32001 }).tier, "full");
+  assert.equal(detect.recommendTier({ context: 32001 }).tier, "standard");
+  assert.equal(detect.recommendTier({ context: 128000 }).tier, "standard", "full is chosen on purpose, never recommended");
+  assert.match(detect.recommendTier({ context: 128000 }).reason, /full adds only the rule for starting subagents/);
   const unknown = detect.recommendTier({});
   assert.equal(unknown.tier, "standard");
   assert.equal(unknown.basis, "unknown");
@@ -65,8 +67,8 @@ test("the recommendation follows the stated context only, and unknown means stan
 test("detection never reads hardware to decide the tier: memory changes nothing", () => {
   assert.deepEqual(detect.recommendTier({ context: 4000, totalMemoryMB: 1048576 }), detect.recommendTier({ context: 4000 }));
   assert.equal(detect.recommendTier({ totalMemoryMB: 1 }).tier, "standard");
-  assert.equal(detect.recommendTier({ context: 100000, totalMemoryMB: 1 }).tier, "full");
-  assert.equal(detect.recommendTier({ context: 100000, freeMemoryMB: 1, cpuCores: 1 }).tier, "full");
+  assert.equal(detect.recommendTier({ context: 100000, totalMemoryMB: 1 }).tier, "standard");
+  assert.deepEqual(detect.recommendTier({ context: 100000, freeMemoryMB: 1, cpuCores: 1 }), detect.recommendTier({ context: 100000 }));
 });
 
 // The privacy promises, checked on the source. A static check cannot prove behaviour, so it sits next to the real tests above.
