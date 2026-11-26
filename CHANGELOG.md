@@ -6,6 +6,28 @@ All notable changes are listed here. The project is early-stage, and nothing bel
 
 Nothing yet.
 
+## 0.3.8-pre.2 (2026-11-26)
+
+Pre-release. A short path for small builds, and lite's small-build cost reported. Instruction changes for small builds only; not measured with models yet: round 4 tests them against 0.3.5 and no kit on the design, testing and truthfulness points, and they are rolled back if those drop.
+
+Changed
+- **Small build path.** A small request (one file or one screen, one person using it) follows "Small build" in `new-project`: a six-line plan, a one-file stack, the design skill's own "Small build", "Check it like the user" read in full, finish items 4 to 9 in one pass, and a closing message of 300 words or less. The design "Small build" holds the essentials of design Steps 1, 3, 5 and 7, and still reads the one direction it picks so the brief keeps real fonts and colors. Medium and large builds, or any doubt about the size, keep every step. Tests pin what the short path keeps: the hard input, the user check, the focus check, Done or Left for every requested item, Still unknown never shortened, the brief's fonts and hex colors, the template patterns to avoid, and evidence before a claimed look.
+- **Context report** adds a small-build path for standard and full, and a line for lite.
+- Sizes, estimated tokens, standard: a small build reads 4,515 with the read helper and 4,825 without Node, against 7,970 for the same request on the full path in 0.3.7-pre.2 (-43%). The full new-app path reads 8,042. Lite's small build is 1,175: lite installs no workflow or design skill, so R-NEW's plan is its whole path. Lite worst case unchanged at 1,600.
+
+Not reached
+- The plan's target of 4,000 for a small build: always-on text alone is 2,235, and cutting it would change shared rules.
+
+Not done, by decision
+- Lite is not split into parts: its four skills total 749 tokens and lite sits at its 1,600 limit, so Parts lists would cost more than they save.
+
+Checked before release
+- What ran: `node tests/verify.cjs` (7 checks, all passed) before each commit; uca-audit on the whole repository: `node scripts/uca-readiness.cjs .`, `node scripts/uca-audit-check.cjs .`, `node scripts/uca-wiring-check.cjs .`, and a hand review of this release's diff.
+- Readiness: Gold, 25 of 26, unchanged (the orphan `demo/docs/index.html`). The audit check read 199 files with no findings; the wiring check passed.
+- Hand review: the small design path agrees with the design skill's rule against coding a substantial new direction without asking about taste (a small build is not one, and it asks when the look is the point); medium and large paths changed only by the routing line in new-project's Read first.
+- Limits found: `design-taste-discovery` is now at its 9,000-byte limit, so its next addition must remove as much as it adds.
+- Not covered: whether small builds score as well as before; round 4 measures it.
+
 ## 0.3.8-pre.1 (2026-11-25)
 
 Pre-release. Measures what each host loads before any task, cuts the part the kit controls, and lets a user pick a tier by model size. No change to how the kit tells a model to work, apart from shorter skill descriptions.
