@@ -17,9 +17,10 @@ Not when: backend or non-visual work; a small fix inside an existing design syst
 Must do: learn the domain and real data; at most one taste question; a written brief with real fonts, hex colors and a signature; avoid Step 5 patterns.
 Done when: the build follows the brief and was looked at and marked pass or fail with evidence.
 Stop here if: the user only asked which direction to take.
-Read on only for: Step 1 and Step 3 before building; Step 7 and `review.md` before finishing; `directions.md`, `techniques.md` or `motion.md` when a step points there.
+Read on only for: "Small build" for a small build; else Step 1 and Step 3 before building; Step 7 and `review.md` before finishing; `directions.md`, `techniques.md` or `motion.md` when a step points there.
 
 ## Parts
+- Small build: `.agents/skills/design-taste-discovery/parts/small.md`
 - Step 1 — learn the domain, and what the user already told us; Step 2 — ask one concise taste question when needed: `.agents/skills/design-taste-discovery/parts/domain.md`
 - Step 3 — commit to a design brief: `.agents/skills/design-taste-discovery/parts/brief.md`
 - Step 4 — pick the cheapest technique that fits the taste, not a trend; Step 5 — avoid generic AI-generated UI patterns; Step 6 — design intentional, distinctive motion when requested: `.agents/skills/design-taste-discovery/parts/build.md`
