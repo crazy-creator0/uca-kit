@@ -58,10 +58,36 @@ test("steps are parsed strictly: every kind, comments skipped, unknown lines and
   assert.deepEqual(steps.map((step) => step.kind), ["click", "type", "press", "wait", "expect-text", "expect-visible", "expect-count", "expect-focus"]);
   assert.equal(steps[1].text, "Ada Lovelace");
   assert.equal(steps[6].count, 3);
-  const bad = parseSteps("clik #a\nwait 9000\n");
+  const bad = parseSteps("clik #a\nwait 9000\nexpect txt #b c\n");
   assert.equal(bad.errors.length, 2);
-  assert.match(bad.errors[0], /line 1: not a step/);
-  assert.match(bad.errors[1], /line 2: wait is at most 2000 ms/);
+  assert.match(bad.errors[0], /line 2: wait is at most 2000 ms/);
+  // Every unknown line is named in one error, followed by every accepted form.
+  assert.match(bad.errors[1], /^not a step: line 1: clik #a; line 3: expect txt #b c\. Accepted lines:/);
+  for (const form of ["click <selector>", "type <selector> <text>", "press <key>", "wait <ms", "expect text <text>", "expect text <selector> <text>", "expect visible <selector>", "expect count <selector> <n>", "expect focus <selector>"]) {
+    assert.ok(bad.errors[1].includes(form), form);
+  }
+});
+
+test("expect text takes an element first when the first word is a selector; plain words still mean the whole page", () => {
+  const { steps, errors } = parseSteps("expect text #score 00\nexpect text .status Game Over\nexpect text [data-role=title] Hi\nexpect text Score: 1\nexpect text Game Over\n");
+  assert.deepEqual(errors, []);
+  assert.deepEqual(steps.map(({ kind, selector, text }) => [kind, selector, text]), [
+    ["expect-text-in", "#score", "00"],
+    ["expect-text-in", ".status", "Game Over"],
+    ["expect-text-in", "[data-role=title]", "Hi"],
+    ["expect-text", undefined, "Score: 1"],
+    ["expect-text", undefined, "Game Over"]
+  ]);
+});
+
+test("the steps Big Pickle wrote on 26 Nov parse with no error, and its text checks name their element", () => {
+  const text = fs.readFileSync(path.join(__dirname, "fixtures", "page-check", "snake-steps-2026-11-26.txt"), "utf8");
+  const { steps, errors } = parseSteps(text);
+  assert.deepEqual(errors, []);
+  assert.equal(steps.length, 16);
+  const inElement = steps.filter((step) => step.kind === "expect-text-in");
+  assert.deepEqual(inElement.map((step) => `${step.selector} ${step.text}`), ["#score 00", "#pauseBtn Resume", "#pauseBtn Pause", "#score 00", "#overlayTitle Game Over"]);
+  assert.equal(steps.filter((step) => step.kind === "expect-text").length, 0);
 });
 
 test("only local pages are opened: a live site, another scheme or a missing file is refused", async () => {
@@ -107,6 +133,34 @@ test("in a browser it catches a pause button that Space presses again, and repor
   const fixed = await run(["game.html", "--steps", "steps.txt"], dir);
   assert.equal(fixed.code, 0, fixed.out);
   assert.match(fixed.out, /PASSED: \d+ passed, 0 failed, 0 note\(s\)\./);
+});
+
+test("in a browser, expect text <selector> <text> checks that element, names a missing one, and shows a short text on failure", { skip: !browserAvailable() && "Playwright is not installed here" }, async (t) => {
+  const dir = project();
+  fs.writeFileSync(path.join(dir, "game.html"), GAME.replace("<p id=\"state\">", "<p id=\"state\" style=\"text-transform:uppercase\">"));
+  fs.writeFileSync(path.join(dir, "steps.txt"), "press ArrowUp\nexpect text #score 1\nexpect text #state running\nexpect text #score 5\nexpect text #nothing 1\nexpect text #state 1\nexpect text RUNNING\n");
+  const result = await run(["game.html", "--steps", "steps.txt"], dir);
+  if (result.code === 3 || /no browser/.test(result.out)) return t.skip("no browser could start");
+  assert.equal(result.code, 1);
+  assert.doesNotMatch(result.out, /FAIL\s+line 2/);
+  assert.doesNotMatch(result.out, /FAIL\s+line 3/);
+  assert.match(result.out, /FAIL\s+line 4: expect text #score "5" \(#score shows "1"\)/);
+  assert.match(result.out, /FAIL\s+line 5: expect text #nothing "1" \(no element matches #nothing\)/);
+  // "1" is on the page (the score) but not in #state: the element form does not fall back to the whole page.
+  assert.match(result.out, /FAIL\s+line 6: expect text #state "1" \(#state shows "RUNNING"\)/);
+  // CSS shows "running" as RUNNING: both text forms pass and say the letter case differs.
+  assert.match(result.out, /ok\s+line 3: expect text #state "running" \(on screen in other letter case, as CSS can show it\)/);
+  assert.match(result.out, /ok\s+line 7: expect text "RUNNING"/);
+  assert.match(result.out, /FAILED: \d+ passed, 3 failed/);
+});
+
+test("without a browser, a selector in expect text is checked against the HTML ids", async () => {
+  const dir = project();
+  fs.writeFileSync(path.join(dir, "steps.txt"), "expect text #score 0\nexpect text #missing 0\n");
+  const result = await run(["game.html", "--steps", "steps.txt"], dir, { UCA_PAGE_CHECK_NO_BROWSER: "1" });
+  assert.equal(result.code, 1);
+  assert.match(result.out, /ok\s+line 1: #score exists in the HTML \(not run\)/);
+  assert.match(result.out, /FAIL\s+line 2: #missing exists in the HTML \(not run\) \(no element with that id\)/);
 });
 
 test("the user check points to the page check, and standard and full install it; the model still writes the steps", () => {

@@ -1,0 +1,16 @@
+click #startBtn
+expect visible #board
+expect text #score 00
+press ArrowRight
+press ArrowDown
+wait 200
+click #pauseBtn
+expect text #pauseBtn Resume
+click #pauseBtn
+expect text #pauseBtn Pause
+click #restartBtn
+expect text #score 00
+press ArrowUp
+wait 2000
+expect visible #overlay
+expect text #overlayTitle Game Over

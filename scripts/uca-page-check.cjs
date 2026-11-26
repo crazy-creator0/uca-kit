@@ -8,8 +8,9 @@
 // A steps file has one step per line ("#" starts a comment). The model writes the user's own steps here,
 // so the checks stay specific to the task; this script only runs them:
 //   click <selector>               type <selector> <text>        press <key>          wait <ms, at most 2000>
-//   expect text <text>             expect visible <selector>     expect count <selector> <n>
-//   expect focus <selector>        (which element has keyboard focus now)
+//   expect text <text>             expect text <selector> <text> (a selector starts with #, . or [)
+//   (text checks pass when only letter case differs, since CSS can change it on screen, and say so)
+//   expect visible <selector>      expect count <selector> <n>   expect focus <selector>
 //
 // Built in, at each width: page errors, console errors, horizontal overflow, images without alt, form controls
 // and buttons without a name, and a note when a clicked button keeps keyboard focus (Space or Enter would press
@@ -17,7 +18,8 @@
 //
 // Uses Playwright when it is already installed; it never installs anything. Without a browser it runs static
 // checks on a local HTML file and says the steps were not run. It opens local pages only: a file, or localhost,
-// 127.0.0.1 or [::1]. It prints selectors, counts and positions, not page text, apart from text the steps name.
+// 127.0.0.1 or [::1]. It prints selectors, counts and positions, not page text, apart from text the steps name and,
+// when a text check on a named element fails, up to 40 characters of that one element's text.
 // Exit codes: 0 every check passed, 1 a check failed, 2 usage error, 3 the page could not be opened.
 
 const fs = require("node:fs");
@@ -29,6 +31,19 @@ const MAX_STEPS = 60;
 const MAX_LINES = 20;
 const DEFAULT_WIDTHS = [390, 1280];
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
+const SHOWN_TEXT = 40;
+// Every accepted line, as the help and the error for an unknown line print them.
+const FORMS = [
+  "  click <selector>",
+  "  type <selector> <text>",
+  "  press <key>",
+  `  wait <ms, at most ${MAX_WAIT_MS}>`,
+  "  expect text <text>                (anywhere on the page)",
+  "  expect text <selector> <text>     (in that element; the selector starts with #, . or [)",
+  "  expect visible <selector>",
+  "  expect count <selector> <n>",
+  "  expect focus <selector>"
+];
 
 function usage() {
   return `uca-page-check — open a local page like its user, run written steps, report in plain text
@@ -36,8 +51,7 @@ function usage() {
   node scripts/uca-page-check.cjs <page.html | http://localhost:PORT/path> [--steps steps.txt] [--widths 390,1280]
 
 Steps file, one per line:
-  click <selector> | type <selector> <text> | press <key> | wait <ms>
-  expect text <text> | expect visible <selector> | expect count <selector> <n> | expect focus <selector>
+${FORMS.join("\n")}
 
 Local pages only. Uses Playwright if it is installed; otherwise static checks, and the steps are not run.
 Exit codes: 0 passed, 1 a check failed, 2 usage error, 3 the page could not be opened.`;
@@ -85,6 +99,7 @@ function resolveTarget(target, cwd = process.cwd()) {
 function parseSteps(text) {
   const steps = [];
   const errors = [];
+  const unknown = [];
   text.replace(/\r\n/g, "\n").split("\n").forEach((raw, index) => {
     const line = raw.trim();
     if (!line || line.startsWith("#")) return;
@@ -97,12 +112,14 @@ function parseSteps(text) {
       const ms = Number(match[1]);
       if (ms > MAX_WAIT_MS) errors.push(`line ${number}: wait is at most ${MAX_WAIT_MS} ms`);
       else steps.push({ number, kind: "wait", ms });
-    } else if ((match = /^expect\s+text\s+(.+)$/.exec(line))) steps.push({ number, kind: "expect-text", text: match[1] });
+    } else if ((match = /^expect\s+text\s+([#.[]\S*)\s+(.+)$/.exec(line))) steps.push({ number, kind: "expect-text-in", selector: match[1], text: match[2] });
+    else if ((match = /^expect\s+text\s+(.+)$/.exec(line))) steps.push({ number, kind: "expect-text", text: match[1] });
     else if ((match = /^expect\s+visible\s+(.+)$/.exec(line))) steps.push({ number, kind: "expect-visible", selector: match[1] });
     else if ((match = /^expect\s+count\s+(.+)\s+(\d+)$/.exec(line))) steps.push({ number, kind: "expect-count", selector: match[1], count: Number(match[2]) });
     else if ((match = /^expect\s+focus\s+(.+)$/.exec(line))) steps.push({ number, kind: "expect-focus", selector: match[1] });
-    else errors.push(`line ${number}: not a step: ${line.slice(0, 60)}`);
+    else unknown.push(`line ${number}: ${line.slice(0, 60)}`);
   });
+  if (unknown.length) errors.push(`not a step: ${unknown.slice(0, 5).join("; ")}${unknown.length > 5 ? `; and ${unknown.length - 5} more` : ""}. Accepted lines:\n${FORMS.join("\n")}`);
   if (steps.length > MAX_STEPS) errors.push(`at most ${MAX_STEPS} steps, got ${steps.length}`);
   return { steps, errors };
 }
@@ -114,6 +131,7 @@ function describe(step) {
     case "press": return `press ${step.key}`;
     case "wait": return `wait ${step.ms}`;
     case "expect-text": return `expect text "${step.text}"`;
+    case "expect-text-in": return `expect text ${step.selector} "${step.text}"`;
     case "expect-visible": return `expect visible ${step.selector}`;
     case "expect-count": return `expect count ${step.selector} ${step.count}`;
     case "expect-focus": return `expect focus ${step.selector}`;
@@ -204,8 +222,20 @@ async function runSteps(page, steps, report) {
         await page.waitForTimeout(step.ms);
         report.pass(where);
       } else if (step.kind === "expect-text") {
-        const found = await page.evaluate((text) => document.body.innerText.includes(text), step.text);
-        report.check(found, where, "not on the page");
+        const found = await page.evaluate((text) => { const shown = document.body.innerText; return shown.includes(text) ? "exact" : shown.toLowerCase().includes(text.toLowerCase()) ? "case" : ""; }, step.text);
+        if (found === "case") report.pass(`${where} (on screen in other letter case, as CSS can show it)`);
+        else report.check(Boolean(found), where, "not on the page");
+      } else if (step.kind === "expect-text-in") {
+        const found = await page.evaluate(({ selector, text, max }) => {
+          const target = document.querySelector(selector);
+          if (!target) return { exists: false };
+          const shown = (target.innerText || target.textContent || "").replace(/\s+/g, " ").trim();
+          const match = shown.includes(text) ? "exact" : shown.toLowerCase().includes(text.toLowerCase()) ? "case" : "";
+          return { exists: true, match, shown: shown.slice(0, max) + (shown.length > max ? "…" : "") };
+        }, { selector: step.selector, text: step.text, max: SHOWN_TEXT });
+        if (!found.exists) report.fail(where, `no element matches ${step.selector}`);
+        else if (found.match === "case") report.pass(`${where} (on screen in other letter case, as CSS can show it)`);
+        else report.check(Boolean(found.match), where, `${step.selector} shows "${found.shown}"`);
       } else if (step.kind === "expect-visible") {
         const visible = await page.isVisible(step.selector);
         report.check(visible, where, "not visible");
