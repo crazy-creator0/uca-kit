@@ -1,0 +1,185 @@
+{
+  "always-on lite": {
+    "tokens": 851
+  },
+  "small build lite": {
+    "tokens": 1175
+  },
+  "always-on standard": {
+    "tokens": 2035
+  },
+  "small build standard": {
+    "tokens": 4315
+  },
+  "task bug standard": {
+    "tokens": 2264
+  },
+  "task feature standard": {
+    "tokens": 2508
+  },
+  "task newApp standard": {
+    "tokens": 7842
+  },
+  "task smallBuild standard": {
+    "tokens": 4315
+  },
+  "task audit standard": {
+    "tokens": 4967
+  },
+  "always-on full": {
+    "tokens": 2189
+  },
+  "small build full": {
+    "tokens": 4469
+  },
+  "task bug full": {
+    "tokens": 2418
+  },
+  "task feature full": {
+    "tokens": 2662
+  },
+  "task newApp full": {
+    "tokens": 7996
+  },
+  "task smallBuild full": {
+    "tokens": 4469
+  },
+  "task audit full": {
+    "tokens": 5121
+  },
+  "host generic lite": {
+    "tokens": 851
+  },
+  "host codex lite": {
+    "tokens": 968
+  },
+  "host cursor lite": {
+    "tokens": 999
+  },
+  "host claude lite": {
+    "tokens": 1059
+  },
+  "host gemini lite": {
+    "tokens": 1064
+  },
+  "host copilot lite": {
+    "tokens": 1050
+  },
+  "host opencode lite": {
+    "tokens": 968
+  },
+  "host devin lite": {
+    "tokens": 953
+  },
+  "host windsurf lite": {
+    "tokens": 1077
+  },
+  "host junie lite": {
+    "tokens": 932
+  },
+  "host jetbrains lite": {
+    "tokens": 962
+  },
+  "host generic standard": {
+    "tokens": 2035
+  },
+  "host codex standard": {
+    "tokens": 2554
+  },
+  "host cursor standard": {
+    "tokens": 2183
+  },
+  "host claude standard": {
+    "tokens": 2645
+  },
+  "host gemini standard": {
+    "tokens": 2650
+  },
+  "host copilot standard": {
+    "tokens": 2636
+  },
+  "host opencode standard": {
+    "tokens": 2554
+  },
+  "host devin standard": {
+    "tokens": 2137
+  },
+  "host windsurf standard": {
+    "tokens": 2663
+  },
+  "host junie standard": {
+    "tokens": 2116
+  },
+  "host jetbrains standard": {
+    "tokens": 2146
+  },
+  "read first anti-ai-slop": {
+    "tokens": 167
+  },
+  "read first anti-hallucination": {
+    "tokens": 188
+  },
+  "read first application-security": {
+    "tokens": 231
+  },
+  "read first audit": {
+    "tokens": 237
+  },
+  "read first backend-api": {
+    "tokens": 213
+  },
+  "read first bug-investigation": {
+    "tokens": 167
+  },
+  "read first cloudflare-operations": {
+    "tokens": 210
+  },
+  "read first data-engineering-analytics": {
+    "tokens": 189
+  },
+  "read first database-engineering": {
+    "tokens": 203
+  },
+  "read first debugging": {
+    "tokens": 229
+  },
+  "read first design-taste-discovery": {
+    "tokens": 316
+  },
+  "read first feature-development": {
+    "tokens": 273
+  },
+  "read first frontend-engineering": {
+    "tokens": 196
+  },
+  "read first frontend-visuals-and-3d": {
+    "tokens": 219
+  },
+  "read first import-hygiene": {
+    "tokens": 198
+  },
+  "read first language-engineering": {
+    "tokens": 188
+  },
+  "read first new-project": {
+    "tokens": 339
+  },
+  "read first performance-engineering": {
+    "tokens": 214
+  },
+  "read first production-deployment": {
+    "tokens": 164
+  },
+  "read first project-notes": {
+    "tokens": 228
+  },
+  "read first skill-gap-router": {
+    "tokens": 191
+  },
+  "read first stack-migration": {
+    "tokens": 295
+  },
+  "read first testing-and-code-review": {
+    "tokens": 240
+  }
+}
