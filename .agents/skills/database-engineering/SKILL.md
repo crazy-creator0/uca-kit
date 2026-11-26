@@ -15,9 +15,10 @@ metadata:
 Use when: tables, schemas, migrations, queries, indexes or transactions change.
 Not when: analysis numbers or data pipelines (data-engineering-analytics); only the API around the data (backend-api).
 Must do: read the current schema and migrations first; parameterized queries only; reversible migrations; approval and a backup plan before anything destructive.
-Done when: the migration ran on a disposable database and the report states data-loss risk and what was not verified.
+Done when: the migration ran on a disposable database; the report states data-loss risk and what was not verified.
 Stop here if: the user only wants a schema design reviewed.
-Read on only for: "Queries and transactions" for speed or races, "Migrations and operations" before running one.
+Read on only for: "Queries and transactions" for speed or races; "Migrations and operations" before one.
+Next: `backend-api` if an endpoint changes.
 
 ## Order of work
 1. Read the current schema, ORM models, and migrations.

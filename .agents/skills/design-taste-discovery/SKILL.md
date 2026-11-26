@@ -17,7 +17,8 @@ Not when: backend or non-visual work; a small fix inside an existing design syst
 Must do: learn the domain and real data; at most one taste question; a written brief with real fonts, hex colors and a signature; avoid Step 5 patterns.
 Done when: the build follows the brief and was looked at and marked pass or fail with evidence.
 Stop here if: the user only asked which direction to take.
-Read on only for: "Small build" for a small build; else Step 1 and Step 3 before building; Step 7 and `review.md` before finishing; `directions.md`, `techniques.md` or `motion.md` when a step points there.
+Read on only for: "Small build" for a small build; else Steps 1 and 3 before building, Step 7 and `review.md` before finishing, other files when a step points there.
+Next: `frontend-engineering` to build.
 
 ## Parts
 - Small build: `.agents/skills/design-taste-discovery/parts/small.md`

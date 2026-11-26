@@ -17,7 +17,7 @@ Not when: a specialist skill covers it (APIs, databases, front end, security, da
 Must do: inspect the languages, conventions and commands first; make the smallest change; handle errors explicitly; run the repository's own checks.
 Done when: those checks ran and the report lists only them.
 Stop here if: the change is small and follows a pattern already in the file.
-Read on only for: "Implementation" for new code, "Testing and verification" before reporting.
+Read on only for: "Implementation" for new code; "Testing and verification" before reporting.
 
 This skill is language-agnostic. Apply it to the language(s) actually present in the task and repository; do not treat placeholders or examples as literal language names. It is the shared baseline for all supported languages, not a claim that the project uses one language or that every language needs a separate skill.
 

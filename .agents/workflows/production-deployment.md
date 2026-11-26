@@ -5,7 +5,7 @@ Use when: deploying, or releasing to preview, staging or production.
 Not when: building or running locally only.
 Must do: explain impact and obtain explicit confirmation before destructive or production-affecting actions; do not expose secrets or claim deployment success without verification.
 Done when: the deployed result was verified from outside, and release version, checks, known limitations and rollback steps are written down.
-Read on only for: "Steps" before deploying; "Cloudflare-specific checks" when Cloudflare is used.
+Read on only for: "Steps" before deploying; "Cloudflare-specific checks" on Cloudflare.
 
 ## Steps
 1. Confirm target environment, release scope, owner approval, and rollback method.

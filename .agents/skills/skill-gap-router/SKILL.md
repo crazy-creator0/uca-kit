@@ -17,7 +17,8 @@ Not when: a clear, single-domain task; greetings and simple questions.
 Must do: pick one primary skill and at most one companion; never invent tools; search outside skills only when the user asks.
 Done when: the chosen skills are read and the user knows which ones and why, or what is missing.
 Stop here if: the task turned out clear; use the skill the router table names.
-Read on only for: "Route" to choose skills, "Missing capability" when a tool or skill is absent, "Web research" for version-specific or audit claims.
+Read on only for: "Route" to choose skills; "Missing capability" when one is absent; "Web research" for version-specific claims.
+Next: the skill you chose.
 
 ## When to use
 For a clear, single-domain task, open that domain skill directly and skip this router. Do not scan the repository or load skills for greetings and simple questions.

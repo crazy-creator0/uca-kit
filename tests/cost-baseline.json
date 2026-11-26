@@ -12,19 +12,22 @@
     "tokens": 4315
   },
   "task bug standard": {
-    "tokens": 2264
+    "tokens": 2253
   },
   "task feature standard": {
-    "tokens": 2508
+    "tokens": 2510,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "task newApp standard": {
-    "tokens": 7842
+    "tokens": 7844,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "task smallBuild standard": {
     "tokens": 4315
   },
   "task audit standard": {
-    "tokens": 4967
+    "tokens": 4977,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "always-on full": {
     "tokens": 2189
@@ -33,19 +36,52 @@
     "tokens": 4469
   },
   "task bug full": {
-    "tokens": 2418
+    "tokens": 2407
   },
   "task feature full": {
-    "tokens": 2662
+    "tokens": 2664,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "task newApp full": {
-    "tokens": 7996
+    "tokens": 7998,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "task smallBuild full": {
     "tokens": 4469
   },
   "task audit full": {
-    "tokens": 5121
+    "tokens": 5131,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
+  },
+  "chain audit > debugging": {
+    "tokens": 463
+  },
+  "chain backend-api > database-engineering": {
+    "tokens": 427
+  },
+  "chain cloudflare-operations > production-deployment": {
+    "tokens": 381
+  },
+  "chain database-engineering > backend-api": {
+    "tokens": 427
+  },
+  "chain design-taste-discovery > frontend-engineering": {
+    "tokens": 512
+  },
+  "chain frontend-visuals-and-3d > performance-engineering": {
+    "tokens": 440
+  },
+  "chain import-hygiene > debugging": {
+    "tokens": 425
+  },
+  "chain skill-gap-router": {
+    "tokens": 193
+  },
+  "chain stack-migration > testing-and-code-review > debugging": {
+    "tokens": 766
+  },
+  "chain testing-and-code-review > debugging": {
+    "tokens": 460
   },
   "host generic lite": {
     "tokens": 851
@@ -120,28 +156,32 @@
     "tokens": 188
   },
   "read first application-security": {
-    "tokens": 231
+    "tokens": 228
   },
   "read first audit": {
-    "tokens": 237
+    "tokens": 245,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "read first backend-api": {
-    "tokens": 213
+    "tokens": 215,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "read first bug-investigation": {
-    "tokens": 167
+    "tokens": 162
   },
   "read first cloudflare-operations": {
-    "tokens": 210
+    "tokens": 220,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "read first data-engineering-analytics": {
     "tokens": 189
   },
   "read first database-engineering": {
-    "tokens": 203
+    "tokens": 212,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "read first debugging": {
-    "tokens": 229
+    "tokens": 218
   },
   "read first design-taste-discovery": {
     "tokens": 316
@@ -153,10 +193,12 @@
     "tokens": 196
   },
   "read first frontend-visuals-and-3d": {
-    "tokens": 219
+    "tokens": 228,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "read first import-hygiene": {
-    "tokens": 198
+    "tokens": 207,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "read first language-engineering": {
     "tokens": 188
@@ -165,21 +207,24 @@
     "tokens": 339
   },
   "read first performance-engineering": {
-    "tokens": 214
+    "tokens": 212
   },
   "read first production-deployment": {
-    "tokens": 164
+    "tokens": 161
   },
   "read first project-notes": {
-    "tokens": 228
+    "tokens": 221
   },
   "read first skill-gap-router": {
-    "tokens": 191
+    "tokens": 193,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "read first stack-migration": {
-    "tokens": 295
+    "tokens": 306,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   },
   "read first testing-and-code-review": {
-    "tokens": 240
+    "tokens": 242,
+    "reason": "0.3.8-pre.4: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
   }
 }

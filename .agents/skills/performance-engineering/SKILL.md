@@ -17,7 +17,7 @@ Not when: something is broken or unexplained (debugging); a known fix owned by a
 Must do: write the metric and workload first; measure before and after with the same command; change one thing at a time; report trade-offs.
 Done when: before and after numbers from the same measurement are shown, or you say the gain was not proven.
 Stop here if: the user only wants a target and a measurement plan.
-Read on only for: "Common causes" when the bottleneck is unknown, "Boundaries" before touching shared code.
+Read on only for: "Common causes" if the bottleneck is unknown; "Boundaries" before shared code.
 
 Performance work is measurement work. A change that was not measured is a guess, not an optimization.
 

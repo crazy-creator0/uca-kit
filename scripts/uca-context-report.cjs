@@ -40,6 +40,61 @@ const TASK_PATHS = {
   audit: [["audit", "full"], ["testing-and-code-review", "read-first"], ["testing-and-code-review", "Check it like the user"]]
 };
 
+// The flow between skills: each Read first block may end with a "Next:" line naming the skill that follows. Every
+// backticked name there is an edge; an edge whose clause says "if" is conditional. A chain follows the first edge
+// from each skill until a skill has no Next line or would repeat; its cost is the sum of the Read first blocks read.
+function flowEdges(agentsDir = path.join(ROOT, ".agents")) {
+  const names = [
+    ...fs.readdirSync(path.join(agentsDir, "skills")),
+    ...fs.readdirSync(path.join(agentsDir, "workflows")).filter((name) => name.endsWith(".md")).map((name) => name.slice(0, -3))
+  ];
+  const edges = {};
+  for (const name of names) {
+    const block = pick(readWhole(resolve(name, agentsDir), agentsDir), {}).text;
+    const line = (block.match(/^Next: (.+)$/m) || [])[1];
+    if (!line) continue;
+    edges[name] = line.split(";").flatMap((clause) => [...clause.matchAll(/`([a-z0-9-]+)`/g)].map((match) => ({ to: match[1], conditional: /\bif\b/.test(clause) })));
+  }
+  return { names, edges };
+}
+
+// What is wrong with a flow: Next names that do not exist or point to themselves, cycles with an unconditional edge,
+// and chains longer than maxChain skills. Empty when the flow is sound.
+function flowProblems(names, edges, maxChain = 4) {
+  const problems = [];
+  for (const [from, list] of Object.entries(edges)) {
+    for (const edge of list) {
+      if (!names.includes(edge.to)) problems.push(`${from}: Next names "${edge.to}", which is not a skill or workflow`);
+      if (edge.to === from) problems.push(`${from}: Next names itself`);
+    }
+  }
+  const walk = (node, trail) => {
+    for (const edge of edges[node] || []) {
+      const at = trail.findIndex((step) => step.node === edge.to);
+      if (at >= 0) {
+        const cycle = [...trail.slice(at + 1).map((step) => step.edge), edge];
+        if (!cycle.every((step) => step.conditional)) problems.push(`unconditional cycle: ${[...trail.slice(at).map((step) => step.node), edge.to].join(" > ")}`);
+      } else if (trail.length < 10) walk(edge.to, [...trail, { node: edge.to, edge }]);
+    }
+  };
+  for (const start of Object.keys(edges)) walk(start, [{ node: start, edge: null }]);
+  for (const start of Object.keys(edges)) {
+    const chain = [start];
+    while (edges[chain.at(-1)] && edges[chain.at(-1)][0] && !chain.includes(edges[chain.at(-1)][0].to)) chain.push(edges[chain.at(-1)][0].to);
+    if (chain.length > maxChain) problems.push(`chain too long (${chain.length}): ${chain.join(" > ")}`);
+  }
+  return [...new Set(problems)];
+}
+
+function flowChains() {
+  const { edges } = flowEdges();
+  return Object.keys(edges).sort().map((start) => {
+    const chain = [start];
+    while (edges[chain.at(-1)] && edges[chain.at(-1)][0] && !chain.includes(edges[chain.at(-1)][0].to)) chain.push(edges[chain.at(-1)][0].to);
+    return { start, chain, tokens: chain.reduce((total, name) => total + partTokens([name, "read-first"]), 0) };
+  });
+}
+
 // Tokens for one part, measured with the same code the read helper uses. Throws when a part no longer exists,
 // so a renamed section cannot silently drop out of the measurement.
 function partTokens([name, how]) {
@@ -226,6 +281,8 @@ function main(argv = process.argv.slice(2)) {
   }
   console.log("\nTypical task: lite = always on + its guardrail skills + a median skill; standard and full = always on (CORE carries the guardrail lines and the Route table) + a median skill's Read first block.");
   console.log("Worst case = always on + guardrail files + router + the two largest task skills read whole (an unclear task that opens everything).");
+  console.log("\nFlow chains (standard and full), the Read first blocks read along each skill's first Next line:");
+  for (const item of flowChains()) console.log(`${item.chain.join(" > ")}: ${item.tokens}`);
   const lite = rows.find((row) => row.tier === "lite");
   if (lite) console.log(`\nSmall build, lite: ${lite.smallBuildTask} (always on + guardrail skills; lite installs no workflow or design skill, so R-NEW's plan in CORE is the whole path).`);
   console.log("\nPer task (standard and full): what the instructions ask / the files that hold it, opened whole (no Node) / every file it touches, read whole.");
@@ -242,4 +299,4 @@ function main(argv = process.argv.slice(2)) {
 
 if (require.main === module) process.exitCode = main();
 
-module.exports = { TASK_PATHS, duplicateOverhead, estimateTokens, main, measureTier, partTokens, report };
+module.exports = { TASK_PATHS, duplicateOverhead, estimateTokens, flowChains, flowEdges, flowProblems, main, measureTier, partTokens, report };

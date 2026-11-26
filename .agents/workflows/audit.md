@@ -6,7 +6,8 @@ Not when: one known bug (`debugging`); a new build; a file or app you did not bu
 Must do: read "Limits" every time (read-only, the user's own project only, no exploits, no secret values); every finding cites a file and line you read or a step you ran.
 Done when: findings by severity, each with how it was checked; what each lens looked at; a fix plan for the user to approve.
 Stop here if: the user only asked what an audit covers.
-Read on only for: the whole file for a full audit; "Limits", "Steps" and "Severity" for a narrow one (one file or one concern).
+Read on only for: the whole file for a full audit; "Limits", "Steps", "Severity" for one file or concern.
+Next: after approval, each finding through `debugging`.
 
 A read-only review of the user's own project for what users would hit: security holes, data leaks, slow or costly code, gaps before production. This file is the only place in the kit where the attacker mindset below applies. Outside an audit, build normally.
 

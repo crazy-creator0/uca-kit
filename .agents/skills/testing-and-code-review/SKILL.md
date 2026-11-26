@@ -17,7 +17,8 @@ Not when: a bug needs a cause first (debugging); a one-line fix in a repo with n
 Must do: choose tests by risk; find what a change affects with a search, not from memory; report only tests you ran; list security findings first.
 Done when: tests ran with their output shown, or the review lists findings by severity with affected and unaffected parts named.
 Stop here if: a small diff adds no new logic; use the review checklist alone.
-Read on only for: "Check it like the user" before saying something you built or changed works, "Change impact" when shared code changes, "Risk coverage" for auth or data, "Honest reporting" before the final answer.
+Read on only for: "Check it like the user" before saying a change works; "Change impact" for shared code; "Risk coverage" for auth or data; "Honest reporting" before the final answer.
+Next: `debugging` if a check fails.
 
 ## Parts
 - Check it like the user: `.agents/skills/testing-and-code-review/parts/user-check.md`
