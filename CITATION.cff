@@ -7,8 +7,8 @@ authors:
   - name: "Crazy Creators"
 repository-code: "https://github.com/crazy-creator0/uca-kit"
 license: Apache-2.0
-version: "0.3.8-pre.4"
-date-released: "2026-11-25"
+version: "0.3.7"
+date-released: "2026-11-26"
 keywords:
   - ai-coding-assistant
   - agent-instructions

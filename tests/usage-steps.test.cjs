@@ -60,7 +60,7 @@ test("step log: a repeated request line counts once; broken lines are skipped an
   assert.equal(parsed.skipped, 3);
 });
 
-test("step log from before 0.3.8-pre.5: tool lines without a kind count as unknown, missing finish is not a reply", () => {
+test("step log from before 0.3.7: tool lines without a kind count as unknown, missing finish is not a reply", () => {
   const old = [
     { time: "2026-11-26T10:00:00.000Z", step: 1, input: 100, output: 7, reasoning: 0, cacheRead: 3, cacheWrite: 0, cost: 0 },
     { time: "2026-11-26T10:00:01.000Z", afterStep: 1, tool: "read", kit: ".agents/CORE.md" }
