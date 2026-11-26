@@ -172,6 +172,9 @@ function measureTier(name, tier) {
     taskSkills: tasks.map(({ skill, tokens }) => ({ skill, tokens })),
     guardrailSkills: guardrails.map(({ skill, tokens }) => ({ skill, tokens })),
     typicalTask,
+    // Lite installs no workflow or design skill: R-NEW's plan in CORE is its whole new-build path, so a small build
+    // reads always-on text and the guardrail skills. Standard and full use the "Small build" sections.
+    smallBuildTask: paths ? paths.smallBuild.readFirst : sum(alwaysOn) + sum(guardrails),
     typicalTaskWholeFiles: tier.extras ? sum(alwaysOn) + median : base + median,
     worstCaseTask: base + router + (tasks[0] ? tasks[0].tokens : 0) + (tasks[1] ? tasks[1].tokens : 0),
     newAppTask,
@@ -223,6 +226,8 @@ function main(argv = process.argv.slice(2)) {
   }
   console.log("\nTypical task: lite = always on + its guardrail skills + a median skill; standard and full = always on (CORE carries the guardrail lines and the Route table) + a median skill's Read first block.");
   console.log("Worst case = always on + guardrail files + router + the two largest task skills read whole (an unclear task that opens everything).");
+  const lite = rows.find((row) => row.tier === "lite");
+  if (lite) console.log(`\nSmall build, lite: ${lite.smallBuildTask} (always on + guardrail skills; lite installs no workflow or design skill, so R-NEW's plan in CORE is the whole path).`);
   console.log("\nPer task (standard and full): what the instructions ask / the files that hold it, opened whole (no Node) / every file it touches, read whole.");
   for (const row of rows) {
     if (!row.taskPaths) continue;

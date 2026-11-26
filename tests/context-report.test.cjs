@@ -72,6 +72,7 @@ test("standard and full report four task paths, each lighter than reading the sa
       assert.ok(p.readFirst <= p.noNode && p.noNode <= p.wholeFiles, `${tier} ${task}: without Node, a model opens no more than the files read whole`);
     }
     assert.equal(rows[tier].newAppTask, rows[tier].taskPaths.newApp.readFirst);
+    assert.equal(rows[tier].smallBuildTask, rows[tier].taskPaths.smallBuild.readFirst);
     // A small build reads far less than the full new-app path; 4,000 is the plan's target, not yet reached.
     assert.ok(rows[tier].taskPaths.smallBuild.readFirst < 0.6 * rows[tier].taskPaths.newApp.readFirst, `${tier}: small build`);
     if (tier === "standard") assert.ok(rows[tier].taskPaths.smallBuild.readFirst <= 4700, `standard small build: ${rows[tier].taskPaths.smallBuild.readFirst}`);
@@ -86,4 +87,12 @@ test("a task path fails loudly when a section it measures is renamed", () => {
   assert.ok(partTokens(["design-taste-discovery", "Step 3"]) > 0);
   assert.throws(() => partTokens(["design-taste-discovery", "Step 99"]), /no section "Step 99"/);
   assert.throws(() => partTokens(["no-such-skill", "full"]), /no skill or workflow named no-such-skill/);
+});
+
+
+test("lite reports its small-build path, and it stays within lite's 1,600-token limit", () => {
+  const lite = rows.lite;
+  assert.equal(lite.smallBuildTask, lite.alwaysOnTokens + lite.guardrailTokens);
+  assert.ok(lite.smallBuildTask <= 1600, `lite small build: ${lite.smallBuildTask}`);
+  assert.ok(lite.smallBuildTask <= lite.worstCaseTask);
 });
