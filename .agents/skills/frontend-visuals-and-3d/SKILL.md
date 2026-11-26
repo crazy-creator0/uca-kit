@@ -15,9 +15,10 @@ metadata:
 Use when: canvas effects, shaders, 3D scenes, WebGL or WebGPU.
 Not when: ordinary UI motion that CSS handles; choosing the overall look (design-taste-discovery).
 Must do: use the cheapest technique that meets the brief; ask before adding a package; keep text and actions outside the canvas; support reduced motion and a fallback when the GPU fails.
-Done when: the effect works, the failure path was tested, and its asset and runtime cost are stated.
+Done when: it works, the failure path was tested, and asset and runtime cost are stated.
 Stop here if: CSS or SVG already meets the brief.
-Read on only for: "Route by task" to pick a technique, "Safety and quality gates" before shipping.
+Read on only for: "Route by task" to pick a technique; "Safety and quality gates" before shipping.
+Next: `performance-engineering` if frames drop.
 
 Read `UI-EFFECTS-GUIDE.md` for the effects ladder, motion rules and fallback notes.
 

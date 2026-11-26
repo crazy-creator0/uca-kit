@@ -7,7 +7,7 @@ Use when: the user asks for notes (for example "uca-notes", "make project notes"
 Not when: nobody asked. Do not write notes nobody asked for; reading the files costs tokens up front, and the saving comes in later sessions.
 Must do: every note quotes the exact line it came from; never quote a secret; `node scripts/uca-project-check.cjs` passes before you report.
 Done when: the check passes and the user knows how many notes you saved, for which files.
-Read on only for: "Steps" before writing notes; "What makes a good note" while writing them; "When the code changes" when the check reports CHANGED.
+Read on only for: "Steps" before writing; "What makes a good note" while writing; "When the code changes" on CHANGED.
 
 ## Steps
 1. If PROJECT.md has no "Key files" block, run `node scripts/uca-project-discover.cjs --write PROJECT.md --section key-files` (or the full command without `--section` when there is no PROJECT.md).

@@ -27,6 +27,7 @@ function current() {
     numbers[`small build ${row.tier}`] = row.smallBuildTask;
     if (row.taskPaths) for (const [task, item] of Object.entries(row.taskPaths)) numbers[`task ${task} ${row.tier}`] = item.readFirst;
   }
+  for (const item of require("./uca-context-report.cjs").flowChains()) numbers[`chain ${item.chain.join(" > ")}`] = item.tokens;
   for (const tier of ["lite", "standard"]) for (const row of hostCost.report(tier)) numbers[`host ${row.platform} ${tier}`] = row.fixed;
   const names = [
     ...fs.readdirSync(path.join(agents, "skills")),

@@ -4,7 +4,7 @@
 Use when: a bug needs a full investigation across client, network, backend and database.
 Not when: no single symptom: run the audit first (below), then bring each finding here.
 Must do: a failing reproduction before changing code; a root cause only with evidence; a regression test; never ask for secrets, and redact credentials, cookies, tokens, private keys and personal data.
-Done when: the original reproduction passes the way the user hit it, and findings, evidence, root-cause confidence, fix, checks and unknowns are reported.
+Done when: the reproduction passes as the user hit it; findings, evidence, root-cause confidence, fix, checks and unknowns reported.
 Read on only for: "Steps" before investigating.
 
 ## Steps

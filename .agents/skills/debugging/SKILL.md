@@ -14,10 +14,10 @@ metadata:
 ## Read first
 Use when: a bug, error, crash, or "it stopped working" needs a cause.
 Not when: a new feature with no failure; slowness with no fault (performance-engineering).
-Must do: no code change before a failing reproduction you have actually seen; keep facts apart from guesses; never ask for secrets or switch off security checks to "fix" it; after two failed fixes, stop and report.
+Must do: no code change before a failing reproduction you have actually seen; keep facts apart from guesses; never ask for secrets or switch off security checks to "fix" it.
 Done when: the original reproduction passes, and a regression test fails without the fix and passes with it, both run.
 Stop here if: the root cause is already confirmed and you only need the fix and its check.
-Read on only for: the output format (before reporting) and the Cloudflare note (edge or DNS symptoms).
+Read on only for: the output format before reporting; the Cloudflare note for edge or DNS symptoms.
 
 Always follow:
 

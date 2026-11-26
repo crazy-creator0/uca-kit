@@ -17,7 +17,7 @@ Not when: a visual change touching no input, data or boundary; a file or app you
 Must do: find trust boundaries and entry points first; authorize on the server; parameterized queries; never commit or log secrets; ask before intrusive testing.
 Done when: each issue has severity, evidence, impact, fix and how it was checked; residual risks listed.
 Stop here if: no boundary, secret or user data is touched.
-Read on only for: "Review areas" during a review, "Non-negotiable controls" before writing auth or data code.
+Read on only for: "Review areas" in a review; "Non-negotiable controls" before auth or data code.
 
 Treat security as part of design and implementation, not a final cosmetic pass.
 
