@@ -137,3 +137,45 @@ test("OpenCode adapter: the opt-in step log names token counts, tool kinds and k
     }
   }
 });
+
+test("OpenCode adapter in a folder without the kit: step log only, no ledger, no guard", async (t) => {
+  // The no-kit eval arm is an empty folder plus this one plugin file, so both arms are counted the same way.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "uca-opencode-bare-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const saved = { file: process.env.UCA_USAGE_FILE, steps: process.env.UCA_USAGE_STEPS };
+  const usageFile = path.join(dir, "private", "usage.json");
+  process.env.UCA_USAGE_FILE = usageFile;
+  try {
+    const { UcaUsagePlugin } = await import(pathToFileURL(PLUGIN).href + "?bare");
+    delete process.env.UCA_USAGE_STEPS;
+    assert.deepEqual(await UcaUsagePlugin({ directory: dir, client: {} }), {}, "without a step log the plugin does nothing");
+
+    const stepsFile = path.join(dir, "steps.jsonl");
+    process.env.UCA_USAGE_STEPS = stepsFile;
+    const hooks = await UcaUsagePlugin({ directory: dir, client: {} });
+    const message = (id, input, finish) => ({ type: "message.updated", properties: { info: { id, role: "assistant", finish, time: { completed: Date.now() }, cost: 0, tokens: { input, output: 5, reasoning: 0, cache: { read: 0, write: 0 } } } } });
+    await hooks.event({ event: message("b1", 90, "tool-calls") });
+    await hooks["tool.execute.before"]({ tool: "write" }, { args: { filePath: "/tmp/x/index.html", content: "PAGE" } });
+    await hooks["tool.execute.after"]({ tool: "write" });
+    await hooks["tool.execute.before"]({ tool: "task" }, { args: { prompt: "PRIVATE-PROMPT" } });
+    await hooks["tool.execute.after"]({ tool: "task" });
+    await hooks.event({ event: message("b2", 180, "stop") });
+    await hooks.event({ event: message("b2", 180, "stop") });
+    const text = fs.readFileSync(stepsFile, "utf8");
+    for (const secret of ["/tmp/x", "PAGE", "PRIVATE-PROMPT"]) assert.equal(text.includes(secret), false, secret);
+    assert.deepEqual(text.trim().split("\n").map((line) => { const { time, ...rest } = JSON.parse(line); return rest; }), [
+      { step: 1, input: 90, output: 5, reasoning: 0, cacheRead: 0, cacheWrite: 0, cost: 0, finish: "tool-calls" },
+      { afterStep: 1, tool: "write", kind: "write" },
+      { afterStep: 1, tool: "task", kind: "agent" },
+      { step: 2, input: 180, output: 5, reasoning: 0, cacheRead: 0, cacheWrite: 0, cost: 0, finish: "stop" }
+    ]);
+    assert.equal(fs.existsSync(usageFile), false, "no ledger is written without the kit");
+    const { readStepLog, runFigures } = require(SCRIPT);
+    const figures = runFigures(readStepLog(text));
+    assert.deepEqual([figures.requests, figures.writes, figures.agents], [2, 1, 1]);
+  } finally {
+    for (const [key, value] of [["UCA_USAGE_FILE", saved.file], ["UCA_USAGE_STEPS", saved.steps]]) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});

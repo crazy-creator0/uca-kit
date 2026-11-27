@@ -489,6 +489,7 @@ function runFigures(run) {
     toolCalls: run.toolsKnown ? KINDS.reduce((sum, k) => sum + run.tools[k], 0) : null,
     reads: run.toolsKnown ? run.tools.read : null, writes: run.toolsKnown ? run.tools.write : null,
     checks: run.toolsKnown ? run.tools.check : null, shell: run.toolsKnown ? run.tools.shell : null,
+    agents: run.toolsKnown ? run.tools.agent : null,
     readsBeforeFirstWrite: run.readsBeforeWrite, replies: run.ended.stop, kitFilesOpened: run.kitOpened
   };
 }

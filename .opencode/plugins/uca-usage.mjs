@@ -16,9 +16,12 @@ export const UcaUsagePlugin = async ({ directory, client }) => {
   const seenMessageIds = new Set();
   const highestWarnedLevel = new Map();
 
-  // If the toolkit script is missing, this plugin degrades to a no-op instead
-  // of breaking the host. An installed kit should include the script.
-  if (!fs.existsSync(script)) return {};
+  const stepsFile = process.env.UCA_USAGE_STEPS || "";
+  // Without the toolkit script there is no ledger or budget guard. The plugin then
+  // only writes the step log, if one is asked for (this is how a no-kit eval arm is
+  // counted: an empty folder plus this one file), and otherwise does nothing.
+  const hasLedger = fs.existsSync(script);
+  if (!hasLedger && !stepsFile) return {};
 
   const ledgerCall = (args) => spawnSync(process.env.UCA_USAGE_NODE || "node", [script, ...args], {
     encoding: "utf8",
@@ -59,7 +62,6 @@ export const UcaUsagePlugin = async ({ directory, client }) => {
     }
   };
 
-  const stepsFile = process.env.UCA_USAGE_STEPS || "";
   let stepNumber = 0;
   const logStep = (entry) => {
     if (!stepsFile) return;
@@ -132,6 +134,10 @@ export const UcaUsagePlugin = async ({ directory, client }) => {
       stepNumber += 1;
       const finish = ["tool-calls", "stop", "length"].includes(info.finish) ? info.finish : undefined;
       logStep({ step: stepNumber, input, output, reasoning, cacheRead, cacheWrite, cost, ...(finish ? { finish } : {}) });
+      if (!hasLedger) {
+        seenMessageIds.add(info.id);
+        return;
+      }
       const result = ledgerCall(args);
       requireSuccess(result, "recording");
       await notifyThresholds(result.stdout);
@@ -144,7 +150,7 @@ export const UcaUsagePlugin = async ({ directory, client }) => {
       const target = kitTarget(output?.args);
       const toolName = String(input?.tool || "").slice(0, 40);
       logStep({ afterStep: stepNumber, tool: toolName, kind: toolKind(toolName, output?.args), ...(target ? { kit: target } : {}) });
-      if (!["task", "subagent"].includes(String(input?.tool || ""))) return;
+      if (!hasLedger || !["task", "subagent"].includes(String(input?.tool || ""))) return;
 
       const check = ledgerCall(["guard", "--planned-agent-calls", "1"]);
       if (check.status !== 0 || check.error) {
@@ -161,7 +167,7 @@ export const UcaUsagePlugin = async ({ directory, client }) => {
 
     "tool.execute.after": async (input) => {
       const toolName = String(input?.tool || "");
-      if (!toolName) return;
+      if (!toolName || !hasLedger) return;
       const args = ["record", "--source", "exact", "--tool-calls", "1"];
       if (toolName === "skill") args.push("--skill-reads", "1");
       const result = ledgerCall(args);
