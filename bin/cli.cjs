@@ -191,7 +191,7 @@ const PLATFORM_ENTRIES = {
   opencode: [
     { source: "OPENCODE-SETUP.md", destination: "OPENCODE-SETUP.md" },
     { source: ".opencode/agents", destination: ".opencode/agents" },
-    { source: ".opencode/plugins/uca-usage.mjs", destination: ".opencode/plugins/uca-usage.mjs" }
+    { source: ".opencode/plugins/uca-usage.js", destination: ".opencode/plugins/uca-usage.js" }
   ],
   devin: [
     { source: ".devin/rules/universal-coding-agent-kit.md", destination: ".devin/rules/universal-coding-agent-kit.md" }

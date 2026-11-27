@@ -9,7 +9,17 @@ const { spawnSync } = require("node:child_process");
 const { pathToFileURL } = require("node:url");
 
 const SCRIPT = path.resolve(__dirname, "../scripts/uca-usage.cjs");
-const PLUGIN = path.resolve(__dirname, "../.opencode/plugins/uca-usage.mjs");
+const PLUGIN = path.resolve(__dirname, "../.opencode/plugins/uca-usage.js");
+
+// The plugin is an ES module in a .js file (OpenCode loads .js and .ts plugins). This
+// repository is CommonJS, so the tests load a copy with an .mjs name.
+let loadCount = 0;
+async function loadPlugin() {
+  const copy = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "uca-plugin-load-")), "uca-usage-" + (loadCount += 1) + ".mjs");
+  fs.copyFileSync(PLUGIN, copy);
+  const mod = await import(pathToFileURL(copy).href);
+  return { UcaUsagePlugin: mod.default.server, definition: mod.default };
+}
 
 function run(script, args, env = process.env) {
   return spawnSync(process.execPath, [script, ...args], {
@@ -37,7 +47,7 @@ test("OpenCode adapter records final usage once and consults local subagent budg
     ]);
     assert.equal(budget.status, 0, budget.stderr);
 
-    const { UcaUsagePlugin } = await import(pathToFileURL(PLUGIN).href);
+    const { UcaUsagePlugin } = await loadPlugin();
     const toasts = [];
     const hooks = await UcaUsagePlugin({ directory: dir, client: { tui: { showToast: async ({ body }) => toasts.push(body) } } });
     const event = {
@@ -100,7 +110,7 @@ test("OpenCode adapter: the opt-in step log names token counts, tool kinds and k
   const stepsFile = path.join(dir, "steps.jsonl");
   process.env.UCA_USAGE_STEPS = stepsFile;
   try {
-    const { UcaUsagePlugin } = await import(pathToFileURL(PLUGIN).href + "?steps");
+    const { UcaUsagePlugin } = await loadPlugin();
     const hooks = await UcaUsagePlugin({ directory: dir, client: {} });
     const message = (id, input, finish) => ({ type: "message.updated", properties: { info: { id, role: "assistant", finish, time: { completed: Date.now() }, cost: 0, tokens: { input, output: 7, reasoning: 0, cache: { read: 3, write: 0 } } } } });
     await hooks.event({ event: message("m1", 100, "tool-calls") });
@@ -117,6 +127,7 @@ test("OpenCode adapter: the opt-in step log names token counts, tool kinds and k
     for (const secret of ["secret-project", ".env", "SECRET-CONTENT", "SECRET-TOKEN", "page-check"]) assert.equal(text.includes(secret), false, secret);
     const lines = text.trim().split("\n").map((line) => JSON.parse(line));
     assert.deepEqual(lines.map(({ time, ...rest }) => rest), [
+      { loaded: "v1" },
       { step: 1, input: 100, output: 7, reasoning: 0, cacheRead: 3, cacheWrite: 0, cost: 0, finish: "tool-calls" },
       { afterStep: 1, tool: "read", kind: "read", kit: ".agents/skills/debugging/SKILL.md" },
       { afterStep: 1, tool: "bash", kind: "shell", kit: "uca-read design-taste-discovery --section \"Step 3\"" },
@@ -146,7 +157,7 @@ test("OpenCode adapter in a folder without the kit: step log only, no ledger, no
   const usageFile = path.join(dir, "private", "usage.json");
   process.env.UCA_USAGE_FILE = usageFile;
   try {
-    const { UcaUsagePlugin } = await import(pathToFileURL(PLUGIN).href + "?bare");
+    const { UcaUsagePlugin } = await loadPlugin();
     delete process.env.UCA_USAGE_STEPS;
     assert.deepEqual(await UcaUsagePlugin({ directory: dir, client: {} }), {}, "without a step log the plugin does nothing");
 
@@ -164,6 +175,7 @@ test("OpenCode adapter in a folder without the kit: step log only, no ledger, no
     const text = fs.readFileSync(stepsFile, "utf8");
     for (const secret of ["/tmp/x", "PAGE", "PRIVATE-PROMPT"]) assert.equal(text.includes(secret), false, secret);
     assert.deepEqual(text.trim().split("\n").map((line) => { const { time, ...rest } = JSON.parse(line); return rest; }), [
+      { loaded: "v1" },
       { step: 1, input: 90, output: 5, reasoning: 0, cacheRead: 0, cacheWrite: 0, cost: 0, finish: "tool-calls" },
       { afterStep: 1, tool: "write", kind: "write" },
       { afterStep: 1, tool: "task", kind: "agent" },
@@ -178,4 +190,90 @@ test("OpenCode adapter in a folder without the kit: step log only, no ledger, no
       if (value === undefined) delete process.env[key]; else process.env[key] = value;
     }
   }
+});
+
+test("OpenCode plugin file: .js, one default export with id, server() for 1.x and setup() for 2.x", async () => {
+  assert.equal(fs.existsSync(PLUGIN.replace(/\.js$/, ".mjs")), false, "an .mjs plugin is not loaded by OpenCode");
+  const { definition } = await loadPlugin();
+  assert.equal(definition.id, "uca.usage");
+  assert.equal(typeof definition.server, "function");
+  assert.equal(typeof definition.setup, "function");
+  const source = fs.readFileSync(PLUGIN, "utf8");
+  assert.equal(/^export (const|function|async)/m.test(source), false, "one default export only, so a host never starts it twice");
+});
+
+test("OpenCode 2.x setup: tool hooks and event stream write the same step log, once per message", async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "uca-opencode-v2-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const saved = { file: process.env.UCA_USAGE_FILE, steps: process.env.UCA_USAGE_STEPS };
+  process.env.UCA_USAGE_FILE = path.join(dir, "private", "usage.json");
+  const stepsFile = path.join(dir, "steps.jsonl");
+  process.env.UCA_USAGE_STEPS = stepsFile;
+  try {
+    const { definition } = await loadPlugin();
+    const hooks = {};
+    const queue = [];
+    let wake = null;
+    const push = (event) => { queue.push(event); if (wake) { wake(); wake = null; } };
+    const makeCtx = () => ({
+      location: { directory: dir },
+      tool: { hook: (name, fn) => { (hooks[name] ||= []).push(fn); } },
+      event: {
+        subscribe: ({ signal }) => ({
+          async *[Symbol.asyncIterator]() {
+            while (!signal.aborted) {
+              if (!queue.length) await new Promise((resolve) => { wake = resolve; signal.addEventListener("abort", resolve, { once: true }); });
+              while (queue.length) yield queue.shift();
+            }
+          }
+        })
+      }
+    });
+    const cleanup = definition.setup(makeCtx());
+    assert.equal(definition.setup(makeCtx()), undefined, "a second client connection adds no second set of hooks");
+    const message = (id, input, finish) => ({ type: "message.updated", data: { info: { id, role: "assistant", finish, time: { completed: Date.now() }, cost: 0, tokens: { input, output: 4, reasoning: 0, cache: { read: 0, write: 0 } } } } });
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+    push({ type: "session.status", data: { secret: "PRIVATE" } });
+    push(message("v2a", 50, "tool-calls"));
+    await settle();
+    for (const fn of hooks["execute.before"]) await fn({ tool: "edit", id: "c1", input: { filePath: "/home/me/private/app.js", content: "SECRET" } });
+    for (const fn of hooks["execute.before"]) await fn({ tool: "subagent", id: "c2", input: { prompt: "PRIVATE-PROMPT" } });
+    push(message("v2b", 120, "stop"));
+    push(message("v2b", 120, "stop"));
+    await settle();
+    cleanup();
+    const text = fs.readFileSync(stepsFile, "utf8");
+    for (const secret of ["PRIVATE", "/home/me", "SECRET"]) assert.equal(text.includes(secret), false, secret);
+    assert.deepEqual(text.trim().split("\n").map((line) => { const { time, ...rest } = JSON.parse(line); return rest; }), [
+      { loaded: "v2" },
+      { eventType: "session.status" },
+      { eventType: "message.updated" },
+      { step: 1, input: 50, output: 4, reasoning: 0, cacheRead: 0, cacheWrite: 0, cost: 0, finish: "tool-calls" },
+      { afterStep: 1, tool: "edit", kind: "write" },
+      { afterStep: 1, tool: "subagent", kind: "agent" },
+      { step: 2, input: 120, output: 4, reasoning: 0, cacheRead: 0, cacheWrite: 0, cost: 0, finish: "stop" }
+    ]);
+  } finally {
+    for (const [key, value] of [["UCA_USAGE_FILE", saved.file], ["UCA_USAGE_STEPS", saved.steps]]) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});
+
+test("Run summary: says which API started the plugin, warns when none did, and names event types when no request was counted", (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "uca-steps-notes-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const write = (name, lines) => { const file = path.join(dir, name); fs.writeFileSync(file, lines.map((l) => JSON.stringify(l)).join("\n") + "\n"); return file; };
+  const started = write("started.jsonl", [{ loaded: "v1" }, { step: 1, input: 10, output: 1, reasoning: 0, cacheRead: 0, cacheWrite: 0, cost: 0, finish: "stop" }]);
+  let result = run(SCRIPT, ["steps", started]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Plugin started: OpenCode v1 API\./);
+  assert.doesNotMatch(result.stdout, /Skipped/);
+  const old = write("old.jsonl", [{ step: 1, input: 10, output: 1, reasoning: 0, cacheRead: 0, cacheWrite: 0, cost: 0, finish: "stop" }]);
+  result = run(SCRIPT, ["steps", old]);
+  assert.match(result.stdout, /WARNING: no start line/);
+  const shapes = write("shapes.jsonl", [{ loaded: "v2" }, { eventType: "session.status" }, { eventType: "message.part.updated" }]);
+  result = run(SCRIPT, ["steps", shapes]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /host sent these event types: session\.status, message\.part\.updated/);
 });

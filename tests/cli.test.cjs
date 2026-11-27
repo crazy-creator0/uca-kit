@@ -70,7 +70,7 @@ function makeKit(root) {
     ".opencode/agents/verifier.md",
     ".opencode/agents/designer.md",
     ".opencode/agents/service-strategist.md",
-    ".opencode/plugins/uca-usage.mjs",
+    ".opencode/plugins/uca-usage.js",
     ".devin/rules/universal-coding-agent-kit.md",
     ".windsurf/rules/universal-coding-agent-kit.md",
     ".junie/rules/universal-coding-agent-kit.md",
@@ -474,7 +474,7 @@ test("OpenCode profile installs specialist agents and local usage plugin", () =>
       ".opencode/agents/designer.md",
       ".opencode/agents/service-strategist.md",
       ".opencode/agents/planner.md",
-      ".opencode/plugins/uca-usage.mjs",
+      ".opencode/plugins/uca-usage.js",
       "scripts/uca-usage.cjs",
       "AGENT-SKILL-MAP.md",
       "USAGE-PRIVACY.md"
