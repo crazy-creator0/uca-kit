@@ -14,9 +14,8 @@ import { spawnSync } from "node:child_process";
 // opens a kit file also names that file. No prompt, output, other path, command
 // text or file content is written.
 // The first line of a step log says which API started the plugin ({"loaded":"v1"} or
-// {"loaded":"v2"}), so an empty log means the plugin did not start. On 2.x, where the
-// message event's fields are not documented, the log also names each event type seen
-// once (names only), so a real run shows what the host sends.
+// {"loaded":"v2"}), so an empty log means the plugin did not start. On 2.x the log also
+// names each event type seen once (names only), so a change in what the host sends shows.
 // One process may start the plugin more than once (2.x runs setup once per client
 // connection); messages are counted once by id, and only the first start per folder
 // adds hooks.
@@ -231,9 +230,14 @@ const setup = (ctx) => {
       try {
         for await (const event of ctx.event.subscribe({ signal: controller.signal })) {
           usage.logEventType(event?.type);
-          const data = event?.data ?? event?.properties;
+          // 2.x reports each model request's tokens on session.step.ended:
+          // { assistantMessageID, finish, tokens: { input, output, reasoning, cache: { read, write } }, cost }.
+          // A retried step starts again but ends once, so ended steps are counted.
+          if (event?.type !== "session.step.ended") continue;
+          const data = event.data || {};
+          const id = data.assistantMessageID || event.id;
           try {
-            await usage.onMessage(data?.info ?? data?.message ?? data);
+            await usage.onMessage({ id, role: "assistant", time: { completed: 1 }, finish: data.finish, tokens: data.tokens, cost: data.cost });
           } catch {
             // A failed ledger write must not end the stream; the step line is already written.
           }

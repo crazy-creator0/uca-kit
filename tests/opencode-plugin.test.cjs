@@ -231,9 +231,11 @@ test("OpenCode 2.x setup: tool hooks and event stream write the same step log, o
     });
     const cleanup = definition.setup(makeCtx());
     assert.equal(definition.setup(makeCtx()), undefined, "a second client connection adds no second set of hooks");
-    const message = (id, input, finish) => ({ type: "message.updated", data: { info: { id, role: "assistant", finish, time: { completed: Date.now() }, cost: 0, tokens: { input, output: 4, reasoning: 0, cache: { read: 0, write: 0 } } } } });
+    // The 2.x frame, as captured from OpenCode 2.x runs: tokens are on session.step.ended.
+    const message = (id, input, finish) => ({ type: "session.step.ended", id: "evt-" + id, data: { sessionID: "ses_1", assistantMessageID: id, finish, rawFinish: finish, cost: 0, tokens: { input, output: 4, reasoning: 0, cache: { read: 0, write: 0 } } } });
     const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
     push({ type: "session.status", data: { secret: "PRIVATE" } });
+    push({ type: "session.step.started", data: { assistantMessageID: "v2a", model: { id: "m" } } });
     push(message("v2a", 50, "tool-calls"));
     await settle();
     for (const fn of hooks["execute.before"]) await fn({ tool: "edit", id: "c1", input: { filePath: "/home/me/private/app.js", content: "SECRET" } });
@@ -247,7 +249,8 @@ test("OpenCode 2.x setup: tool hooks and event stream write the same step log, o
     assert.deepEqual(text.trim().split("\n").map((line) => { const { time, ...rest } = JSON.parse(line); return rest; }), [
       { loaded: "v2" },
       { eventType: "session.status" },
-      { eventType: "message.updated" },
+      { eventType: "session.step.started" },
+      { eventType: "session.step.ended" },
       { step: 1, input: 50, output: 4, reasoning: 0, cacheRead: 0, cacheWrite: 0, cost: 0, finish: "tool-calls" },
       { afterStep: 1, tool: "edit", kind: "write" },
       { afterStep: 1, tool: "subagent", kind: "agent" },
