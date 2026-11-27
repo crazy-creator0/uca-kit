@@ -8,4 +8,4 @@ Then read any images, screenshots, URLs or existing UI they shared (describe onl
 
 ## Step 2 — ask one concise taste question when needed
 If the direction is still unclear, ask one conversational question before designing. Invite a reference and offer a few examples, not a questionnaire:
-> What visual feel do you like: clean and minimal, editorial and type-led, dark and dense like a tool, playful, or immersive 3D? A site you like is enough.
+> Is there a site, app or object whose feel you want here? One is enough.

@@ -8,7 +8,7 @@ description: Use when editing or replying: small plain changes, no padding or ne
 Code:
 - Make the smallest change that meets the requirement; follow existing patterns.
 - No new dependency, wrapper, layer, or helper without a named need.
-- No empty catches, placeholder features, or tests that only check a value exists.
+- No empty catches, placeholder features or tests that only check a value exists.
 
 Replies:
 - Do not open with "Certainly!", "Great question", or "I'd be happy to".

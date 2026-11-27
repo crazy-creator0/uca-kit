@@ -1,0 +1,18 @@
+Build a modern, responsive website for a fictional company called TechNova.
+
+Requirements:
+
+Create a clean homepage with a navigation bar.
+Add a hero section with a catchy headline, description, and call-to-action button.
+Include an About Us section.
+Add a Services section with 3 service cards.
+Include a Contact Us form.
+Add a footer with social media links.
+Use modern colors, smooth animations, and attractive typography.
+Make the website fully responsive on mobile, tablet, and desktop.
+Use HTML, CSS, and JavaScript.
+Ensure all buttons and interactive elements work correctly.
+
+Bonus: Add a dark/light mode toggle and a simple animated background.
+
+Make the design visually appealing, professional, and user-friendly.

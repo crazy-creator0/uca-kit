@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0E1116">
+  <meta name="description" content="TechNova is a 28-person engineering and design studio building cloud platforms, products and data pipelines for teams that need to ship and keep shipping.">
+  <title>TechNova — Engineering that holds up</title>
+  <script>
+    // Apply the saved theme before the first paint so the page never flashes.
+    (function () {
+      var saved = null;
+      try { saved = localStorage.getItem("technova-theme"); } catch (e) {}
+      var dark = saved ? saved === "dark" : !window.matchMedia("(prefers-color-scheme: light)").matches;
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+      document.documentElement.classList.add("js");
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #0E1116;
+      --panel: #151A21;
+      --panel-2: #1B222B;
+      --text: #D6DCE5;
+      --muted: #96A1B0;
+      --border: #2A323E;
+      --accent: #4DA3FF;
+      --accent-ink: #08111D;
+      --ok: #3FB950;
+      --warn: #D29922;
+      --fail: #F85149;
+      --header-bg: rgba(14, 17, 22, .92);
+      --grid-line: rgba(157, 177, 204, .06);
+      --shadow: 0 12px 32px rgba(0, 0, 0, .28);
+      --font-sans: "Inter Tight", "Segoe UI", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+      --space: 8px;
+      --radius: 3px;
+      --max: 1120px;
+    }
+
+    [data-theme="light"] {
+      --bg: #F4F7FB;
+      --panel: #FFFFFF;
+      --panel-2: #F8FAFD;
+      --text: #16202C;
+      --muted: #536174;
+      --border: #D4DCE7;
+      --accent: #1B67D2;
+      --accent-ink: #FFFFFF;
+      --ok: #1E7A3C;
+      --warn: #9A6400;
+      --fail: #C9382B;
+      --header-bg: rgba(244, 247, 251, .92);
+      --grid-line: rgba(27, 103, 210, .08);
+      --shadow: 0 12px 32px rgba(22, 32, 44, .10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, p, ul { margin-top: 0; }
+    a { color: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    .container { width: min(100% - 48px, var(--max)); margin-inline: auto; }
+    .page { position: relative; z-index: 1; }
+
+    .skip-link {
+      position: absolute;
+      top: -60px;
+      left: 16px;
+      z-index: 100;
+      padding: 10px 16px;
+      background: var(--accent);
+      color: var(--accent-ink);
+      border-radius: var(--radius);
+      transition: top .15s ease;
+    }
+    .skip-link:focus { top: 12px; }
+
+    /* Animated background: a drifting technical grid and one slow scan line. */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      background: var(--bg);
+    }
+    .backdrop::before {
+      content: "";
+      position: absolute;
+      inset: -48px;
+      background-image:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at 72% 18%, #000 5%, transparent 78%);
+      animation: grid-drift 40s linear infinite;
+    }
+    .backdrop::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: .18;
+      animation: scan 14s linear infinite;
+    }
+    .motion-paused .backdrop::before,
+    .motion-paused .backdrop::after { animation-play-state: paused; }
+
+    @keyframes grid-drift { to { transform: translate3d(48px, 48px, 0); } }
+    @keyframes scan { from { transform: translate3d(0, -10vh, 0); } to { transform: translate3d(0, 110vh, 0); } }
+
+    .status-strip {
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .status-inner {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .led {
+      width: 7px;
+      height: 7px;
+      flex: none;
+      border-radius: 50%;
+      background: var(--ok);
+      box-shadow: 0 0 0 2px var(--panel-2);
+    }
+    .led.warn { background: var(--warn); }
+    .status-sep { color: var(--border); }
+    .status-meta { margin-left: auto; }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--border);
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+    }
+    .nav {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .brand-accent { color: var(--accent); }
+    .nav-links { display: flex; align-items: center; gap: 28px; margin-left: auto; }
+    .nav-links a {
+      font-size: 14px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color .15s ease;
+    }
+    .nav-links a:hover, .nav-links a:focus-visible { color: var(--text); }
+
+    .icon-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      color: var(--text);
+      font: 600 12px/1 var(--font-mono);
+      cursor: pointer;
+      transition: border-color .15s ease, color .15s ease, background-color .15s ease;
+    }
+    .icon-button:hover { border-color: var(--accent); color: var(--accent); }
+    .theme-toggle { min-width: 92px; justify-content: center; }
+    .menu-toggle { display: none; }
+    .menu-bars { display: grid; gap: 4px; width: 14px; }
+    .menu-bars span { height: 1px; background: currentColor; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 0 20px;
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: var(--accent-ink);
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .15s ease, filter .15s ease;
+    }
+    .btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .btn:active { transform: translateY(0); }
+    .btn svg { width: 16px; height: 16px; }
+
+    section { scroll-margin-top: 84px; }
+    .section { padding: 88px 0; border-top: 1px solid var(--border); }
+    .eyebrow {
+      margin-bottom: 16px;
+      color: var(--accent);
+      font: 600 12px/1.4 var(--font-mono);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 14ch;
+      margin-bottom: 20px;
+      font-size: clamp(2.5rem, 6vw, 4.25rem);
+      font-weight: 700;
+      line-height: 1.04;
+      letter-spacing: -.045em;
+    }
+    h2 {
+      max-width: 22ch;
+      margin-bottom: 20px;
+      font-size: clamp(1.85rem, 4vw, 2.75rem);
+      line-height: 1.12;
+      letter-spacing: -.035em;
+    }
+    h3 { margin-bottom: 10px; font-size: 1.15rem; letter-spacing: -.015em; }
+    .lead { max-width: 56ch; color: var(--muted); font-size: clamp(1rem, 1.6vw, 1.1rem); }
+
+    .hero { padding: 92px 0 96px; }
+    .hero-grid { display: grid; gap: 56px; align-items: center; }
+    .hero-actions { display: flex; align-items: center; gap: 24px; margin-top: 32px; }
+    .hero-note { color: var(--muted); font: 12px/1.5 var(--font-mono); }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 16px;
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      max-width: 620px;
+    }
+    .metric strong { display: block; font: 700 1.5rem/1.2 var(--font-mono); letter-spacing: -.03em; }
+    .metric span { color: var(--muted); font-size: 13px; }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .intake-panel { overflow: hidden; }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font: 600 11px/1.4 var(--font-mono);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .intake-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .intake-row:last-child { border-bottom: 0; }
+    .intake-row .led { margin-right: 2px; }
+    .intake-status { margin-left: auto; color: var(--muted); font: 12px/1 var(--font-mono); }
+    .intake-foot {
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--muted);
+      font: 12px/1.5 var(--font-mono);
+    }
+
+    .about-grid { display: grid; gap: 40px; align-items: start; }
+    .about-grid p + p { margin-top: 16px; }
+    .fact-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .fact-list li { padding: 20px; background: var(--panel); }
+    .fact-list strong { display: block; font: 700 1.5rem/1.2 var(--font-mono); }
+    .fact-list span { color: var(--muted); font-size: 13px; }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+      gap: 16px;
+      margin-top: 40px;
+    }
+    .service-card {
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--panel);
+      transition: transform .15s ease, border-color .15s ease;
+    }
+    .service-card:hover { transform: translateY(-4px); }
+    .service-no { color: var(--accent); font: 600 11px/1 var(--font-mono); letter-spacing: .08em; }
+    .service-card p { color: var(--muted); font-size: 14px; }
+    .deliverables { margin: 4px 0 24px; padding-left: 18px; color: var(--text); font-size: 14px; }
+    .deliverables li + li { margin-top: 8px; }
+    .deliverables li::marker { color: var(--accent); }
+    .service-foot {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font: 12px/1.5 var(--font-mono);
+    }
+
+    .contact-grid { display: grid; gap: 40px; align-items: start; }
+    .form-panel { padding: 28px; }
+    .field { margin-bottom: 20px; }
+    .field label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; }
+    .field label span { color: var(--muted); font-weight: 400; }
+    .field input, .field textarea {
+      display: block;
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text);
+      font: inherit;
+      font-size: 15px;
+      transition: border-color .15s ease;
+    }
+    .field input:hover, .field textarea:hover { border-color: var(--muted); }
+    .field input:focus, .field textarea:focus { border-color: var(--accent); outline: none; }
+    .field textarea { min-height: 132px; resize: vertical; }
+    .field [aria-invalid="true"] { border-color: var(--fail); }
+    .field-error { min-height: 18px; margin: 6px 0 0; color: var(--fail); font-size: 12px; }
+    .form-note { margin: 16px 0 0; color: var(--muted); font-size: 12px; }
+    .form-result {
+      margin-bottom: 20px;
+      padding: 16px;
+      border: 1px solid var(--ok);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      font-size: 14px;
+    }
+    .form-result[hidden] { display: none; }
+    .form-result strong { display: block; margin-bottom: 4px; color: var(--ok); }
+    .contact-aside h3 { font-size: 1rem; }
+    .contact-aside p { color: var(--muted); font-size: 14px; }
+    .contact-line {
+      display: block;
+      margin-bottom: 20px;
+      color: var(--text);
+      font: 600 14px/1.5 var(--font-mono);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .contact-line:hover { color: var(--accent); border-color: var(--accent); }
+    .hours { margin: 0; padding: 0; list-style: none; font: 13px/1.8 var(--font-mono); color: var(--muted); }
+    .hours strong { color: var(--text); font-weight: 600; }
+
+    .site-footer { border-top: 1px solid var(--border); background: var(--panel); }
+    .footer-inner { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; padding: 32px 0; }
+    .footer-inner .brand { margin-right: auto; }
+    .socials { display: flex; gap: 8px; flex-wrap: wrap; }
+    .socials a {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font: 12px/1 var(--font-mono);
+      text-decoration: none;
+      transition: color .15s ease, border-color .15s ease;
+    }
+    .socials a:hover { color: var(--accent); border-color: var(--accent); }
+    .footer-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 16px 0 28px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font: 12px/1.5 var(--font-mono);
+    }
+    .footer-meta a { color: var(--text); }
+
+    .js .reveal { opacity: 0; transform: translateY(14px); transition: opacity .45s ease, transform .45s ease; }
+    .js .reveal.is-visible { opacity: 1; transform: none; }
+
+    @media (min-width: 900px) {
+      .hero-grid { grid-template-columns: 1.1fr .9fr; }
+      .about-grid { grid-template-columns: 1.1fr .9fr; }
+      .contact-grid { grid-template-columns: 1.35fr .65fr; }
+    }
+
+    @media (max-width: 760px) {
+      .container { width: min(100% - 32px, var(--max)); }
+      .nav { flex-wrap: wrap; gap: 8px; padding: 12px 0; }
+      .nav > .brand { margin-right: auto; }
+      .icon-button { min-height: 36px; }
+      .theme-toggle { min-width: 0; }
+      .theme-label { display: none; }
+      .menu-toggle { display: inline-flex; }
+      .nav-links {
+        order: 3;
+        width: 100%;
+        display: grid;
+        gap: 0;
+        margin: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .nav-links.is-open { visibility: visible; pointer-events: auto; }
+      .nav-links a { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+      .nav-links a:last-child { border-bottom: 0; }
+      .status-meta { margin-left: 0; }
+      .hero { padding: 64px 0 72px; }
+      .hero-grid { gap: 40px; }
+      .hero-actions { flex-wrap: wrap; gap: 16px; }
+      .metrics { grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
+      .section { padding: 64px 0; }
+      .form-panel { padding: 20px; }
+    }
+
+    @media (max-width: 420px) {
+      .metrics { grid-template-columns: 1fr; }
+      .fact-list { grid-template-columns: 1fr; }
+      .status-sep { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+      .js .reveal { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <div class="page">
+    <div class="status-strip">
+      <div class="container status-inner">
+        <span class="led" aria-hidden="true"></span>
+        <span>All systems operational</span>
+        <span class="status-sep" aria-hidden="true">/</span>
+        <span>Operations desk · 24/7 monitoring</span>
+        <span class="status-meta">Last check 09:40 UTC</span>
+      </div>
+    </div>
+
+    <header class="site-header">
+      <nav class="nav container" aria-label="Main navigation">
+        <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">TN</span>TechNova<span class="brand-accent">.</span></a>
+        <button class="icon-button menu-toggle" id="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu">
+          <span class="menu-bars" aria-hidden="true"><span></span><span></span><span></span></span>
+        </button>
+        <button class="icon-button theme-toggle" id="theme-toggle" type="button" aria-label="Switch theme"><span aria-hidden="true">◐</span><span class="theme-label" id="theme-label">Dark</span></button>
+        <div class="nav-links" id="primary-nav">
+          <a href="#about">About</a>
+          <a href="#services">Services</a>
+          <a href="#contact">Contact</a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="container hero-grid">
+          <div class="reveal">
+            <p class="eyebrow">Engineering studio · Lisbon &amp; Montréal · Est. 2016</p>
+            <h1 id="hero-title">Shipping software that holds up under pressure.</h1>
+            <p class="lead">TechNova builds cloud platforms, products and data pipelines for teams that need to move now — and keep moving after launch.</p>
+            <div class="hero-actions">
+              <a class="btn" href="#contact">Start a project
+                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+              </a>
+              <span class="hero-note">Reply within one business day</span>
+            </div>
+            <div class="metrics" aria-label="Company figures">
+              <div class="metric"><strong>48</strong><span>products launched</span></div>
+              <div class="metric"><strong>28</strong><span>engineers &amp; designers</span></div>
+              <div class="metric"><strong>99.98%</strong><span>platform uptime</span></div>
+            </div>
+          </div>
+
+          <aside class="panel intake-panel reveal" aria-labelledby="intake-title">
+            <div class="panel-head"><span id="intake-title">Q1 2027 intake</span><span>Live capacity</span></div>
+            <div class="intake-row"><span class="led" aria-hidden="true"></span><span>Platform &amp; cloud</span><span class="intake-status">2 slots</span></div>
+            <div class="intake-row"><span class="led" aria-hidden="true"></span><span>Product engineering</span><span class="intake-status">1 slot</span></div>
+            <div class="intake-row"><span class="led warn" aria-hidden="true"></span><span>Data &amp; automation</span><span class="intake-status">Waitlist</span></div>
+            <div class="intake-foot">Capacity is reviewed every Monday. Enquiries received before 12:00 UTC get a same-day answer.</div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" id="about" aria-labelledby="about-title">
+        <div class="container about-grid">
+          <div class="reveal">
+            <p class="eyebrow">01 / About us</p>
+            <h2 id="about-title">A senior team, not a rotating bench.</h2>
+            <p>We started in 2016 with two engineers and one production incident too many. Today 28 of us work across four time zones, and the people who scope your system are the ones who build it.</p>
+            <p>Every engagement ends with your team able to run the work themselves: documented architecture, working pipelines, and a handover you can actually use.</p>
+          </div>
+          <ul class="fact-list reveal" aria-label="TechNova facts">
+            <li><strong>2016</strong><span>Founded in Lisbon</span></li>
+            <li><strong>28</strong><span>Specialists on staff</span></li>
+            <li><strong>12</strong><span>Countries served</span></li>
+            <li><strong>4</strong><span>Working time zones</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section" id="services" aria-labelledby="services-title">
+        <div class="container">
+          <div class="reveal">
+            <p class="eyebrow">02 / Services</p>
+            <h2 id="services-title">Three ways we help teams ship.</h2>
+            <p class="lead">Each engagement has a named lead, a fixed first milestone, and a handover built into the timeline.</p>
+          </div>
+          <div class="services-grid">
+            <article class="service-card reveal">
+              <span class="service-no">SVC / 01</span>
+              <h3>Platform &amp; cloud engineering</h3>
+              <p>Clusters, deployment pipelines and observability your team can operate without us.</p>
+              <ul class="deliverables">
+                <li>Architecture review and migration plan</li>
+                <li>CI/CD, dashboards and alert routes</li>
+                <li>Runbooks plus a live handover session</li>
+              </ul>
+              <div class="service-foot">Typical first milestone: 8 weeks</div>
+            </article>
+            <article class="service-card reveal">
+              <span class="service-no">SVC / 02</span>
+              <h3>Product engineering</h3>
+              <p>Web apps and APIs built alongside your designers, from first click to production release.</p>
+              <ul class="deliverables">
+                <li>Shared design system in your codebase</li>
+                <li>Fortnightly releases with working demos</li>
+                <li>Accessibility and performance pass</li>
+              </ul>
+              <div class="service-foot">Typical first milestone: 12 weeks</div>
+            </article>
+            <article class="service-card reveal">
+              <span class="service-no">SVC / 03</span>
+              <h3>Data &amp; automation</h3>
+              <p>Pipelines and internal tools that turn scattered operational data into decisions people trust.</p>
+              <ul class="deliverables">
+                <li>Data model and warehouse schema</li>
+                <li>Scheduled pipelines with failure alerts</li>
+                <li>Internal dashboard and source docs</li>
+              </ul>
+              <div class="service-foot">Typical first milestone: 6 weeks</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="contact" aria-labelledby="contact-title">
+        <div class="container contact-grid">
+          <div class="reveal">
+            <p class="eyebrow">03 / Contact us</p>
+            <h2 id="contact-title">Tell us what you're building.</h2>
+            <p class="lead">A short brief is enough to start. We will come back with questions, an outline approach and a realistic first milestone.</p>
+            <div class="panel form-panel">
+              <div class="form-result" id="form-result" role="status" aria-live="polite" hidden></div>
+              <form id="contact-form" novalidate>
+                <div class="field">
+                  <label for="name">Your name</label>
+                  <input id="name" name="name" type="text" autocomplete="name" required aria-describedby="name-error">
+                  <p class="field-error" id="name-error"></p>
+                </div>
+                <div class="field">
+                  <label for="email">Work email</label>
+                  <input id="email" name="email" type="email" autocomplete="email" required aria-describedby="email-error">
+                  <p class="field-error" id="email-error"></p>
+                </div>
+                <div class="field">
+                  <label for="company">Company <span>(optional)</span></label>
+                  <input id="company" name="company" type="text" autocomplete="organization">
+                </div>
+                <div class="field">
+                  <label for="message">What are you building?</label>
+                  <textarea id="message" name="message" required aria-describedby="message-error" placeholder="System you have today, what needs to change, and your rough timeline."></textarea>
+                  <p class="field-error" id="message-error"></p>
+                </div>
+                <button class="btn" type="submit">Send enquiry
+                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+                </button>
+                <p class="form-note">Demo site: submissions are stored in this browser only. No email is sent.</p>
+              </form>
+            </div>
+          </div>
+
+          <aside class="contact-aside reveal" aria-label="Other ways to reach us">
+            <h3>Direct line</h3>
+            <a class="contact-line" href="mailto:hello@technova.example">hello@technova.example</a>
+            <h3>Office hours</h3>
+            <ul class="hours">
+              <li><strong>Lisbon</strong> · 09:00–18:00 WET</li>
+              <li><strong>Montréal</strong> · 09:00–18:00 EST</li>
+            </ul>
+            <p style="margin-top:20px">For existing projects, use your shared Slack channel — we watch those first.</p>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">TN</span>TechNova<span class="brand-accent">.</span></a>
+        <div class="socials" aria-label="Social links">
+          <a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn (opens in a new tab)">LinkedIn</a>
+          <a href="https://github.com/" target="_blank" rel="noopener noreferrer" aria-label="GitHub (opens in a new tab)">GitHub</a>
+          <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram (opens in a new tab)">Instagram</a>
+        </div>
+      </div>
+      <div class="container footer-meta">
+        <span>© 2026 TechNova — a fictional company.</span>
+        <a href="#top">Back to top ↑</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var root = document.documentElement;
+      var body = document.body;
+      var themeButton = document.getElementById("theme-toggle");
+      var themeLabel = document.getElementById("theme-label");
+      var menuButton = document.getElementById("menu-toggle");
+      var navLinks = document.getElementById("primary-nav");
+      var form = document.getElementById("contact-form");
+      var result = document.getElementById("form-result");
+
+      function readStore(key, fallback) {
+        try {
+          var value = localStorage.getItem(key);
+          return value === null ? fallback : value;
+        } catch (e) { return fallback; }
+      }
+      function writeStore(key, value) {
+        try { localStorage.setItem(key, value); return true; }
+        catch (e) { return false; }
+      }
+
+      // Theme toggle
+      function paintTheme() {
+        var dark = root.dataset.theme === "dark";
+        themeLabel.textContent = dark ? "Dark" : "Light";
+        themeButton.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", dark ? "#0E1116" : "#F4F7FB");
+      }
+      paintTheme();
+      themeButton.addEventListener("click", function () {
+        var next = root.dataset.theme === "dark" ? "light" : "dark";
+        root.dataset.theme = next;
+        writeStore("technova-theme", next);
+        paintTheme();
+      });
+
+      // Mobile navigation
+      function setMenu(open) {
+        navLinks.classList.toggle("is-open", open);
+        menuButton.setAttribute("aria-expanded", String(open));
+        menuButton.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      }
+      menuButton.addEventListener("click", function () {
+        setMenu(menuButton.getAttribute("aria-expanded") !== "true");
+      });
+      navLinks.addEventListener("click", function (event) {
+        if (event.target.closest("a")) setMenu(false);
+      });
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && menuButton.getAttribute("aria-expanded") === "true") {
+          setMenu(false);
+          menuButton.focus();
+        }
+      });
+      window.matchMedia("(min-width: 761px)").addEventListener("change", function (event) {
+        if (event.matches) setMenu(false);
+      });
+
+      // Pause ambient motion when the tab is in the background.
+      document.addEventListener("visibilitychange", function () {
+        body.classList.toggle("motion-paused", document.hidden);
+      });
+
+      // Scroll reveals. Without IntersectionObserver everything stays visible.
+      var revealItems = document.querySelectorAll(".reveal");
+      if ("IntersectionObserver" in window) {
+        var observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.12, rootMargin: "0px 0px -32px 0px" });
+        revealItems.forEach(function (item) { observer.observe(item); });
+        revealItems.forEach(function (item) {
+          var box = item.getBoundingClientRect();
+          if (box.top < window.innerHeight && box.bottom > 0) item.classList.add("is-visible");
+        });
+      } else {
+        revealItems.forEach(function (item) { item.classList.add("is-visible"); });
+      }
+
+      // Contact form: inline validation, then a local demo submission.
+      var rules = {
+        name: function (value) { return value.length >= 2 ? "" : "Please enter your name (at least 2 characters)."; },
+        email: function (value) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value) ? "" : "Please enter a valid email address, for example name@company.com."; },
+        message: function (value) { return value.length >= 10 ? "" : "Please add a little more detail (at least 10 characters)."; }
+      };
+
+      function showError(field, message) {
+        var error = document.getElementById(field.id + "-error");
+        error.textContent = message;
+        if (message) field.setAttribute("aria-invalid", "true");
+        else field.removeAttribute("aria-invalid");
+      }
+
+      Object.keys(rules).forEach(function (key) {
+        var field = form.elements[key];
+        field.addEventListener("input", function () {
+          if (field.hasAttribute("aria-invalid")) showError(field, rules[key](field.value.trim()));
+        });
+      });
+
+      function showResult(title, detail, isError) {
+        result.replaceChildren();
+        var heading = document.createElement("strong");
+        heading.textContent = title;
+        var text = document.createElement("span");
+        text.textContent = detail;
+        result.appendChild(heading);
+        result.appendChild(text);
+        result.style.borderColor = isError ? "var(--fail)" : "var(--ok)";
+        result.hidden = false;
+      }
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var firstInvalid = null;
+        Object.keys(rules).forEach(function (key) {
+          var field = form.elements[key];
+          var message = rules[key](field.value.trim());
+          showError(field, message);
+          if (message && !firstInvalid) firstInvalid = field;
+        });
+        if (firstInvalid) {
+          result.hidden = true;
+          firstInvalid.focus();
+          return;
+        }
+
+        var record = {
+          name: form.elements.name.value.trim(),
+          email: form.elements.email.value.trim(),
+          company: form.elements.company.value.trim(),
+          message: form.elements.message.value.trim(),
+          receivedAt: new Date().toISOString()
+        };
+        var saved = false;
+        try {
+          var key = "technova-enquiries";
+          var list = JSON.parse(localStorage.getItem(key) || "[]");
+          if (!Array.isArray(list)) list = [];
+          list.push(record);
+          localStorage.setItem(key, JSON.stringify(list.slice(-20)));
+          saved = true;
+        } catch (e) { saved = false; }
+
+        if (!saved) {
+          showResult("Could not save this demo enquiry", "This browser blocked local storage. Nothing was sent — you can email hello@technova.example instead.", true);
+          return;
+        }
+        showResult("Thanks, " + record.name + ".", "Your brief is saved in this browser. No email was sent; this is a demo site.", false);
+        form.reset();
+      });
+    })();
+  </script>
+</body>
+</html>

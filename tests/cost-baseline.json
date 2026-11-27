@@ -1,57 +1,66 @@
 {
   "always-on lite": {
-    "tokens": 851
+    "tokens": 864,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "small build lite": {
-    "tokens": 1175
+    "tokens": 1174
   },
   "always-on standard": {
-    "tokens": 2035
+    "tokens": 2050,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "small build standard": {
-    "tokens": 4315
+    "tokens": 4430,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "task bug standard": {
-    "tokens": 2253
+    "tokens": 2268,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "task feature standard": {
-    "tokens": 2510,
-    "reason": "0.3.7: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
+    "tokens": 2525,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "task newApp standard": {
-    "tokens": 7844,
-    "reason": "0.3.7: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
+    "tokens": 7924,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "task smallBuild standard": {
-    "tokens": 4315
+    "tokens": 4430,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "task audit standard": {
-    "tokens": 4977,
-    "reason": "0.3.7: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
+    "tokens": 4992,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "always-on full": {
-    "tokens": 2189
+    "tokens": 2204,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "small build full": {
-    "tokens": 4469
+    "tokens": 4584,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "task bug full": {
-    "tokens": 2407
+    "tokens": 2422,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "task feature full": {
-    "tokens": 2664,
-    "reason": "0.3.7: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
+    "tokens": 2679,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "task newApp full": {
-    "tokens": 7998,
-    "reason": "0.3.7: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
+    "tokens": 8078,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "task smallBuild full": {
-    "tokens": 4469
+    "tokens": 4584,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "task audit full": {
-    "tokens": 5131,
-    "reason": "0.3.7: Next line naming the skill that follows (start of the skill flow), mostly paid by trimming the same block"
+    "tokens": 5146,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "chain audit > debugging": {
     "tokens": 463
@@ -84,70 +93,92 @@
     "tokens": 460
   },
   "host generic lite": {
-    "tokens": 851
+    "tokens": 864,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host codex lite": {
-    "tokens": 968
+    "tokens": 981,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host cursor lite": {
-    "tokens": 999
+    "tokens": 1012,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host claude lite": {
-    "tokens": 1059
+    "tokens": 1072,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host gemini lite": {
-    "tokens": 1064
+    "tokens": 1077,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host copilot lite": {
-    "tokens": 1050
+    "tokens": 1063,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host opencode lite": {
-    "tokens": 968
+    "tokens": 981,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host devin lite": {
-    "tokens": 953
+    "tokens": 966,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host windsurf lite": {
-    "tokens": 1077
+    "tokens": 1090,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host junie lite": {
-    "tokens": 932
+    "tokens": 945,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host jetbrains lite": {
-    "tokens": 962
+    "tokens": 975,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host generic standard": {
-    "tokens": 2035
+    "tokens": 2050,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host codex standard": {
-    "tokens": 2554
+    "tokens": 2569,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host cursor standard": {
-    "tokens": 2183
+    "tokens": 2198,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host claude standard": {
-    "tokens": 2645
+    "tokens": 2660,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host gemini standard": {
-    "tokens": 2650
+    "tokens": 2665,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host copilot standard": {
-    "tokens": 2636
+    "tokens": 2651,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host opencode standard": {
-    "tokens": 2554
+    "tokens": 2569,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host devin standard": {
-    "tokens": 2137
+    "tokens": 2152,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host windsurf standard": {
-    "tokens": 2663
+    "tokens": 2678,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host junie standard": {
-    "tokens": 2116
+    "tokens": 2131,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "host jetbrains standard": {
-    "tokens": 2146
+    "tokens": 2161,
+    "reason": "0.3.7: default-look step in R-NEW (all tiers, word for word) and in the design brief, with the trained-look avoid list; with and without the kit one prompt gave nearly the same page (27 Nov). Partly paid by cuts in the same files and lite skills"
   },
   "read first anti-ai-slop": {
     "tokens": 167

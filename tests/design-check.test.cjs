@@ -9,7 +9,7 @@ const check = require("../scripts/uca-design-check.cjs");
 
 const fixture = (name) => fs.readFileSync(path.join(__dirname, "fixtures", "design", name), "utf8");
 const ruleIds = (text) => new Set(check.checkText(text).map((finding) => finding.rule));
-const ALL = ["default-typeface", "purple-blue-gradient", "glow-or-blob", "generic-copy", "three-up-cards", "emoji-icons", "uniform-rounding-and-shadow", "no-design-tokens"];
+const ALL = ["default-typeface", "purple-blue-gradient", "glow-or-blob", "generic-copy", "three-up-cards", "emoji-icons", "uniform-rounding-and-shadow", "no-design-tokens", "numbered-section-labels", "grid-paper-background", "status-panel", "stock-lines"];
 
 test("a typical template page trips every rule, each with a line and evidence", () => {
   const findings = check.checkText(fixture("template.html"));
@@ -162,3 +162,18 @@ function BRIEF_AS_HEADINGS() {
   const fields = check.parseBrief(fixture("DESIGN-good.md"));
   return check.BRIEF_FIELDS.map((name) => `## ${name}\n${fields[name]}\n`).join("\n");
 }
+
+test("the trained look: both builds of one prompt, with and without the kit (27 Nov), are flagged on every trained-look rule", () => {
+  const TRAINED = ["numbered-section-labels", "grid-paper-background", "status-panel", "stock-lines"];
+  for (const arm of ["kit/index.html", "no-kit/index.html"]) {
+    const page = fixture(path.join("trained-look", arm));
+    const css = arm.startsWith("no-kit") ? fixture(path.join("trained-look", "no-kit", "styles.css")) : "";
+    const found = new Set([...ruleIds(page), ...ruleIds(css)]);
+    for (const id of TRAINED) assert.ok(found.has(id), `${arm}: ${id} not flagged`);
+  }
+});
+
+test("trained-look rules stay quiet on single uses and on the product's own words", () => {
+  const ids = ruleIds("<h2>01 / Menu</h2><p>Ship it Tuesday. Our kitchen holds up to forty.</p><style>.a{background:linear-gradient(90deg,#fff,#000)}</style>");
+  for (const id of ["numbered-section-labels", "grid-paper-background", "status-panel", "stock-lines"]) assert.equal(ids.has(id), false, id);
+});

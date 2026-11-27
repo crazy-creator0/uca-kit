@@ -152,6 +152,44 @@ const RULES = [
       return found;
     }
   },
+  // The trained look: what current models build for any company page when nothing pulls them
+  // elsewhere. Seen in kit and no-kit builds of the same prompt (27 Nov), nearly identical.
+  {
+    id: "numbered-section-labels",
+    why: "Numbered small-caps labels (\"01 / About\", \"SVC / 02\") are the model's default section marker. Label sections in the product's own words, or not at all.",
+    check(text) {
+      const body = text.replace(/<!--[\s\S]*?-->|\/\*[\s\S]*?\*\//g, "");
+      const all = [...matches(body, /\b0\d\s*\/\s*[A-Za-z]{3,}|\b[A-Z]{2,5}\s*\/\s*0\d\b/)];
+      return all.length >= 2 ? [{ line: lineOf(text, text.indexOf(all[0][0])), evidence: `${all.length} labels, first: "${all[0][0]}"` }] : [];
+    }
+  },
+  {
+    id: "grid-paper-background",
+    why: "A faint 1px grid behind the page is the model's default texture. Use a surface from the product's own world, or a plain one.",
+    check(text) {
+      const found = [];
+      for (const match of matches(text, /linear-gradient\([^()]*(?:\([^()]*\)[^()]*)*1px\s*,\s*transparent\s+1px\s*\)/)) found.push({ line: lineOf(text, match.index), evidence: match[0].slice(0, 80) });
+      return found.slice(0, 1);
+    }
+  },
+  {
+    id: "status-panel",
+    why: "A live-status or log card (\"All systems operational\", \"Delivery log\", uptime) placed for atmosphere is the model's default hero prop. Keep it only if the user acts on that status.",
+    check(text) {
+      const found = [];
+      for (const match of matches(text, /\ball systems (?:operational|nominal|normal|go)\b|\blive (?:capacity|status)\b|\bdelivery log\b|\blast (?:check|deploy)\b|\bplatform uptime\b/i)) found.push({ line: lineOf(text, match.index), evidence: match[0] });
+      return found.slice(0, 2);
+    }
+  },
+  {
+    id: "stock-lines",
+    why: "Lines the model writes for any company (\"software that holds up\", \"Tell us what you're building\", \"Reply within one business day\"). Write what this company says.",
+    check(text) {
+      const found = [];
+      for (const match of matches(text, /\bthat holds up\b|\btell us what you(?:'|\u2019|&rsquo;)re building\b|\breply within (?:one|two|a|1|2) (?:business |working )?days?\b|\bwhat we take on\b/i)) found.push({ line: lineOf(text, match.index), evidence: match[0] });
+      return found.slice(0, 3);
+    }
+  },
   {
     id: "no-design-tokens",
     why: "Many literal colors and no variables: the palette was not defined once. Write the brief's hex values as tokens.",

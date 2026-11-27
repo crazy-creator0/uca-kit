@@ -1,6 +1,6 @@
 # Design directions — read when writing the brief (Step 3)
 
-Starting points, not templates. Pick two that fit the domain, choose one, then change at least two attributes with real objects or words from the domain, add a signature element, and one deliberate departure. Using a direction unchanged is a failure of the brief. Fonts are free families; check the licence you actually use.
+Starting points, not templates. Pick two that fit the domain, choose one, then change at least two attributes with real objects or words from the domain, add a signature element, and one deliberate departure. Each "Signature idea" shows the kind; take yours from the domain, never the example itself. Using a direction unchanged is a failure of the brief. Fonts are free families; check the licence you actually use.
 
 ## Parts
 Each direction is its own file. Pick two by what they fit, then open those two.

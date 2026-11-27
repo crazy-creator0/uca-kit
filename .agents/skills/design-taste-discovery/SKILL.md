@@ -28,12 +28,10 @@ Next: `frontend-engineering` to build.
 - Step 7 — review like a product designer; Step 8 — approval and implementation: `.agents/skills/design-taste-discovery/parts/approve.md`
 
 ## Principle
-The user's taste comes before the tool list. Do not pick a design library because the kit lists it. Understand the look the user wants, commit to a specific design, then suggest only tools that fit.
+The user's taste comes before the tool list. Understand the look the user wants, commit to a specific design, then suggest only tools that fit.
 
 ## Non-negotiable rules
 - Never code a substantial new visual direction before asking about taste when the user gave no clear preference or reference.
-- Never recommend a tool before understanding the design goal and the stack.
-- Never mistake your aesthetic assumptions for user-approved decisions.
+- Never present your own taste as the user's choice.
 - Never claim a reference was inspected if it was not accessible.
 - Do not treat any style checklist as a substitute for product-specific judgment.
-- Keep discovery light; it is not an interview.

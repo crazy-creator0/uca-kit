@@ -82,3 +82,31 @@ test("the design review checks with text first and caps looks at two pictures, w
   assert.match(evidence, /cannot read images marks this item "read, not looked" and hands the look to the user/);
   assert.match(evidence, /Do not claim visual inspection when only source code was checked\./);
 });
+
+// The trained look (27 Nov): with and without the kit, one prompt gave nearly the same page.
+// Wording checks: they show the step is written down, not that a model follows it.
+test("the brief starts from the model's own default look and changes three parts of it", () => {
+  const dir = path.join(__dirname, "..", ".agents", "skills", "design-taste-discovery");
+  const small = fs.readFileSync(path.join(dir, "parts", "small.md"), "utf8");
+  const brief = fs.readFileSync(path.join(dir, "parts", "brief.md"), "utf8");
+  for (const text of [small, brief]) {
+    assert.match(text, /default look in one line|\*\*Default:\*\* the page you would build with no brief/);
+    assert.match(text, /change three parts of it with things from the domain/);
+    assert.match(text, /one concrete fact about this business \(invent one if fictional\)/);
+  }
+  for (const sign of ["01 / About", "status or log card beside the hero", "row of three stats", "faint grid background", "holds up"]) assert.ok(small.includes(sign), sign);
+});
+
+test("R-NEW asks for the default look in every tier, word for word", () => {
+  const rule = (tier) => fs.readFileSync(path.join(__dirname, "..", ".agents", tier, "CORE.md"), "utf8").match(/^- \*\*R-NEW\*\*.*$/m)[0];
+  assert.match(rule("lite"), /your default look and three changes to it from the subject/);
+  assert.equal(rule("standard"), rule("lite"));
+  assert.equal(rule("full"), rule("lite"));
+});
+
+test("directions give a kind of signature, not a device to copy", () => {
+  const dir = path.join(__dirname, "..", ".agents", "skills", "design-taste-discovery");
+  assert.match(fs.readFileSync(path.join(dir, "directions.md"), "utf8"), /take yours from the domain, never the example itself/);
+  const all = fs.readdirSync(path.join(dir, "directions")).map((name) => fs.readFileSync(path.join(dir, "directions", name), "utf8")).join("\n");
+  assert.doesNotMatch(all, /rotated label/);
+});

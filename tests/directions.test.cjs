@@ -59,7 +59,7 @@ test("the library tells the model to adapt a direction and never use it unchange
   assert.match(text, /Using a direction unchanged is a failure of the brief/);
   assert.match(text, /signature element, and one deliberate departure/);
   const skill = readKitFile(path.join(root, ".agents", "skills", "design-taste-discovery", "SKILL.md"));
-  assert.match(skill, /list the directions in `\.agents\/skills\/design-taste-discovery\/directions\.md`[^\n]*shortlist two that fit the domain/);
+  assert.match(skill, /list the directions in `\.agents\/skills\/design-taste-discovery\/directions\.md`[^\n]*shortlist two by one concrete fact about this business/);
   assert.match(skill, /Never use a direction unchanged/);
   assert.match(skill, /Save the accepted brief as `DESIGN\.md`/);
   assert.match(skill, /--brief DESIGN\.md/);
