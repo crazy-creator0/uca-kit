@@ -18,7 +18,7 @@ UCA_USAGE_STEPS=~/runs/snake-kit-1.jsonl opencode
 
 Then `node scripts/uca-usage.cjs steps D:\runs\snake-kit-1.jsonl`, or with the other arm's file as a second argument.
 
-**The no-kit arm** is an empty folder plus one file, `.opencode/plugins/uca-usage.mjs`, copied from the kit arm (commands in `OPENCODE-SETUP.md`). The plugin carries no instructions; without the kit's scripts it writes only the step log, so both arms are counted by the same code. Check before the run that the folder holds nothing else. On every other host both arms fill the same run sheet from their transcripts. Totalling a log needs Node; the run itself does not, because the plugin runs inside OpenCode. What the log holds, and what it never holds, is in `USAGE-PRIVACY.md`.
+**The no-kit arm** is an empty folder plus one file, `.opencode/plugins/uca-usage.js`, copied from the kit arm (commands in `OPENCODE-SETUP.md`). The plugin carries no instructions; without the kit's scripts it writes only the step log, so both arms are counted by the same code. Check before the run that the folder holds nothing else. On every other host both arms fill the same run sheet from their transcripts. Totalling a log needs Node; the run itself does not, because the plugin runs inside OpenCode. What the log holds, and what it never holds, is in `USAGE-PRIVACY.md`.
 
 ## Any other host: the run sheet
 

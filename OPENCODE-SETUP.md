@@ -24,7 +24,9 @@ Read `AGENT-SKILL-MAP.md` only when routing is ambiguous or cross-functional; re
 
 ## Local usage meter and subagent budget guard
 
-The OpenCode profile installs `.opencode/plugins/uca-usage.mjs` and `scripts/uca-usage.cjs`. The plugin is designed to record finalized message token metadata locally, count calls made through supported task/subagent hooks, consult the configured local budget before those optional calls, and show local threshold/budget-block toast warnings. It stores aggregate counters only; it does not store prompts, outputs, message IDs, code, or credentials and has no UCA Kit telemetry endpoint.
+The OpenCode profile installs `.opencode/plugins/uca-usage.js` and `scripts/uca-usage.cjs`. The plugin is designed to record finalized message token metadata locally, count calls made through supported task/subagent hooks, consult the configured local budget before those optional calls, and show local threshold/budget-block toast warnings. It stores aggregate counters only; it does not store prompts, outputs, message IDs, code, or credentials and has no UCA Kit telemetry endpoint.
+
+**OpenCode versions.** The plugin is built for OpenCode 1.18.29 or newer (its `server()` entry) and OpenCode 2.x (its `setup()` entry), from OpenCode's docs; neither is confirmed in a real run yet, which the start line below checks; check yours with `opencode --version`. OpenCode's docs list `.js` and `.ts` plugins, which is why the file is `.js`. Kits before 0.3.7 installed `uca-usage.mjs`, which did not start in a real OpenCode run on Windows: run `update --prune` to remove it. On 2.x, tool calls follow the documented hooks, but the fields of the message event that carries token counts are not documented, so the step log also names each event type it sees; if a 2.x run counts no requests, the summary lists those names. Report them, rather than trusting the token numbers.
 
 Configure caps and a conservative per-call reservation (these are examples; choose values for your model/plan):
 
@@ -56,6 +58,8 @@ node scripts/uca-usage.cjs steps ~/runs/task-1.jsonl
 node scripts/uca-usage.cjs steps ~/runs/task-1.jsonl ~/runs/task-1-no-kit.jsonl
 ```
 
+**Check it started.** After the first reply, open the log: its first line must be `{"loaded":"v1"}` or `{"loaded":"v2"}` (with a time). An empty or missing file means OpenCode did not start the plugin, and the run counts nothing; stop and check the version and that the file is `.opencode/plugins/uca-usage.js`.
+
 It prints the requests and how each ended, input summed over all requests, output, peak context, wall time, tool calls by kind (read, write, check, shell, agent) and reads before the first write.
 
 **Comparing with no kit.** To count a run without the kit the same way, start it in an empty folder that holds only the plugin file, which carries no instructions. Without the kit's scripts the plugin writes the step log and nothing else (no ledger, no budget guard):
@@ -63,13 +67,13 @@ It prints the requests and how each ended, input summed over all requests, outpu
 ```powershell
 # Windows PowerShell
 New-Item -ItemType Directory -Force no-kit-run\.opencode\plugins | Out-Null
-Copy-Item kit-run\.opencode\plugins\uca-usage.mjs no-kit-run\.opencode\plugins\
+Copy-Item kit-run\.opencode\plugins\uca-usage.js no-kit-run\.opencode\plugins\
 ```
 
 ```bash
 # macOS or Linux
 mkdir -p no-kit-run/.opencode/plugins
-cp kit-run/.opencode/plugins/uca-usage.mjs no-kit-run/.opencode/plugins/
+cp kit-run/.opencode/plugins/uca-usage.js no-kit-run/.opencode/plugins/
 ```
 
 Then start OpenCode in `no-kit-run` with its own `UCA_USAGE_STEPS` file. OpenCode's own token total shows the context of the last request, not what the run spent. What the log holds is in `USAGE-PRIVACY.md`; it never holds prompts, replies, file contents or command text.

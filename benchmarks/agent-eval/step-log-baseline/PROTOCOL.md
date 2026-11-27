@@ -9,8 +9,8 @@ A real OpenCode run (Big Pickle, snake prompt, one run per arm) made 43 requests
 - **Prompt:** `../round-2/prompts/task-3-snake.txt`, byte for byte, as the whole first message. If the earlier OpenCode run used a different prompt, it is saved next to this file and used instead, and the change is recorded under Deviations before the run.
 - **Host and model:** OpenCode with Big Pickle. The OpenCode version and the operating system are recorded in the results.
 - **Kit arm:** an empty folder, then `npx --yes github:crazy-creator0/uca-kit#<release branch or tag> init . --platform opencode --tier standard`. The commit is recorded in the results.
-- **No-kit arm:** an empty folder holding only `.opencode/plugins/uca-usage.mjs`, copied from the kit arm (`OPENCODE-SETUP.md`, "Comparing with no kit"). Nothing else is in the folder when the run starts.
-- **Step log:** `UCA_USAGE_STEPS` set to a new file per arm before OpenCode starts.
+- **No-kit arm:** an empty folder holding only `.opencode/plugins/uca-usage.js`, copied from the kit arm (`OPENCODE-SETUP.md`, "Comparing with no kit"). Nothing else is in the folder when the run starts.
+- **Step log:** `UCA_USAGE_STEPS` set to a new file per arm before OpenCode starts. After the first reply in each arm, the log's first line must be a start line (`loaded`); if it is not, the run stops and is restarted after the cause is fixed (recorded under Deviations).
 - **Runs:** one per arm, back to back on the same day. One run per arm is thin evidence; differences of a few requests are read as noise.
 - **The operator:** answers the agent's questions with "Go ahead, use your judgment", and types nothing else until the agent says it is done.
 
@@ -43,4 +43,4 @@ A sanity check, not a score: the same eight items on both builds, each pass or f
 - A change meant to cut requests names which of these it aims at, and is checked by the same measure.
 
 ## Deviations
-None yet.
+- 27 Nov, first attempt: neither arm wrote a step log. The plugin was named `uca-usage.mjs`, and OpenCode's docs list only `.js` and `.ts` plugins. Fixed in 0.3.7 before the tag; the run is repeated with the start-line check above. The builds from that attempt are not used.

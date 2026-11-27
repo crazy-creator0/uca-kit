@@ -301,7 +301,7 @@ function blankRun(format) {
     format, rows: 0, requests: 0, requestsKnown: true, ended: { "tool-calls": 0, stop: 0, length: 0, unknown: 0 },
     sums: { input: 0, cacheRead: 0, cacheWrite: 0, output: 0, reasoning: 0, cost: 0 }, unknownRows: { input: 0, cacheRead: 0, cacheWrite: 0, output: 0, reasoning: 0, cost: 0 },
     peak: null, peakAt: null, first: null, wallMs: null, tools: Object.fromEntries(KINDS.map((k) => [k, 0])), toolsKnown: false,
-    readsBeforeWrite: null, kitOpened: 0, kitDistinct: new Set(), gaps: { one: 0, many: 0 }, skipped: 0, sources: new Set()
+    readsBeforeWrite: null, kitOpened: 0, kitDistinct: new Set(), gaps: { one: 0, many: 0 }, skipped: 0, sources: new Set(), pluginStarts: [], eventTypes: []
   };
 }
 function addContext(run, context, at) {
@@ -353,6 +353,12 @@ function readStepLog(text) {
       countTool(run, typeof entry.kind === "string" ? entry.kind : "unknown", state);
       gaps.set(entry.afterStep, (gaps.get(entry.afterStep) || 0) + 1);
       if (typeof entry.kit === "string") { run.kitOpened += 1; run.kitDistinct.add(entry.kit); }
+    } else if (entry.loaded === "v1" || entry.loaded === "v2") {
+      run.pluginStarts.push(entry.loaded);
+      continue;
+    } else if (typeof entry.eventType === "string") {
+      if (run.eventTypes.length < 50) run.eventTypes.push(entry.eventType.slice(0, 60));
+      continue;
     } else { run.skipped += 1; continue; }
     if (Number.isFinite(time)) { if (firstTime === null || time < firstTime) firstTime = time; if (lastTime === null || time > lastTime) lastTime = time; }
   }
@@ -490,9 +496,20 @@ function runFigures(run) {
     reads: run.toolsKnown ? run.tools.read : null, writes: run.toolsKnown ? run.tools.write : null,
     checks: run.toolsKnown ? run.tools.check : null, shell: run.toolsKnown ? run.tools.shell : null,
     agents: run.toolsKnown ? run.tools.agent : null,
+    pluginStarts: run.pluginStarts ? run.pluginStarts.length : 0,
     readsBeforeFirstWrite: run.readsBeforeWrite, replies: run.ended.stop, kitFilesOpened: run.kitOpened
   };
 }
+// Whether the plugin said it started, and, when no request was counted, which event
+// types the host sent instead (names only), so a host whose message shape differs shows up.
+function pluginNotes(run) {
+  const notes = [];
+  if (run.pluginStarts.length) notes.push("Plugin started: OpenCode " + [...new Set(run.pluginStarts)].join(" and ") + " API" + (run.pluginStarts.length > 1 ? " (" + run.pluginStarts.length + " starts)" : "") + ".");
+  else notes.push("WARNING: no start line. Either the plugin did not start in this run, or the log was written by a plugin older than 0.3.7. Numbers below are only as complete as the log.");
+  if (run.requests === 0 && run.eventTypes.length) notes.push("WARNING: no request was counted, but the host sent these event types: " + run.eventTypes.join(", ") + ". Its message event may differ from the documented shape; report these names.");
+  return notes;
+}
+
 function printRun(run, out) {
   const f = runFigures(run);
   out("UCA Kit — run summary: " + run.file + " (" + run.format + ")");
@@ -509,6 +526,7 @@ function printRun(run, out) {
   } else out("Tool calls: unknown (none recorded in this file)");
   if (run.format === "OpenCode step log") out("Kit files opened: " + run.kitOpened + " (" + run.kitDistinct.size + " different)");
   if (run.sums.cost > 0) out("Cost the host estimated: $" + fmt(run.sums.cost) + " (an estimate, not an invoice)");
+  if (run.format === "OpenCode step log") for (const line of pluginNotes(run)) out(line);
   if (run.skipped) out("Skipped " + run.skipped + " line(s) that were not a request or a tool call.");
   out("Source: " + [...run.sources].join(", ") + ". Peak context = new input + cache read + cache write of one request.");
 }
@@ -533,6 +551,7 @@ function printCompare(a, b, out) {
   const widths = rows[0].map((_, i) => Math.max(...rows.map((row) => row[i].length)));
   out("UCA Kit — run comparison (first file minus second)");
   for (const row of rows) out(row.map((c, i) => (i === 0 ? c.padEnd(widths[i]) : c.padStart(widths[i]))).join("  "));
+  for (const run of [a, b]) if (run.format === "OpenCode step log") for (const line of pluginNotes(run)) out(run.file + ": " + line);
   if (a.skipped || b.skipped) out("Skipped lines: " + a.file + " " + a.skipped + ", " + b.file + " " + b.skipped + ".");
 }
 function stepsCommand(args, out = console.log) {
@@ -544,6 +563,7 @@ function stepsCommand(args, out = console.log) {
   const runs = files.map(readRun);
   if (runs.every((run) => run.requests === 0 && !run.toolsKnown && run.requestsKnown)) {
     console.error("Nothing to summarize: no request or tool-call lines found in " + files.join(" or ") + ".");
+    for (const run of runs) if (run.format === "OpenCode step log" && (run.pluginStarts.length || run.eventTypes.length)) for (const line of pluginNotes(run)) console.error(run.file + ": " + line);
     return 1;
   }
   if (json) { out(JSON.stringify(runs.map((run) => ({ file: run.file, format: run.format, ...runFigures(run), skippedLines: run.skipped })), null, 2)); return 0; }
