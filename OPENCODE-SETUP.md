@@ -56,7 +56,23 @@ node scripts/uca-usage.cjs steps ~/runs/task-1.jsonl
 node scripts/uca-usage.cjs steps ~/runs/task-1.jsonl ~/runs/task-1-no-kit.jsonl
 ```
 
-It prints the requests and how each ended, input summed over all requests, output, peak context, wall time, tool calls by kind (read, write, check, shell, agent) and reads before the first write. OpenCode's own token total shows the context of the last request, not what the run spent. What the log holds is in `USAGE-PRIVACY.md`; it never holds prompts, replies, file contents or command text.
+It prints the requests and how each ended, input summed over all requests, output, peak context, wall time, tool calls by kind (read, write, check, shell, agent) and reads before the first write.
+
+**Comparing with no kit.** To count a run without the kit the same way, start it in an empty folder that holds only the plugin file, which carries no instructions. Without the kit's scripts the plugin writes the step log and nothing else (no ledger, no budget guard):
+
+```powershell
+# Windows PowerShell
+New-Item -ItemType Directory -Force no-kit-run\.opencode\plugins | Out-Null
+Copy-Item kit-run\.opencode\plugins\uca-usage.mjs no-kit-run\.opencode\plugins\
+```
+
+```bash
+# macOS or Linux
+mkdir -p no-kit-run/.opencode/plugins
+cp kit-run/.opencode/plugins/uca-usage.mjs no-kit-run/.opencode/plugins/
+```
+
+Then start OpenCode in `no-kit-run` with its own `UCA_USAGE_STEPS` file. OpenCode's own token total shows the context of the last request, not what the run spent. What the log holds is in `USAGE-PRIVACY.md`; it never holds prompts, replies, file contents or command text.
 
 **Limitations:** this is an OpenCode-specific adapter, not a universal interceptor. Other IDEs remain manual/unmetered until their own supported usage/hook adapters are implemented. The ledger is local by default; hosted model providers still receive the request needed to generate answers. Full privacy from the model provider requires a suitably configured local/self-hosted model. See `USAGE-PRIVACY.md`.
 
